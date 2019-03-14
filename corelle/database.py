@@ -1,6 +1,7 @@
 from os import path, listdir
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 from pg_viewtils import run_sql_file, relative_path
 
 db = create_engine("postgresql:///plate-rotations")

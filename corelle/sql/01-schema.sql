@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS model (
   id serial PRIMARY KEY,
-  name text NOT NULL
+  name text UNIQUE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS plate (

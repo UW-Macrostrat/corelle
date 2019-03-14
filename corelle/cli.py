@@ -18,13 +18,13 @@ def init(drop=False):
 file = Path(exists=True, dir_okay=False)
 
 @cli.command(name='import')
-@argument('name', type=str)
+@argument('model_name')
 @argument('plates', type=file)
 @argument('rotations', type=file)
 @option('--drop', is_flag=True, default=False)
-def import_model(name, plates, rotations, drop=False):
+def _import(model_name, plates, rotations, drop=False):
     """
     Import a plate-rotation model
     """
-    model = import_model(name)
+    import_model(model_name, plates, rotations, drop=False)
 
