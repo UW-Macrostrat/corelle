@@ -1,5 +1,7 @@
 from click import group, argument, option, echo, style
 
+from .database import initialize
+
 @group()
 def cli():
     pass
@@ -7,5 +9,5 @@ def cli():
 @cli.command(name='init')
 @option('--drop', is_flag=True, default=False)
 def init(drop=False):
-    pass
+    initialize(drop=drop)
 
