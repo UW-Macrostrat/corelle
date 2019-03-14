@@ -1,0 +1,4 @@
+click
+git+git://github.com/davenquinn/pg-viewtils@2a386c
+numpy
+numpy-quaternion
