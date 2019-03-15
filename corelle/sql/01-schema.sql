@@ -6,9 +6,17 @@ CREATE TABLE IF NOT EXISTS model (
 CREATE TABLE IF NOT EXISTS plate (
   id integer PRIMARY KEY,
   model_id integer NOT NULL REFERENCES model(id),
+  parent_id integer
+    REFERENCES plate(id)
+    DEFERRABLE INITIALLY DEFERRED,
   name text,
   cotid text,
-  coid text,
+  coid text
+);
+
+CREATE TABLE IF NOT EXISTS plate_polygon (
+  id serial PRIMARY KEY,
+  plate_id integer NOT NULL REFERENCES plate(id),
   young_lim numeric,
   old_lim numeric,
   geometry geometry(MultiPolygon, 4326)

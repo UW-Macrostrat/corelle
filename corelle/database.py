@@ -7,7 +7,11 @@ from pg_viewtils import run_sql_file, relative_path
 db = create_engine("postgresql:///plate-rotations")
 create_session = sessionmaker(bind=db)
 
-__drop_tables = "DROP TABLE model, plate, rotation CASCADE"
+__drop_tables = """
+DROP TABLE IF EXISTS
+model, plate, plate_polygon, rotation
+CASCADE
+"""
 
 def initialize(drop=False):
     # Run all SQL in the `sql` directory
