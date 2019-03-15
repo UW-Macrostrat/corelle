@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore")
+
 from click import (
     group, argument, option,
     echo, style, Path
