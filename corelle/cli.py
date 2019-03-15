@@ -3,8 +3,7 @@ warnings.filterwarnings("ignore")
 
 from click import (
     group, argument, option,
-    echo, style, Path
-)
+    echo, style, Path)
 
 from .database import initialize
 from .load_data import import_model

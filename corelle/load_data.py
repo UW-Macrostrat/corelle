@@ -4,8 +4,10 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.dialects.postgresql import insert
 from functools import partial
+from time import perf_counter
 from json import dumps
 import fiona
+import csv
 
 def get_model(name):
     model = reflect_table(db, 'model')
@@ -49,11 +51,13 @@ def import_plates(model_id, plates):
 
             add_plate(
                 id=plate_id,
-                model_id=model_id,
                 parent_id=p['ParentPlat'],
                 name=p['PlateName'],
                 cotid=p['COTID'],
                 coid=p['COID'])
+
+            _ = func.ST_GeomFromGeoJSON(geom)
+            geom = func.ST_SetSRID(func.ST_Multi(_), 4326)
 
             young_lim = p['LimYngP']
             if young_lim == -999:
@@ -62,10 +66,7 @@ def import_plates(model_id, plates):
                 plate_id=plate_id,
                 young_lim=young_lim,
                 old_lim=p['LimOldP'],
-                geometry=func.ST_SetSRID(
-                    func.ST_Multi(func.ST_GeomFromGeoJSON(geom)),
-                    4326
-                ))
+                geometry=geom)
 
             stmt = (plate_polygon
                     .insert()
@@ -78,6 +79,37 @@ def import_plates(model_id, plates):
 def import_rotations(model_id, rotations):
     rotation = reflect_table(db,'rotation')
     session = create_session()
+    conn = db.connect()
+
+    with open(rotations, 'r') as f:
+        start = perf_counter()
+        for i, line in enumerate(f):
+            if line.startswith('*'): continue
+            data, meta = line.strip().split("!",1)
+            row = data.split()
+
+            # Insert first plate id
+            plate_id = row[0]
+            ref_plate_id = row[5]
+            insert_plate(conn,
+                    id=plate_id,
+                    model_id=model_id)
+            insert_plate(conn,
+                    id=ref_plate_id,
+                    model_id=model_id)
+
+            vals = dict(
+                plate_id=plate_id,
+                t_step=row[1],
+                latitude=row[2],
+                longitude=row[3],
+                angle=row[4],
+                ref_plate_id=ref_plate_id,
+                metadata=meta)
+            _ = rotation.insert().values(vals)
+            conn.execute(_)
+        elapsed = perf_counter()-start
+        print(f"Imported {i} rotations in {elapsed} seconds")
 
 def import_model(name, plates, rotations, drop=False):
     model_id = get_model(name)
