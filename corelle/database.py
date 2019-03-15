@@ -15,7 +15,7 @@ CASCADE
 
 def initialize(drop=False):
     # Run all SQL in the `sql` directory
-    dn = relative_path(__file__,'proc')
+    dn = relative_path(__file__,'sql')
     if drop:
         db.execute(__drop_tables)
 
