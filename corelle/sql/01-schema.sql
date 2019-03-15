@@ -7,8 +7,7 @@ CREATE TABLE IF NOT EXISTS plate (
   id integer PRIMARY KEY,
   model_id integer NOT NULL REFERENCES model(id),
   parent_id integer
-    REFERENCES plate(id)
-    DEFERRABLE INITIALLY DEFERRED,
+    REFERENCES plate(id),
   name text,
   cotid text,
   coid text
