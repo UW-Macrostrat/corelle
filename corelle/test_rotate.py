@@ -17,6 +17,9 @@ def test_quaternion_identity():
     identity = N.quaternion(1,0,0,0)
     # Numerical construction of quaternion
     q = N.quaternion(0,*v1)
+
+    assert identity.angle() == 0
+
     assert equal(q.vec, v1)
     assert is_pure_quaternion(q)
     v2 = q*identity
