@@ -2,8 +2,10 @@ import numpy as N
 import quaternion as Q
 from sqlalchemy import text
 from pg_viewtils import reflect_table
-from .database import db
 from functools import lru_cache
+from time import sleep
+
+from .database import db
 
 __plate = reflect_table(db, 'plate')
 __rotation = reflect_table(db, 'rotation')
@@ -26,15 +28,16 @@ def get_rotation(plate_id, time, depth=0):
         if r.ref_plate_id:
             print(" "*depth, plate_id, r.ref_plate_id)
             base = get_rotation(
-                    r.ref_plate_id, time,
-                    depth = depth + 1
-                )
+                    r.ref_plate_id, r.t_end,
+                    depth=depth+1)
         else:
             base = N.quaternion(1,0,0,0)
+
         q = euler_to_quaternion([
             float(i) for i in r.euler_angle
         ])
         transform *= base*q
+
     return transform
 
 def build_cache():
