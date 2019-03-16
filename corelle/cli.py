@@ -1,6 +1,8 @@
 import warnings
 warnings.filterwarnings("ignore")
 
+import numpy as N
+
 from click import (
     group, argument, option,
     echo, style, Path)
@@ -45,4 +47,6 @@ def rotate(plate, time):
     """
     Rotate a plate to a time
     """
-    get_rotation(plate, time)
+    q = get_rotation(plate, time)
+    angle = N.degrees(q.angle())
+    echo(f"Rotate {angle}º around {q.vec}")

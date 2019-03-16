@@ -1,6 +1,7 @@
 import numpy as N
 import quaternion
 from .util import vector, unit_vector
+from .rotate import sph2cart
 
 equal = N.allclose
 
@@ -24,3 +25,9 @@ def test_quaternion_identity():
     assert is_pure_quaternion(q)
     v2 = q*identity
     assert equal(v1,v2.vec)
+
+def test_euler_to_quaternion():
+    assert equal(
+        vector(1,0,0),
+        sph2cart(0,0))
+
