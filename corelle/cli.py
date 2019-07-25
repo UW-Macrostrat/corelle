@@ -2,6 +2,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import numpy as N
+from IPython import embed
 
 from click import (
     group, argument, option,
@@ -55,3 +56,7 @@ def rotate(plate, time):
 @cli.command(name='serve')
 def serve():
     app.run(debug=True)
+
+@cli.command(name='shell')
+def shell():
+    embed()
