@@ -49,4 +49,4 @@ def rotate(plate, time):
     """
     q = get_rotation(plate, time)
     angle = N.degrees(q.angle())
-    echo(f"Rotate {angle}º around {q.vec}")
+    echo(f"Rotate {angle:.2f}° around {q.vec}")
