@@ -146,4 +146,3 @@ def import_model(name, plates, rotations, drop=False):
     import_plates(model_id, plates)
     import_rotations(model_id, rotations)
 
-

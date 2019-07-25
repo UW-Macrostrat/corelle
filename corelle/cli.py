@@ -1,12 +1,15 @@
 import warnings
 warnings.filterwarnings("ignore")
 
+import numpy as N
+
 from click import (
     group, argument, option,
     echo, style, Path)
 
 from .database import initialize
 from .load_data import import_model
+from .rotate import build_cache, get_rotation
 
 @group()
 def cli():
@@ -30,3 +33,20 @@ def _import(model_name, plates, rotations, drop=False):
     """
     import_model(model_name, plates, rotations, drop=False)
 
+@cli.command(name='cache')
+def cache():
+    """
+    Compute and cache rotations
+    """
+    build_cache()
+
+@cli.command(name='rotate')
+@argument('plate', type=int)
+@argument('time', type=float)
+def rotate(plate, time):
+    """
+    Rotate a plate to a time
+    """
+    q = get_rotation(plate, time)
+    angle = N.degrees(q.angle())
+    echo(f"Rotate {angle}º around {q.vec}")
