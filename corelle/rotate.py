@@ -27,6 +27,7 @@ def euler_to_quaternion(euler_pole):
 
 conn = db.connect()
 
+# Cache this expensive, recursive function.
 @lru_cache(maxsize=5000)
 def get_rotation(plate_id, time, depth=0, verbose=False):
     _ = "SELECT (rotation_sequence(:plate_id, :time)).*"
