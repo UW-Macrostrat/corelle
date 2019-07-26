@@ -2,6 +2,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import numpy as N
+from IPython import embed
 
 from click import (
     group, argument, option,
@@ -10,6 +11,7 @@ from click import (
 from .database import initialize
 from .load_data import import_model
 from .rotate import build_cache, get_rotation
+from .api import app
 
 @group()
 def cli():
@@ -50,3 +52,11 @@ def rotate(plate, time):
     q = get_rotation(plate, time)
     angle = N.degrees(q.angle())
     echo(f"Rotate {angle:.2f}° around {q.vec}")
+
+@cli.command(name='serve')
+def serve():
+    app.run(debug=True)
+
+@cli.command(name='shell')
+def shell():
+    embed()

@@ -25,4 +25,3 @@ def initialize(drop=False):
         if not file.endswith(".sql"): continue
         fn = path.join(dn, file)
         run_sql_file(session, fn)
-

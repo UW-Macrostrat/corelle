@@ -4,6 +4,8 @@ from sqlalchemy import text
 from pg_viewtils import reflect_table
 from functools import lru_cache
 from time import sleep
+from pg_viewtils import relative_path
+
 
 from .util import unit_vector
 from .database import db
@@ -28,7 +30,7 @@ def euler_to_quaternion(euler_pole):
 conn = db.connect()
 
 # Cache this expensive, recursive function.
-@lru_cache(maxsize=5000)
+@lru_cache(maxsize=50000)
 def get_rotation(plate_id, time, depth=0, verbose=False):
     _ = "SELECT (rotation_sequence(:plate_id, :time)).*"
     res = conn.execute(text(_), plate_id=plate_id, time=time)
@@ -53,7 +55,16 @@ def get_rotation(plate_id, time, depth=0, verbose=False):
 
     return transform
 
+def get_all_rotations(time):
+    fn = relative_path(__file__, 'query', 'active-plates-at-time.sql')
+    sql = text(open(fn).read())
+    results = conn.execute(sql, time=time)
+    for res in results:
+        plate_id = res[0]
+        q = get_rotation(plate_id, time)
+        if N.isnan(q.w):
+            continue
+        yield plate_id, q
+
 def build_cache():
     pass
-
-
