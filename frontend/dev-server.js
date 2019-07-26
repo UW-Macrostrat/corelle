@@ -14,8 +14,11 @@ const backend = spawn(
 
 let app = express();
 
-let bundler = new Bundler('./index.html');
-const apiProxy = proxy({target: `http://0.0.0.0:${port}`});
+let bundler = new Bundler('./index.html', {
+  scopeHoist: true,
+  detailedReport: true
+});
+const apiProxy = proxy({target: `http://127.0.0.1:${port}`});
 
 app.use('/api', apiProxy);
 app.use(bundler.middleware());
