@@ -3,7 +3,8 @@ const express = require('express');
 const proxy = require('http-proxy-middleware');
 const { spawn } = require('child_process');
 
-const port = '3432';
+const port = 3432;
+const mainPort = 5000;
 // Run the backend dev server (quits on exiting this script)
 const backend = spawn(
   'plates',
@@ -18,3 +19,7 @@ const apiProxy = proxy({target: `http://0.0.0.0:${port}`});
 
 app.use('/api', apiProxy);
 app.use(bundler.middleware());
+
+app.listen(mainPort, ()=>{
+  console.log(`Corelle test app listening on port ${mainPort}`);
+});

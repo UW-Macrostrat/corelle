@@ -14,5 +14,10 @@
     "express": "^4.17.1",
     "http-proxy-middleware": "^0.19.1",
     "parcel-bundler": "^1.12.3"
+  },
+  "dependencies": {
+    "@macrostrat/hyper": "^1.1.1",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
   }
 }
