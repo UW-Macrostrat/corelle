@@ -5,11 +5,14 @@
   "main": "index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "npm install && parcel index.html"
+    "dev": "npm install && node ./dev-server.js"
   },
   "author": "Daven Quinn",
   "license": "ISC",
   "devDependencies": {
-    "coffeescript": "^2.4.1"
+    "coffeescript": "^2.4.1",
+    "express": "^4.17.1",
+    "http-proxy-middleware": "^0.19.1",
+    "parcel-bundler": "^1.12.3"
   }
 }

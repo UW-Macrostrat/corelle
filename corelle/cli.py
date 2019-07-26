@@ -54,8 +54,10 @@ def rotate(plate, time):
     echo(f"Rotate {angle:.2f}° around {q.vec}")
 
 @cli.command(name='serve')
-def serve():
-    app.run(debug=True)
+@option('-p','--port', type=int, default=5000)
+@option('--debug', is_flag=True, default=False)
+def serve(**kwargs):
+    app.run(**kwargs)
 
 @cli.command(name='shell')
 def shell():
