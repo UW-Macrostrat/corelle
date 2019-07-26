@@ -1,0 +1,15 @@
+{
+  "name": "corelle-frontend",
+  "version": "1.0.0",
+  "description": "A frontend for the Corelle plate-rotation application",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npm install && parcel index.html"
+  },
+  "author": "Daven Quinn",
+  "license": "ISC",
+  "devDependencies": {
+    "coffeescript": "^2.4.1"
+  }
+}
