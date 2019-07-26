@@ -1,7 +1,7 @@
-const Bundler = require('parcel-bundler');
-const express = require('express');
-const proxy = require('http-proxy-middleware');
-const { spawn } = require('child_process');
+import Bundler from 'parcel-bundler';
+import express from 'express';
+import proxy from 'http-proxy-middleware';
+import { spawn } from 'child_process';
 
 const port = 3432;
 const mainPort = 5000;
