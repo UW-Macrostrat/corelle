@@ -2,7 +2,7 @@ import hyper from '@macrostrat/hyper'
 import React, {Component} from 'react'
 import {min} from 'd3-array'
 import {select} from 'd3-selection'
-import {geoNaturalEarth1} from 'd3-geo'
+import {geoStereographic} from 'd3-geo'
 import {ComposableMap, ZoomableGroup, Geographies, Geography, Graticule} from 'react-simple-maps'
 import {ResizeSensor} from '@blueprintjs/core'
 import styles from './main.styl'
@@ -31,10 +31,10 @@ class WorldMap extends Component
 
 class WorldMapInner extends Component
   projection: (width, height, config)->
-    return geoNaturalEarth1()
-      .rotate([-10,-52,0])
+    return geoStereographic()
+      .center([0,0])
       .scale(config.scale)
-      .clipExtent(config.extent)
+      #.clipExtent(config.clipExtent)
 
   render: ->
     {width, height} = @props
