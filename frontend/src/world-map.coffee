@@ -25,7 +25,7 @@ class WorldMap extends Component
           height: "auto",
         }}
         >
-        <ZoomableGroup center={[10,52]}>
+        <ZoomableGroup center={[10,52]} style={{cursor: "move"}}>
           <Geographies geography="/api/plates">
             {(geographies, projection) => geographies.map (geography, i)=>
               <Geography
