@@ -4,61 +4,82 @@ import {min} from 'd3-array'
 import {select} from 'd3-selection'
 import {geoNaturalEarth1} from 'd3-geo'
 import {ComposableMap, ZoomableGroup, Geographies, Geography, Graticule} from 'react-simple-maps'
+import {ResizeSensor} from '@blueprintjs/core'
+import styles from './main.styl'
 
 class WorldMap extends Component
+  constructor: ->
+    super arguments...
+    @state = {
+      width: 1100,
+      height: 800
+    }
+
   projection: (width, height, config)->
     return geoNaturalEarth1()
       .rotate([-10,-52,0])
       .scale(config.scale)
 
+  onResize: (entries)=>
+    {width, height} = entries[0].contentRect
+    console.log width, height
+    @setState {width, height}
+
   render: ()->
-    <div>
-      <ComposableMap
-        projection={this.projection}
-        projectionConfig={{
-          scale: 600,
-        }}
-        width={980}
-        height={551}
-        style={{
-          width: "100%",
-          height: "auto",
-        }}
-        >
-        <ZoomableGroup center={[10,52]} style={{cursor: "move"}}>
-          <Geographies geography="/api/plates">
-            {(geographies, projection) => geographies.map (geography, i)=>
-              <Geography
-                key={i}
-                geography={geography}
-                projection={projection}
-                style={{
-                  default: {
-                    fill: "#ECEFF1",
-                    stroke: "#607D8B",
-                    strokeWidth: 0.75,
-                    outline: "none",
-                  },
-                  hover: {
-                    fill: "#607D8B",
-                    stroke: "#607D8B",
-                    strokeWidth: 0.75,
-                    outline: "none",
-                  },
-                  pressed: {
-                    fill: "#FF5722",
-                    stroke: "#607D8B",
-                    strokeWidth: 0.75,
-                    outline: "none",
-                  },
-                }}
-              />
-            }
-          </Geographies>
-          <Graticule />
-        </ZoomableGroup>
-      </ComposableMap>
-    </div>
+    <ResizeSensor onResize={@onResize}>
+      <div className={styles['world-map']}>
+      {@renderInner()}
+      </div>
+    </ResizeSensor>
+
+  renderInner: ->
+    return null unless @state.width?
+    return null unless @state.height?
+    <ComposableMap
+      projection={this.projection}
+      projectionConfig={{
+        scale: 600,
+      }}
+      width={@state.width}
+      height={@state.height}
+      style={{
+        width: "100%",
+        height: "auto",
+      }}
+      >
+      <ZoomableGroup center={[10,52]} style={{cursor: "move"}}>
+        <Geographies geography="/api/plates">
+          {(geographies, projection) => geographies.map (geography, i)=>
+            <Geography
+              key={i}
+              geography={geography}
+              projection={projection}
+              style={{
+                default: {
+                  fill: "#ECEFF1",
+                  stroke: "#607D8B",
+                  strokeWidth: 0.75,
+                  outline: "none",
+                },
+                hover: {
+                  fill: "#607D8B",
+                  stroke: "#607D8B",
+                  strokeWidth: 0.75,
+                  outline: "none",
+                },
+                pressed: {
+                  fill: "#FF5722",
+                  stroke: "#607D8B",
+                  strokeWidth: 0.75,
+                  outline: "none",
+                },
+              }}
+            />
+          }
+        </Geographies>
+        <Graticule />
+      </ZoomableGroup>
+    </ComposableMap>
 
 
 export {WorldMap}
