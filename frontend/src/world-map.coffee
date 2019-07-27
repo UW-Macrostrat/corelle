@@ -2,12 +2,12 @@ import h from '@macrostrat/hyper'
 import React, {Component} from 'react'
 import {min} from 'd3-array'
 import {select} from 'd3-selection'
-import {geoAzimuthalEqualArea} from 'd3-geo'
+import {geoNaturalEarth1} from 'd3-geo'
 import {ComposableMap, ZoomableGroup, Geographies, Geography, Graticule} from 'react-simple-maps'
 
 class WorldMap extends Component
   projection: (width, height, config)->
-    return geoAzimuthalEqualArea()
+    return geoNaturalEarth1()
       .rotate([-10,-52,0])
       .scale(config.scale)
 
