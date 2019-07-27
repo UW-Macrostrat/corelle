@@ -51,38 +51,12 @@ class WorldMapInner extends Component
         height: "auto",
       }}
       >
-      <ZoomableGroup center={[10,52]} style={{cursor: "move"}}>
-        <Graticule />
-        <Geographies geography="/api/plates">
-          {(geographies, projection) => geographies.map (geography, i)=>
-            <Geography
-              key={i}
-              geography={geography}
-              projection={projection}
-              style={{
-                default: {
-                  fill: "#ECEFF1",
-                  stroke: "#607D8B",
-                  strokeWidth: 0.75,
-                  outline: "none",
-                },
-                hover: {
-                  fill: "#607D8B",
-                  stroke: "#607D8B",
-                  strokeWidth: 0.75,
-                  outline: "none",
-                },
-                pressed: {
-                  fill: "#FF5722",
-                  stroke: "#607D8B",
-                  strokeWidth: 0.75,
-                  outline: "none",
-                },
-              }}
-            />
-          }
-        </Geographies>
-      </ZoomableGroup>
+      <ZoomableGroup center={[0,0]} style={{cursor: "move"}}>
+        <Graticule />{
+        h Geographies, {geography: '/api/plates'}, (geographies, projection)=>
+          geographies.map (geography, i)=>
+            h Geography, {key: i, geography, projection, className: 'plate-polygon'}
+      }</ZoomableGroup>
     </ComposableMap>
 
 
