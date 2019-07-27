@@ -68,6 +68,6 @@ class Rotation(Resource):
         return res
 
 
-api.add_resource(Help, '/')
-api.add_resource(ModernPlates, "/plates")
-api.add_resource(Rotation, "/rotate")
+api.add_resource(Help, '/api')
+api.add_resource(ModernPlates, "/api/plates")
+api.add_resource(Rotation, "/api/rotate")

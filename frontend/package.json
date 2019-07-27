@@ -1,0 +1,34 @@
+{
+  "name": "corelle-frontend",
+  "version": "1.0.0",
+  "description": "A frontend for the Corelle plate-rotation application",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npm install && node -r esm dev-server.js"
+  },
+  "author": "Daven Quinn",
+  "license": "ISC",
+  "devDependencies": {
+    "coffeescript": "^2.4.1",
+    "esm": "^3.2.25",
+    "express": "^4.17.1",
+    "http-proxy-middleware": "^0.19.1",
+    "parcel-bundler": "^1.12.3",
+    "stylus": "^0.54.5"
+  },
+  "dependencies": {
+    "@blueprintjs/core": "^3.17.1",
+    "@blueprintjs/datetime": "^3.11.0",
+    "@macrostrat/hyper": "^1.1.1",
+    "@macrostrat/ui-components": "^0.0.7",
+    "d3-array": "^2.2.0",
+    "d3-geo": "^1.11.6",
+    "d3-selection": "^1.4.0",
+    "postcss-modules": "^1.4.1",
+    "quaternion": "^1.1.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-simple-maps": "^0.12.1"
+  }
+}
