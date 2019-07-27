@@ -19,8 +19,9 @@
   },
   "dependencies": {
     "@blueprintjs/core": "^3.17.1",
+    "@blueprintjs/datetime": "^3.11.0",
     "@macrostrat/hyper": "^1.1.1",
-    "@macrostrat/ui-components": "^0.0.4",
+    "@macrostrat/ui-components": "^0.0.5",
     "d3-array": "^2.2.0",
     "d3-geo": "^1.11.6",
     "d3-selection": "^1.4.0",

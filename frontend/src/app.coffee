@@ -1,20 +1,29 @@
+import {Component} from 'react'
 import {WorldMap} from './world-map'
-import hyper from '@macrostrat/hyper'
-import {Slider} from '@blueprintjs/core'
-import styles from './main.styl'
+import ControlPanel from './control-panel'
+import h from '@macrostrat/hyper'
+import {RotationsProvider} from './rotations'
+import T from 'prop-types'
 
-h = hyper.styled(styles)
+class App extends Component
+  constructor: ->
+    super arguments...
+    @state = {
+      time: 0
+      rotations: null
+    }
 
-ControlPanel = ->
-  h 'div.control-panel', [
-    h 'h1', "Corelle"
-    h Slider, {min: 0, max: 2000}
-  ]
+  setTime: (value)=>
+    @setState {time: value}
 
-App = ->
-  h 'div', [
-    h WorldMap
-    h ControlPanel
-  ]
+  render: ->
+    {time} = @state
+    h 'div', [
+      h RotationsProvider, {time}, [
+        h WorldMap
+        h ControlPanel, {time, setTime: @setTime}
+      ]
+    ]
+
 
 export default App
