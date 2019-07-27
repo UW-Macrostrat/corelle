@@ -1,4 +1,4 @@
-import h from '@macrostrat/hyper'
+import hyper from '@macrostrat/hyper'
 import React, {Component} from 'react'
 import {min} from 'd3-array'
 import {select} from 'd3-selection'
@@ -6,6 +6,8 @@ import {geoNaturalEarth1} from 'd3-geo'
 import {ComposableMap, ZoomableGroup, Geographies, Geography, Graticule} from 'react-simple-maps'
 import {ResizeSensor} from '@blueprintjs/core'
 import styles from './main.styl'
+
+h = hyper.styled(styles)
 
 class WorldMap extends Component
   constructor: ->
@@ -15,39 +17,42 @@ class WorldMap extends Component
       height: 800
     }
 
+  onResize: (entries)=>
+    {width, height} = entries[0].contentRect
+    @setState {width, height}
+
+  render: ->
+    {width, height} = @state
+    h ResizeSensor, {onResize: @onResize}, (
+      h 'div.world-map', null, (
+        h WorldMapInner, {width, height}
+      )
+    )
+
+class WorldMapInner extends Component
   projection: (width, height, config)->
     return geoNaturalEarth1()
       .rotate([-10,-52,0])
       .scale(config.scale)
+      .clipExtent(config.extent)
 
-  onResize: (entries)=>
-    {width, height} = entries[0].contentRect
-    console.log width, height
-    @setState {width, height}
-
-  render: ()->
-    <ResizeSensor onResize={@onResize}>
-      <div className={styles['world-map']}>
-      {@renderInner()}
-      </div>
-    </ResizeSensor>
-
-  renderInner: ->
-    return null unless @state.width?
-    return null unless @state.height?
+  render: ->
+    {width, height} = @props
     <ComposableMap
       projection={this.projection}
       projectionConfig={{
         scale: 600,
+        clipExtent: [[0,0],[width, height]]
       }}
-      width={@state.width}
-      height={@state.height}
+      width={width}
+      height={height}
       style={{
         width: "100%",
         height: "auto",
       }}
       >
       <ZoomableGroup center={[10,52]} style={{cursor: "move"}}>
+        <Graticule />
         <Geographies geography="/api/plates">
           {(geographies, projection) => geographies.map (geography, i)=>
             <Geography
@@ -77,7 +82,6 @@ class WorldMap extends Component
             />
           }
         </Geographies>
-        <Graticule />
       </ZoomableGroup>
     </ComposableMap>
 
