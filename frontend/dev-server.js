@@ -15,7 +15,8 @@ const backend = spawn(
 let app = express();
 
 let bundler = new Bundler('./index.html', {
-  scopeHoist: true,
+  // Scope hoisting interferes with CSS bundling apparently
+  //scopeHoist: true,
   detailedReport: true
 });
 const apiProxy = proxy({target: `http://127.0.0.1:${port}`});
