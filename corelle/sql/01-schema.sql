@@ -34,3 +34,11 @@ CREATE TABLE IF NOT EXISTS rotation (
   ref_plate_id integer REFERENCES plate(id),
   metadata text
 );
+
+-- Features that can be clipped by plate IDs and returned
+CREATE TABLE IF NOT EXISTS feature (
+  id serial PRIMARY KEY,
+  dataset_id text NOT NULL,
+  geometry geometry(Geometry, 4326),
+  properties jsonb
+);

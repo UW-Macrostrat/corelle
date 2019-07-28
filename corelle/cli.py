@@ -11,7 +11,7 @@ from click import (
 from os.path import splitext
 
 from .database import initialize
-from .load_data import import_model
+from .load_data import import_model, import_features
 from .rotate import build_cache, get_rotation
 from .api import app
 
@@ -49,6 +49,15 @@ def _import(model_name, plates, rotations, fields=None, drop=False):
     """
     fields = load_fields(fields)
     import_model(model_name, plates, rotations, fields=fields,drop=False)
+
+@cli.command(name='import-features')
+@argument('name')
+@argument('file', type=file)
+def _import_features(name, file):
+    """
+    Import features that can be associated with the models
+    """
+    import_features(name, file)
 
 @cli.command(name='cache')
 def cache():

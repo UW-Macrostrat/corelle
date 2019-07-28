@@ -28,3 +28,15 @@ init:
 
 update_functions:
 	cat corelle/sql/02-functions.sql | psql plate-rotations
+
+baseurl := https://raw.githubusercontent.com/martynafford/natural-earth-geojson/master
+
+load_features:
+	-mkdir temp
+	curl -o temp/ne_110m_land.json \
+		$(baseurl)/110m/physical/ne_110m_land.json
+	curl -o temp/ne_50m_land.json \
+		$(baseurl)/50m/physical/ne_50m_land.json
+	plates import-features ne_110m_land temp/ne_110m_land.json
+	plates import-features ne_50m_land temp/ne_50m_land.json
+	rm -rf temp

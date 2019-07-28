@@ -6,6 +6,7 @@ from time import perf_counter
 from json import dumps
 import fiona
 import csv
+from click import echo, style
 
 from .database import db, create_session
 
@@ -28,21 +29,18 @@ def get_model(name):
     ).first()[0]
 
 __plate = reflect_table(db,'plate')
+__feature = reflect_table(db, 'feature')
 __rotation = reflect_table(db,'rotation')
 __plate_polygon = reflect_table(db, 'plate_polygon')
 
-def insert_plate(**vals):
-    vals_1 = {k:v for k,v in vals.items() if v is not None}
-    stmt = (insert(__plate)
-        .values(vals_1)
-        .on_conflict_do_nothing())
-    connect().execute(stmt)
+def pg_geometry(feature):
+    geom = dumps(feature['geometry'])
+    _ = func.ST_GeomFromGeoJSON(geom)
+    return func.ST_SetSRID(func.ST_Multi(_), 4326)
 
-def import_feature(model_id, feature, fields=None):
+def import_plate(model_id, feature, fields=None):
 
     conn = connect()
-    geom = dumps(feature['geometry'])
-    p = feature['properties']
 
     def field(field_id):
         # If we have provided a mapping of fields for the input
@@ -53,7 +51,7 @@ def import_feature(model_id, feature, fields=None):
 
     plate_id = field("id")
 
-    insert_plate(
+    vals = dict(
         id=plate_id,
         model_id=model_id,
         parent_id=field('parent_id'),
@@ -61,23 +59,23 @@ def import_feature(model_id, feature, fields=None):
         cotid=field('cotid'),
         coid=field('coid'))
 
-    _ = func.ST_GeomFromGeoJSON(geom)
-    geom = func.ST_SetSRID(func.ST_Multi(_), 4326)
+    conn.execute(insert(__plate)
+        .values(vals)
+        .on_conflict_do_nothing())
 
     young_lim = field('young_lim')
     if young_lim == -999:
         young_lim = None
+
     poly_vals = dict(
         plate_id=plate_id,
         young_lim=young_lim,
         old_lim=field('old_lim'),
-        geometry=geom)
+        geometry=pg_geometry(feature))
 
-    stmt = (__plate_polygon
+    conn.execute(__plate_polygon
             .insert()
             .values(poly_vals))
-
-    conn.execute(stmt)
 
 def import_plates(model_id, plates, fields={}):
     session = create_session()
@@ -100,9 +98,31 @@ def import_plates(model_id, plates, fields={}):
             name='Spin axis')
 
         for feature in src:
-            import_feature(model_id, feature, fields=fields)
+            import_plate(model_id, feature, fields=fields)
 
         trans.commit()
+
+def import_feature(dataset, feature):
+    conn = connect()
+
+    vals = dict(
+        dataset_id=dataset,
+        properties=(feature['properties'] or None),
+        geometry=pg_geometry(feature))
+
+    conn.execute(__feature
+            .insert()
+            .values(vals))
+
+def import_features(name, features):
+    session = create_session()
+    with fiona.open(features, 'r') as src:
+        conn = connect()
+        trans = conn.begin()
+        for i, feature in enumerate(src):
+            import_feature(name, feature)
+        trans.commit()
+    echo(f"Imported {i+1} features for dataset "+style(name, bold=True))
 
 def import_rotation_row(model_id, line):
     """
