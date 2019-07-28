@@ -15,7 +15,7 @@ time requested, allowing the poles to be further
 processed without scaling.
 */
 CREATE OR REPLACE FUNCTION rotation_sequence(
-  integer, numeric
+  integer, integer, numeric
 )
 RETURNS SETOF rotation_returntype AS $$
 WITH plate_rotation AS (
@@ -29,19 +29,20 @@ SELECT
 	ref_plate_id
 FROM rotation
 WHERE plate_id = $1
+  AND model_id = $2
 ORDER BY t_step
 ),
 reduced_time AS (
 SELECT
 	*,
-	least(t_orig_end, $2) t_end
+	least(t_orig_end, $3) t_end
 FROM plate_rotation
-WHERE t_start < $2
+WHERE t_start < $3
 ),
 c AS (
 SELECT *,
 	CASE
-		WHEN t_orig_end > $2
+		WHEN t_orig_end > $3
 		THEN (t_end-t_start)/(t_orig_end-t_start)*orig_angle
 		ELSE orig_angle
 	END angle

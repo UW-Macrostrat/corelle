@@ -11,15 +11,16 @@ class App extends Component
     @state = {
       time: 0
       rotations: null
+      model: "Seton2012"
     }
 
   setTime: (value)=>
     @setState {time: value}
 
   render: ->
-    {time} = @state
+    {time, model} = @state
     h 'div', [
-      h RotationsProvider, {time}, [
+      h RotationsProvider, {model, time}, [
         h WorldMap
         h ControlPanel, {time, setTime: @setTime}
       ]

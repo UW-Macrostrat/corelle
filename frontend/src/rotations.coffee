@@ -24,12 +24,14 @@ quat2euler = (q)->
 class __RotationsProvider extends Component
   @propTypes: {
     time: T.number.isRequired
+    model: T.string.isRequired
     rotations: T.arrayOf(T.object)
   }
   render: ->
-    {rotations, time} = @props
+    {rotations, time, model} = @props
     value = {
       rotations,
+      model,
       time,
       plateRotation: @plateRotation
       rotatedProjection: @rotatedProjection
@@ -58,14 +60,14 @@ class __RotationsProvider extends Component
     return projection.rotate(angles)
 
 RotationsProvider = (props)->
-  {time, children} = props
+  {time, children, model} = props
   h APIResultView, {
     route: "/api/rotate",
-    params: {time, quaternion: true}
+    params: {time, model, quaternion: true}
     placeholder: null
     debounce: 1000
   }, (data)=>
-    h __RotationsProvider, {time, rotations: data}, children
+    h __RotationsProvider, {time, model, rotations: data}, children
 
 RotationsProvider.propTypes = __RotationsProvider.propTypes
 

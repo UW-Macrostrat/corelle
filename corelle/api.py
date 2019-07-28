@@ -18,10 +18,10 @@ class Help(Resource):
     def get(self):
         return {'routes': []}
 
-def get_plate_polygons():
+def get_plate_polygons(model):
     fn = relative_path(__file__, 'query', 'modern-plate-polygons.sql')
     sql = text(open(fn).read())
-    results = conn.execute(sql)
+    results = conn.execute(sql, model_name=model)
     for row in results:
         props = dict(row)
         geom = loads(props.pop("geometry"))
@@ -32,29 +32,37 @@ def get_plate_polygons():
             geometry = geom)
 
 class ModernPlates(Resource):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.parser = RequestParser()
+        self.parser.add_argument('model', type=str, required=True)
+
     def get(self):
-        return list(get_plate_polygons())
+        args = self.parser.parse_args()
+        return list(get_plate_polygons(args['model']))
 
 r = RequestParser()
 r.add_argument('plate_id', type=int)
 r.add_argument('time', required=True)
 r.add_argument('quaternion', type=bool, default=False)
+r.add_argument('model', type=str, required=True)
 
 class Rotation(Resource):
     def get(self):
         args = r.parse_args()
+
         if args['plate_id']:
             return self.get_single(args)
 
         return list(self.get_all(args))
 
     def get_all(self, args):
-        for (plate_id, q) in get_all_rotations(args['time']):
+        for (plate_id, q) in get_all_rotations(args['model'], args['time']):
             yield self.reducer(q, plate_id, args)
 
     def get_single(self, args):
         plate_id = args['plate_id']
-        q = get_rotation(plate_id, args['time'])
+        q = get_rotation(args['model_id'], plate_id, args['time'])
         return self.reducer(q, plate_id, args)
 
     def reducer(self, q, plate_id, args):
@@ -67,7 +75,13 @@ class Rotation(Resource):
         res['plate_id'] = plate_id
         return res
 
+class Model(Resource):
+    def get(self):
+        results = conn.execute("SELECT id, name FROM model")
+        return [dict(r) for r in results]
+
 
 api.add_resource(Help, '/api')
 api.add_resource(ModernPlates, "/api/plates")
 api.add_resource(Rotation, "/api/rotate")
+api.add_resource(Model, "/api/model")

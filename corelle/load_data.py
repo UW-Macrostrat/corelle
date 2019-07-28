@@ -38,6 +38,12 @@ def pg_geometry(feature):
     _ = func.ST_GeomFromGeoJSON(geom)
     return func.ST_SetSRID(func.ST_Multi(_), 4326)
 
+def insert_plate(**vals):
+    connect().execute(
+        insert(__plate)
+            .values(vals)
+            .on_conflict_do_nothing())
+
 def import_plate(model_id, feature, fields=None):
 
     conn = connect()
@@ -51,7 +57,7 @@ def import_plate(model_id, feature, fields=None):
 
     plate_id = field("id")
 
-    vals = dict(
+    insert_plate(
         id=plate_id,
         model_id=model_id,
         parent_id=field('parent_id'),
@@ -59,16 +65,13 @@ def import_plate(model_id, feature, fields=None):
         cotid=field('cotid'),
         coid=field('coid'))
 
-    conn.execute(insert(__plate)
-        .values(vals)
-        .on_conflict_do_nothing())
-
     young_lim = field('young_lim')
     if young_lim == -999:
         young_lim = None
 
     poly_vals = dict(
         plate_id=plate_id,
+        model_id=model_id,
         young_lim=young_lim,
         old_lim=field('old_lim'),
         geometry=pg_geometry(feature))
@@ -87,13 +90,15 @@ def import_plates(model_id, plates, fields={}):
         if fields:
             mrf = fields.get("mantle_reference_frame", None)
         if mrf is not None:
-            insert_plate(id=mrf,
-                    model_id=model_id,
-                    name='Mantle reference frame')
+            insert_plate(
+                id=mrf,
+                model_id=model_id,
+                name='Mantle reference frame')
 
         # The spin axis is assumed to have plate ID 0 by default
         spin_axis = fields.get("spin_axis", 0)
-        insert_plate(id=spin_axis,
+        insert_plate(
+            id=spin_axis,
             model_id=model_id,
             name='Spin axis')
 
@@ -141,6 +146,9 @@ def import_rotation_row(model_id, line):
     data, meta = line.strip().split("!",1)
     row = data.split()
 
+    if int(row[0]) == 999:
+        return
+
     # Insert first plate id
     plate_id = row[0]
     ref_plate_id = row[5]
@@ -157,6 +165,7 @@ def import_rotation_row(model_id, line):
 
     vals = dict(
         plate_id=plate_id,
+        model_id=model_id,
         t_step=row[1],
         latitude=row[2],
         longitude=row[3],

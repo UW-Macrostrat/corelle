@@ -43,6 +43,7 @@ PlatePolygon = (props)->
 
 
 class WorldMapInner extends Component
+  @contextType: RotationsContext
   projection: (width, height, config)->
     return geoStereographic()
       .center([0,0])
@@ -51,7 +52,7 @@ class WorldMapInner extends Component
 
   render: ->
     {width, height} = @props
-    ctx = @context
+    {model} = @context
     <ComposableMap
       projection={this.projection}
       projectionConfig={{
@@ -67,7 +68,7 @@ class WorldMapInner extends Component
       >
       <ZoomableGroup center={[0,0]} style={{cursor: "move"}}>
         <Graticule />{
-        h Geographies, {geography: '/api/plates'}, (geographies, projection)=>
+        h Geographies, {geography: "/api/plates?model=#{model}"}, (geographies, projection)=>
           geographies.map (geography, i)=>
             h PlatePolygon, {key: i, geography, projection}
       }</ZoomableGroup>
