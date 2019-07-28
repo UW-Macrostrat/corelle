@@ -31,15 +31,5 @@ update_functions:
 
 baseurl := https://raw.githubusercontent.com/martynafford/natural-earth-geojson/master
 
-load_features:
-	-mkdir temp
-	curl -o temp/ne_110m_land.json \
-		$(baseurl)/110m/physical/ne_110m_land.json
-	curl -o temp/ne_50m_land.json \
-		$(baseurl)/50m/physical/ne_50m_land.json
-	curl -o temp/macrostrat_columns.json "https://macrostrat.org/api/v2/columns?all&format=geojson"
-	cat temp/macrostrat_columns.json | jq .success.data > temp/macrostrat_columns2.json
-	plates import-features --overwrite ne_110m_land temp/ne_110m_land.json
-	plates import-features --overwrite ne_50m_land temp/ne_50m_land.json
-	plates import-features --overwrite macrostrat_columns temp/macrostrat_columns2.json
-	rm -rf temp
+load_features: bin/load-features
+	./$^
