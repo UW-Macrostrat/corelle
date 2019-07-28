@@ -28,8 +28,8 @@ SELECT
 	angle orig_angle,
 	ref_plate_id
 FROM rotation
-WHERE plate_id = $1
-  AND model_id = $2
+WHERE plate_id = $2
+  AND model_id = $1
 ORDER BY t_step
 ),
 reduced_time AS (
