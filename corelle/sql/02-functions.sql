@@ -1,3 +1,4 @@
+DROP TYPE rotation_returntype CASCADE;
 CREATE TYPE rotation_returntype AS (
 	plate_id integer,
 	ref_plate_id integer,

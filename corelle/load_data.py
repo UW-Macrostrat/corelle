@@ -37,31 +37,39 @@ def insert_plate(**vals):
         .on_conflict_do_nothing())
     connect().execute(stmt)
 
-def import_feature(model_id, feature):
+def import_feature(model_id, feature, fields=None):
+
     conn = connect()
     geom = dumps(feature['geometry'])
     p = feature['properties']
 
-    plate_id = p["PlateID"]
+    def field(field_id):
+        # If we have provided a mapping of fields for the input
+        # geojson file, we should use these fields for
+        if fields and field_id in fields:
+            field_id = fields[field_id]
+        return feature['properties'].get(field_id, None)
+
+    plate_id = field("id")
 
     insert_plate(
         id=plate_id,
         model_id=model_id,
-        parent_id=p['ParentPlat'],
-        name=p['PlateName'],
-        cotid=p['COTID'],
-        coid=p['COID'])
+        parent_id=field('parent_id'),
+        name=field('name'),
+        cotid=field('cotid'),
+        coid=field('coid'))
 
     _ = func.ST_GeomFromGeoJSON(geom)
     geom = func.ST_SetSRID(func.ST_Multi(_), 4326)
 
-    young_lim = p['LimYngP']
+    young_lim = field('young_lim')
     if young_lim == -999:
         young_lim = None
     poly_vals = dict(
         plate_id=plate_id,
         young_lim=young_lim,
-        old_lim=p['LimOldP'],
+        old_lim=field('old_lim'),
         geometry=geom)
 
     stmt = (__plate_polygon
@@ -70,21 +78,26 @@ def import_feature(model_id, feature):
 
     conn.execute(stmt)
 
-def import_plates(model_id, plates):
+def import_plates(model_id, plates, fields=None):
     session = create_session()
     with fiona.open(plates, 'r') as src:
         conn = connect()
         trans = conn.begin()
 
-        insert_plate(id=0,
-                model_id=model_id,
-                name='Mantle reference frame')
-        insert_plate(id=800,
-                model_id=model_id,
-                name='Spin axis')
+        if model_id == "PaleoPlates":
+            insert_plate(id=0,
+                    model_id=model_id,
+                    name='Mantle reference frame')
+            insert_plate(id=800,
+                    model_id=model_id,
+                    name='Spin axis')
+        else:
+            insert_plate(id=0,
+                    model_id=model_id,
+                    name='Spin axis')
 
         for feature in src:
-            import_feature(model_id, feature)
+            import_feature(model_id, feature, fields=fields)
 
         trans.commit()
 
@@ -141,8 +154,7 @@ def import_rotations(model_id, rotations):
         elapsed = perf_counter()-start
         print(f"Imported {i+1} rotations in {elapsed} seconds")
 
-def import_model(name, plates, rotations, drop=False):
+def import_model(name, plates, rotations, fields=None, drop=False):
     model_id = get_model(name)
-    import_plates(model_id, plates)
+    import_plates(model_id, plates, fields=fields)
     import_rotations(model_id, rotations)
-
