@@ -53,11 +53,12 @@ def _import(model_name, plates, rotations, fields=None, drop=False):
 @cli.command(name='import-features')
 @argument('name')
 @argument('file', type=file)
-def _import_features(name, file):
+@option('--overwrite', is_flag=True, default=False)
+def _import_features(name, file, overwrite=False):
     """
     Import features that can be associated with the models
     """
-    import_features(name, file)
+    import_features(name, file, overwrite=False)
 
 @cli.command(name='cache')
 def cache():

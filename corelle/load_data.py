@@ -114,11 +114,18 @@ def import_feature(dataset, feature):
             .insert()
             .values(vals))
 
-def import_features(name, features):
+def import_features(name, features, overwrite=False):
     session = create_session()
+
     with fiona.open(features, 'r') as src:
         conn = connect()
         trans = conn.begin()
+
+        if overwrite:
+            conn.execute(__feature
+                .delete()
+                .where(__feature.c.dataset_id == dataset))
+
         for i, feature in enumerate(src):
             import_feature(name, feature)
         trans.commit()
