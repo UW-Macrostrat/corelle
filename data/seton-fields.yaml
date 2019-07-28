@@ -1,5 +1,7 @@
-id: PlateID
+id: PLATEID1
 young_lim: TOAGE
 old_lim: FROMAGE
 parent_id: PLATEID2
-name: NAME
+name: Name
+# Continent name
+coid: TYPE

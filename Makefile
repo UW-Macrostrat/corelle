@@ -14,12 +14,15 @@ init:
 		data/eglington/PlatePolygons2016All.json \
 		data/eglington/T_Rot_Model_PalaeoPlates_2019_20190302_experiment.rot
 	plates import "Seton2012" \
+		--fields data/seton-fields.yaml \
 		data/seton_2012.geojson \
 		data/seton_2012.rot
 	plates import "Wright2013" \
+		--fields data/wright-fields.yaml \
 		data/wright_plates.geojson \
 		data/wright_2013.rot
 	plates import "Scotese" \
+		--fields data/scotese-fields.yaml \
 		data/scotese.geojson \
 		data/scotese.rot
 

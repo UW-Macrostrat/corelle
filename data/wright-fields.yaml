@@ -1,0 +1,5 @@
+id: plateid1
+young_lim: toage
+old_lim: fromage
+parent_id: plateid2
+name: name

@@ -32,8 +32,9 @@ __rotation = reflect_table(db,'rotation')
 __plate_polygon = reflect_table(db, 'plate_polygon')
 
 def insert_plate(**vals):
+    vals_1 = {k:v for k,v in vals.items() if v is not None}
     stmt = (insert(__plate)
-        .values(vals)
+        .values(vals_1)
         .on_conflict_do_nothing())
     connect().execute(stmt)
 
@@ -78,23 +79,25 @@ def import_feature(model_id, feature, fields=None):
 
     conn.execute(stmt)
 
-def import_plates(model_id, plates, fields=None):
+def import_plates(model_id, plates, fields={}):
     session = create_session()
     with fiona.open(plates, 'r') as src:
         conn = connect()
         trans = conn.begin()
 
-        if model_id == "PaleoPlates":
-            insert_plate(id=0,
+        mrf = None
+        if fields:
+            mrf = fields.get("mantle_reference_frame", None)
+        if mrf is not None:
+            insert_plate(id=mrf,
                     model_id=model_id,
                     name='Mantle reference frame')
-            insert_plate(id=800,
-                    model_id=model_id,
-                    name='Spin axis')
-        else:
-            insert_plate(id=0,
-                    model_id=model_id,
-                    name='Spin axis')
+
+        # The spin axis is assumed to have plate ID 0 by default
+        spin_axis = fields.get("spin_axis", 0)
+        insert_plate(id=spin_axis,
+            model_id=model_id,
+            name='Spin axis')
 
         for feature in src:
             import_feature(model_id, feature, fields=fields)
@@ -132,7 +135,8 @@ def import_rotation_row(model_id, line):
         longitude=row[3],
         angle=row[4],
         ref_plate_id=ref_plate_id,
-        metadata=meta)
+        # Postgres chokes on NULL characters in strings
+        metadata=meta.replace('\x00', ''))
     _ = __rotation.insert().values(vals)
     conn.execute(_)
 
@@ -152,7 +156,7 @@ def import_rotations(model_id, rotations):
         for i, line in enumerate(f):
             import_rotation_row(model_id, line)
         elapsed = perf_counter()-start
-        print(f"Imported {i+1} rotations in {elapsed} seconds")
+        print(f"Imported {i+1} rotations in {elapsed:.2f} seconds")
 
 def import_model(name, plates, rotations, fields=None, drop=False):
     model_id = get_model(name)

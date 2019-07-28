@@ -7,3 +7,6 @@ name: PlateName
 cotid: COTID
 # Continent name
 coid: COID
+# Plate IDs
+spin_axis: 800
+mantle_reference_frame: 0
