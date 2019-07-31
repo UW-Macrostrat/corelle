@@ -8,21 +8,24 @@ h = hyper.styled(styles)
 
 ControlPanel = (props)->
   {time, setTime} = props
+  max = 500
   h 'div.control-panel', [
     h 'h1', "Corelle"
     h Slider, {
       min: 0,
-      max: 500,
+      max,
       initialValue: 0
-      labelStepSize: 100
+      labelStepSize: max/5
       labelRenderer: (val)->
-        if val == 500
+        if val == max
           return null
         if val == 0
           return "now"
         "#{val} Ma"
       value: time,
-      onChange: setTime or ->
+      onChange: (v)->
+        if setTime?
+          setTime(v)
     }
     props.children
   ]

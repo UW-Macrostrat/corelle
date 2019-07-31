@@ -1,7 +1,11 @@
 SELECT
- p.id
+  p.id
 FROM plate p
 JOIN plate_polygon pp
   ON p.id = pp.plate_id
-WHERE pp.old_lim > :time
+ AND p.model_id = pp.model_id
+JOIN model m
+  ON p.model_id = m.id
+WHERE m.name = :model_name
+  AND pp.old_lim > :time
   AND coalesce(pp.young_lim, 0) < :time

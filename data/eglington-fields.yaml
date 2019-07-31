@@ -1,0 +1,12 @@
+id: PlateID
+young_lim: LimYngP
+old_lim: LimOldP
+parent_id: ParentPlat
+name: PlateName
+# Is it continental or oceanic?
+cotid: COTID
+# Continent name
+coid: COID
+# Plate IDs
+spin_axis: 800
+mantle_reference_frame: 0

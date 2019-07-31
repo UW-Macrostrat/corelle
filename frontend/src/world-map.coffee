@@ -2,7 +2,7 @@ import hyper from '@macrostrat/hyper'
 import React, {Component, useContext} from 'react'
 import {min} from 'd3-array'
 import {select} from 'd3-selection'
-import {geoStereographic} from 'd3-geo'
+import {geoStereographic, geoTransform} from 'd3-geo'
 import {ComposableMap, ZoomableGroup, Geographies, Geography, Graticule} from 'react-simple-maps'
 import {ResizeSensor} from '@blueprintjs/core'
 import {RotationsContext} from './rotations'
@@ -32,17 +32,29 @@ class WorldMap extends Component
 
 PlatePolygon = (props)->
   {geography, projection} = props
-  {rotatedProjection} = useContext(RotationsContext) or {}
+  {geographyRotator} = useContext(RotationsContext) or {}
   {id} = geography
-  if not rotatedProjection?
+  if not geographyRotator?
     return null
-  projection = rotatedProjection(id, projection)
-  if not projection?
-    return null
-  h Geography, {key: id, geography, projection, className: 'plate-polygon'}
+  rotate = geographyRotator id
+
+  trans = geoTransform {
+    point: (lon,lat)->
+      [x,y] = rotate [lon,lat]
+      this.stream.point(x,y)
+  }
+
+  stream = (s)->
+    # This ordering makes no sense but whatever
+    # https://stackoverflow.com/questions/27557724/what-is-the-proper-way-to-use-d3s-projection-stream
+    trans.stream(projection.stream(s))
+  combinedProj = {stream}
+
+  h Geography, {key: id, geography, projection: combinedProj, className: 'plate-polygon'}
 
 
 class WorldMapInner extends Component
+  @contextType: RotationsContext
   projection: (width, height, config)->
     return geoStereographic()
       .center([0,0])
@@ -51,7 +63,7 @@ class WorldMapInner extends Component
 
   render: ->
     {width, height} = @props
-    ctx = @context
+    {model} = @context
     <ComposableMap
       projection={this.projection}
       projectionConfig={{
@@ -67,8 +79,9 @@ class WorldMapInner extends Component
       >
       <ZoomableGroup center={[0,0]} style={{cursor: "move"}}>
         <Graticule />{
-        h Geographies, {geography: '/api/plates'}, (geographies, projection)=>
+        h Geographies, {geography: "/api/plates?model=#{model}"}, (geographies, projection)=>
           geographies.map (geography, i)=>
+            #return null if i > 100
             h PlatePolygon, {key: i, geography, projection}
       }</ZoomableGroup>
     </ComposableMap>

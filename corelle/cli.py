@@ -1,15 +1,17 @@
 import warnings
 warnings.filterwarnings("ignore")
 
+import json, yaml
 import numpy as N
 from IPython import embed
 
 from click import (
     group, argument, option,
     echo, style, Path)
+from os.path import splitext
 
 from .database import initialize
-from .load_data import import_model
+from .load_data import import_model, import_features
 from .rotate import build_cache, get_rotation
 from .api import app
 
@@ -24,16 +26,39 @@ def init(drop=False):
 
 file = Path(exists=True, dir_okay=False)
 
+def load_fields(fn):
+    if not fn:
+        return None
+    ext = splitext(fn)[1]
+    with open(fn, "r") as f:
+        if ext == '.json':
+            return json.load(f)
+        if ext in ['.yaml', '.yml']:
+            return yaml.load(f)
+    return None
+
 @cli.command(name='import')
 @argument('model_name')
 @argument('plates', type=file)
 @argument('rotations', type=file)
+@option('--fields', type=file)
 @option('--drop', is_flag=True, default=False)
-def _import(model_name, plates, rotations, drop=False):
+def _import(model_name, plates, rotations, fields=None, drop=False):
     """
     Import a plate-rotation model
     """
-    import_model(model_name, plates, rotations, drop=False)
+    fields = load_fields(fields)
+    import_model(model_name, plates, rotations, fields=fields,drop=False)
+
+@cli.command(name='import-features')
+@argument('name')
+@argument('file', type=file)
+@option('--overwrite', is_flag=True, default=False)
+def _import_features(name, file, overwrite=False):
+    """
+    Import features that can be associated with the models
+    """
+    import_features(name, file, overwrite=False)
 
 @cli.command(name='cache')
 def cache():
@@ -43,13 +68,15 @@ def cache():
     build_cache()
 
 @cli.command(name='rotate')
+@argument('model', type=str)
 @argument('plate', type=int)
 @argument('time', type=float)
-def rotate(plate, time):
+@option('--verbose','-v', is_flag=True, default=False)
+def rotate(model, plate, time, verbose=False):
     """
     Rotate a plate to a time
     """
-    q = get_rotation(plate, time)
+    q = get_rotation(model, plate, time, verbose=verbose)
     angle = N.degrees(q.angle())
     echo(f"Rotate {angle:.2f}° around {q.vec}")
 

@@ -1,0 +1,5 @@
+id: PlateID
+young_lim: TOAGE
+old_lim: FROMAGE
+parent_id: PLATEID2
+name: NAME

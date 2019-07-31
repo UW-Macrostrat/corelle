@@ -3,6 +3,8 @@ import h from 'react-hyperscript'
 import {APIResultView, APIContext} from '@macrostrat/ui-components'
 import T from 'prop-types'
 import Quaternion from 'quaternion'
+import {geoRotation} from 'd3-geo'
+import {sum} from 'd3-array'
 
 # Drag to rotate globe
 # http://bl.ocks.org/ivyywang/7c94cb5a3accd9913263
@@ -13,26 +15,53 @@ RotationsContext = createContext {rotations: null}
 
 # Should replace with inbuilt quaternion function
 to_degrees = 180 / Math.PI
+to_radians = Math.PI / 180
 quat2euler = (q)->
   {w,x,y,z} = q
-  return [
-    Math.atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y)) * to_degrees,
-    Math.asin(Math.max(-1, Math.min(1, 2 * (w * y - z * x)))) * to_degrees,
-    Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)) * to_degrees
+  # Half angle
+  __ang = Math.acos(w)
+  s = Math.sin(__ang)
+
+  angle = 2 * __ang * to_degrees
+  lat = Math.asin(z/s) * to_degrees
+  lon = Math.atan2(y/s,x/s) * to_degrees
+
+  return [lat, lon, angle]
+
+sph2cart = (point)->
+  [lon, lat] = point
+  _lon = lon * to_radians
+  _lat = lat * to_radians
+  vec = [
+    Math.cos(_lat)*Math.cos(_lon)
+    Math.cos(_lat)*Math.sin(_lon)
+    Math.sin(_lat)
   ]
+  #sq = (d)->Math.pow(d,2)
+  #norm = Math.sqrt(sum(vec.map(sq)))
+  return vec#.map (d)->d/norm
+
+cart2sph = (vec)->
+  [x,y,z] = vec
+  lat = Math.asin(z) * to_degrees
+  lon = Math.atan2(y, x) * to_degrees
+  return [lon, lat]
 
 class __RotationsProvider extends Component
   @propTypes: {
     time: T.number.isRequired
+    model: T.string.isRequired
     rotations: T.arrayOf(T.object)
   }
   render: ->
-    {rotations, time} = @props
+    {rotations, time, model} = @props
     value = {
       rotations,
+      model,
       time,
       plateRotation: @plateRotation
       rotatedProjection: @rotatedProjection
+      geographyRotator: @geographyRotator
     }
 
     h RotationsContext.Provider, {
@@ -47,6 +76,21 @@ class __RotationsProvider extends Component
     q = Quaternion(rot.quaternion)
     return q
 
+  geographyRotator: (id)=>
+    {time} = @props
+    identity = (arr)->arr
+    if time == 0
+      return identity
+    q = @plateRotation(id)
+    if not q?
+      return identity
+    #angles = quat2euler(q)
+    return (point)->
+      vec = sph2cart(point)
+      v1 = q.rotateVector(vec)
+      return cart2sph(v1)
+    #return geoRotation(angles)
+
   rotatedProjection: (id, projection)=>
     {time} = @props
     if time == 0
@@ -55,17 +99,19 @@ class __RotationsProvider extends Component
     if not q?
       return null
     angles = quat2euler(q)
-    return projection.rotate(angles)
+    #console.log angles
+    return ->
+      projection.apply @, arguments
 
 RotationsProvider = (props)->
-  {time, children} = props
+  {time, children, model} = props
   h APIResultView, {
     route: "/api/rotate",
-    params: {time, quaternion: true}
+    params: {time, model, quaternion: true}
     placeholder: null
     debounce: 1000
   }, (data)=>
-    h __RotationsProvider, {time, rotations: data}, children
+    h __RotationsProvider, {time, model, rotations: data}, children
 
 RotationsProvider.propTypes = __RotationsProvider.propTypes
 

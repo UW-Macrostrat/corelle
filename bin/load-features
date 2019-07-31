@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# Make a temp dir
+tempdir=$(mktemp -d)
+trap 'rm -rf "$tempdir"' EXIT
+
+cd "$tempdir"
+
+# Import 50m Natural Earth data
+baseurl="https://raw.githubusercontent.com/martynafford/natural-earth-geojson/master"
+ds=ne_110m_land
+fn="$ds.json"
+curl -o "$fn" "$baseurl/110m/physical/$ds.json"
+
+plates import-features --overwrite $ds $fn
+
+
+# Import Macrostrat polygons
+ds="macrostrat_columns"
+fn="$ds.json"
+
+curl "https://macrostrat.org/api/v2/columns?all&format=geojson" \
+| jq .success.data > $fn
+
+plates import-features --overwrite $ds $fn
