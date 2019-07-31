@@ -71,11 +71,12 @@ def cache():
 @argument('model', type=str)
 @argument('plate', type=int)
 @argument('time', type=float)
-def rotate(model, plate, time):
+@option('--verbose','-v', is_flag=True, default=False)
+def rotate(model, plate, time, verbose=False):
     """
     Rotate a plate to a time
     """
-    q = get_rotation(model, plate, time)
+    q = get_rotation(model, plate, time, verbose=verbose)
     angle = N.degrees(q.angle())
     echo(f"Rotate {angle:.2f}° around {q.vec}")
 

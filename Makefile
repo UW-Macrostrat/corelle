@@ -1,6 +1,6 @@
 all: install
 
-.PHONY: install init update_functions
+.PHONY: install init update_functions test
 
 install:
 	pip install -r requirements.txt
@@ -33,3 +33,6 @@ baseurl := https://raw.githubusercontent.com/martynafford/natural-earth-geojson/
 
 load_features: bin/load-features
 	./$^
+
+test:
+	bin/run-tests

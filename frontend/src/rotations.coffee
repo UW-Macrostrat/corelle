@@ -3,6 +3,7 @@ import h from 'react-hyperscript'
 import {APIResultView, APIContext} from '@macrostrat/ui-components'
 import T from 'prop-types'
 import Quaternion from 'quaternion'
+import {geoRotation} from 'd3-geo'
 
 # Drag to rotate globe
 # http://bl.ocks.org/ivyywang/7c94cb5a3accd9913263
@@ -15,11 +16,15 @@ RotationsContext = createContext {rotations: null}
 to_degrees = 180 / Math.PI
 quat2euler = (q)->
   {w,x,y,z} = q
-  return [
-    Math.atan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y)) * to_degrees,
-    Math.asin(Math.max(-1, Math.min(1, 2 * (w * y - z * x)))) * to_degrees,
-    Math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)) * to_degrees
-  ]
+  # Half angle
+  __ang = Math.acos(w)
+  s = Math.sin(__ang)
+
+  angle = 2 * __ang * to_degrees
+  lat = Math.asin(z/s) * to_degrees
+  lon = Math.atan2(y/s,x/s) * to_degrees
+
+  return [lat, lon, angle]
 
 class __RotationsProvider extends Component
   @propTypes: {
@@ -35,6 +40,7 @@ class __RotationsProvider extends Component
       time,
       plateRotation: @plateRotation
       rotatedProjection: @rotatedProjection
+      geographyRotator: @geographyRotator
     }
 
     h RotationsContext.Provider, {
@@ -49,6 +55,19 @@ class __RotationsProvider extends Component
     q = Quaternion(rot.quaternion)
     return q
 
+  geographyRotator: (id)=>
+    {time} = @props
+    identity = (arr)->arr
+    if time == 0
+      return identity
+    q = @plateRotation(id)
+    if not q?
+      return identity
+    #angles = quat2euler(q)
+    angles = [0.2, 0.01, 0.01]
+    #console.log angles
+    return geoRotation(angles)
+
   rotatedProjection: (id, projection)=>
     {time} = @props
     if time == 0
@@ -57,7 +76,9 @@ class __RotationsProvider extends Component
     if not q?
       return null
     angles = quat2euler(q)
-    return projection.rotate(angles)
+    #console.log angles
+    return ->
+      projection.apply @, arguments
 
 RotationsProvider = (props)->
   {time, children, model} = props

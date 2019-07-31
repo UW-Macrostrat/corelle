@@ -2,7 +2,7 @@ import hyper from '@macrostrat/hyper'
 import React, {Component, useContext} from 'react'
 import {min} from 'd3-array'
 import {select} from 'd3-selection'
-import {geoStereographic} from 'd3-geo'
+import {geoStereographic, geoTransform} from 'd3-geo'
 import {ComposableMap, ZoomableGroup, Geographies, Geography, Graticule} from 'react-simple-maps'
 import {ResizeSensor} from '@blueprintjs/core'
 import {RotationsContext} from './rotations'
@@ -32,14 +32,24 @@ class WorldMap extends Component
 
 PlatePolygon = (props)->
   {geography, projection} = props
-  {rotatedProjection} = useContext(RotationsContext) or {}
+  {geographyRotator} = useContext(RotationsContext) or {}
   {id} = geography
-  if not rotatedProjection?
+  if not geographyRotator?
     return null
-  projection = rotatedProjection(id, projection)
-  if not projection?
-    return null
-  h Geography, {key: id, geography, projection, className: 'plate-polygon'}
+  rotate = geographyRotator id
+  console.log rotate([0,0])
+
+  trans = geoTransform {
+    point: (lon,lat)->
+      [x,y] = rotate [lon,lat]
+      this.stream.point(x,y)
+  }
+
+  stream = (s)->
+    projection.stream(trans.stream(s))
+  combinedProj = {stream}
+
+  h Geography, {key: id, geography, projection: combinedProj, className: 'plate-polygon'}
 
 
 class WorldMapInner extends Component

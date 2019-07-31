@@ -8,6 +8,7 @@ SELECT
 FROM plate_polygon pp
 JOIN plate p
   ON pp.plate_id = p.id
+ AND pp.model_id = p.model_id
 JOIN model m
   ON p.model_id = m.id
 WHERE m.name = :model_name
