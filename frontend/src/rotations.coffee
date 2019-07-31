@@ -4,6 +4,7 @@ import {APIResultView, APIContext} from '@macrostrat/ui-components'
 import T from 'prop-types'
 import Quaternion from 'quaternion'
 import {geoRotation} from 'd3-geo'
+import {sum} from 'd3-array'
 
 # Drag to rotate globe
 # http://bl.ocks.org/ivyywang/7c94cb5a3accd9913263
@@ -14,6 +15,7 @@ RotationsContext = createContext {rotations: null}
 
 # Should replace with inbuilt quaternion function
 to_degrees = 180 / Math.PI
+to_radians = Math.PI / 180
 quat2euler = (q)->
   {w,x,y,z} = q
   # Half angle
@@ -25,6 +27,25 @@ quat2euler = (q)->
   lon = Math.atan2(y/s,x/s) * to_degrees
 
   return [lat, lon, angle]
+
+sph2cart = (point)->
+  [lon, lat] = point
+  _lon = lon * to_radians
+  _lat = lat * to_radians
+  vec = [
+    Math.cos(_lat)*Math.cos(_lon)
+    Math.cos(_lat)*Math.sin(_lon)
+    Math.sin(_lat)
+  ]
+  #sq = (d)->Math.pow(d,2)
+  #norm = Math.sqrt(sum(vec.map(sq)))
+  return vec#.map (d)->d/norm
+
+cart2sph = (vec)->
+  [x,y,z] = vec
+  lat = Math.asin(z) * to_degrees
+  lon = Math.atan2(y, x) * to_degrees
+  return [lon, lat]
 
 class __RotationsProvider extends Component
   @propTypes: {
@@ -64,9 +85,11 @@ class __RotationsProvider extends Component
     if not q?
       return identity
     #angles = quat2euler(q)
-    angles = [0.2, 0.01, 0.01]
-    #console.log angles
-    return geoRotation(angles)
+    return (point)->
+      vec = sph2cart(point)
+      v1 = q.rotateVector(vec)
+      return cart2sph(v1)
+    #return geoRotation(angles)
 
   rotatedProjection: (id, projection)=>
     {time} = @props

@@ -37,7 +37,6 @@ PlatePolygon = (props)->
   if not geographyRotator?
     return null
   rotate = geographyRotator id
-  console.log rotate([0,0])
 
   trans = geoTransform {
     point: (lon,lat)->
@@ -46,7 +45,9 @@ PlatePolygon = (props)->
   }
 
   stream = (s)->
-    projection.stream(trans.stream(s))
+    # This ordering makes no sense but whatever
+    # https://stackoverflow.com/questions/27557724/what-is-the-proper-way-to-use-d3s-projection-stream
+    trans.stream(projection.stream(s))
   combinedProj = {stream}
 
   h Geography, {key: id, geography, projection: combinedProj, className: 'plate-polygon'}
@@ -80,6 +81,7 @@ class WorldMapInner extends Component
         <Graticule />{
         h Geographies, {geography: "/api/plates?model=#{model}"}, (geographies, projection)=>
           geographies.map (geography, i)=>
+            #return null if i > 100
             h PlatePolygon, {key: i, geography, projection}
       }</ZoomableGroup>
     </ComposableMap>
