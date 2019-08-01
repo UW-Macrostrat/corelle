@@ -80,6 +80,7 @@ def get_rotation(model_name, plate_id, time, depth=0, verbose=False):
         q = euler_to_quaternion([
             float(i) for i in [r.latitude,r.longitude,r.angle]
         ])
+        q *= base
 
         if t_step > time:
             # Proportion of time between steps elapsed
