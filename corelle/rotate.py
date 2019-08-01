@@ -41,30 +41,28 @@ def quaternion_to_euler(q):
 
 conn = db.connect()
 
+class LoopError(Exception):
+    pass
+
 class Stack(object):
-    def __init__(self):
+    def __init__(self, loops=[]):
         self.ids = []
-        self.rotations = []
-        self.loops = []
+        self.loops = loops
 
-    def push(self, row, rotation):
-        if row.ref_plate_id in ids:
-            # There is a loop! we need to go back to before the loop
-            # Go back to the start of the loop
-            self.truncate_before(row.ref_plate_id)
-        self.ids.append(row.ref_plate_id)
-        self.rotations.append(rotation)
+def get_rotation(model_name, plate_id, time, **kwargs):
+    model_id = db.execute(
+        __model.select(__model.c.name == model_name)).scalar()
 
-    def truncate_before(self, id):
-        ix = self.ids.index(id)
-        self.loops.append(self.ids[ix])
-        self.ids = self.ids[:ix]
-        self.rotations = self.rotations[:ix]
-        self.items = self.items[:ix]
+    model_query = __rotation.select().where(__model.c.id == model_id)
 
-    def next_id(self):
-        return self.ids[-1]
-
+    stack = Stack()
+    for i in range(100):
+        # Try 100 times
+        try:
+            return __get_rotation(stack, model_query, plate_id, time, **kwargs)
+        except LoopError as err:
+            loops = stack.loops
+            stack = Stack(loops = loops)
 
 # Cache this expensive, recursive function.
 @lru_cache(maxsize=5000)
@@ -72,95 +70,56 @@ def __get_rotation(stack, model_query, plate_id, time, depth=0, verbose=False):
     time = float(time)
     # Fetches a sequence of rotations per unit time
 
-    base_query = model_query.filter(__rotation.c.plate_id==plate_id)
+    base_query = model_query.where(__rotation.c.plate_id==plate_id)
     _t = __rotation.c.t_step
-    rotations_before = base_query.filter(_t <= time).order_by(desc(_t))
-    rotations_after = base_query.filter(_t > time).order_by(_t)
+    rotations_before = base_query.where(_t <= time).order_by(desc(_t))
+    rotations_after = base_query.where(_t > time).order_by(_t)
 
-    prev_step = None
     rotation = None
-    for r in rotations_before:
-        if stack.is_loop(r.ref_plate_id):
+    for r in db.execute(rotations_before):
+        if r.ref_plate_id in stack.loops:
             # We don't want to get into an endless loop
             continue
+        if r.ref_plate_id in stack.ids:
+            stack.loops.append(r.ref_plate_id)
+            raise LoopError("We have found an infinite loop")
+        base = N.quaternion(1,0,0,0)
+        if r.ref_plate_id is not None:
+            base = __get_rotation(stack, model_query, r.ref_plate_id, time)
+
         q_before = euler_to_quaternion([
             float(i) for i in [r.latitude,r.longitude,r.angle]
-        ])
+        ])*base
 
-        base = __get_rotation(stack, model_query, stack.next_id(), time)
         if r.t_step == time:
+            rotation = q_before
             # The rotation is simply q_before
-
         prev_step = float(r.t_step)
-        break
 
-    if not prev_step:
-        return None
-
-    for r in rotations_after:
+    for r in db.execute(rotations_after):
         if rotation is not None:
-            # We don't need to modify our rotation
             break
-        if stack.is_loop(r.ref_plate_id):
+        if r.ref_plate_id in stack.loops:
+            # We don't want to get into an endless loop
             continue
+        if r.ref_plate_id in stack.ids:
+            stack.loops.append(r.ref_plate_id)
+            raise LoopError("We have found an infinite loop")
+        base = N.quaternion(1,0,0,0)
+        if r.ref_plate_id is not None:
+            base = __get_rotation(stack, model_query, r.ref_plate_id, time)
+
         q_after = euler_to_quaternion([
             float(i) for i in [r.latitude,r.longitude,r.angle]
-        ])
+        ])*base
         # Proportion of time between steps elapsed
         proportion = (time-prev_step)/(float(r.t_step)-prev_step)
         rotation = q_before*(1-proportion) + q_after*proportion
 
-
-    stack.push(rotation, q)
-    return __get_rotation(stack, model_query, stack.next_id(), time)
-
-
-
-    rotations = res.fetchall()
-    assert len(rotations) <= 2
-
-    if len(rotations) == 0:
-        return None
-
-    transform = N.quaternion(1,0,0,0)
-
-    if verbose:
-        print(" "*depth, plate_id)
-
-    for i,r in enumerate(rotations):
-        base = N.quaternion(1,0,0,0)
-        t_step = float(r.t_step)
-        if i == 1:
-            # We are on the second step
-            assert t_step > time
-            t_step = time
-
-        if r.ref_plate_id:
-            # This rotation is based on another plate
-            base = get_rotation(
-                model_name,
-                r.ref_plate_id,
-                t_step,
-                depth=depth+1,
-                verbose=verbose)
-
-        # Rotate the plate to the base rotation (for the end of time period)
-        q = euler_to_quaternion([
-            float(i) for i in [r.latitude,r.longitude,r.angle]
-        ])
-        q *= base
-
-        if t_step > time:
-            # Proportion of time between steps elapsed
-            proportion = (time-float(r.prev_step))/(float(r.t_step)-float(r.prev_step))
-            q = transform*(1-proportion) + q*proportion
-        # relative = rotation/transform
-        # reduced_angle = Q.as_rotation_vector(relative)*proportion
-        # rotation = Q.from_rotation_vector(reduced_angle)*transform
-
-        transform = q
-
-    return transform
+    stack.ids.append(plate_id)
+    if rotation is None:
+        rotation = N.quaternion(1,0,0,0)
+    return rotation
 
 def get_all_rotations(model, time):
     fn = relative_path(__file__, 'query', 'active-plates-at-time.sql')
