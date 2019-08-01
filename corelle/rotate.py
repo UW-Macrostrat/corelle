@@ -61,19 +61,26 @@ def get_rotation(model_name, plate_id, time, **kwargs):
         try:
             return __get_rotation(stack, model_query, plate_id, time, **kwargs)
         except LoopError as err:
+            print(err)
             loops = stack.loops
             stack = Stack(loops = loops)
 
 # Cache this expensive, recursive function.
 @lru_cache(maxsize=5000)
-def __get_rotation(stack, model_query, plate_id, time, depth=0, verbose=False):
+def __get_rotation(stack, model_query, plate_id, time, verbose=False, depth=0):
     time = float(time)
     # Fetches a sequence of rotations per unit time
+    if verbose:
+        print(" "*depth, plate_id, time)
+    if plate_id is None or plate_id == 0:
+        return N.quaternion(1,0,0,0)
 
     base_query = model_query.where(__rotation.c.plate_id==plate_id)
     _t = __rotation.c.t_step
     rotations_before = base_query.where(_t <= time).order_by(desc(_t))
     rotations_after = base_query.where(_t > time).order_by(_t)
+
+    base = __get_rotation(stack, model_query, r.ref_plate_id, time, verbose=verbose, depth=depth+1)
 
     rotation = None
     for r in db.execute(rotations_before):
@@ -82,10 +89,8 @@ def __get_rotation(stack, model_query, plate_id, time, depth=0, verbose=False):
             continue
         if r.ref_plate_id in stack.ids:
             stack.loops.append(r.ref_plate_id)
-            raise LoopError("We have found an infinite loop")
-        base = N.quaternion(1,0,0,0)
-        if r.ref_plate_id is not None:
-            base = __get_rotation(stack, model_query, r.ref_plate_id, time)
+            raise LoopError(f"Plate {r.ref_plate_id} caused an infinite loop")
+
 
         q_before = euler_to_quaternion([
             float(i) for i in [r.latitude,r.longitude,r.angle]
@@ -95,6 +100,7 @@ def __get_rotation(stack, model_query, plate_id, time, depth=0, verbose=False):
             rotation = q_before
             # The rotation is simply q_before
         prev_step = float(r.t_step)
+        break
 
     for r in db.execute(rotations_after):
         if rotation is not None:
@@ -104,10 +110,9 @@ def __get_rotation(stack, model_query, plate_id, time, depth=0, verbose=False):
             continue
         if r.ref_plate_id in stack.ids:
             stack.loops.append(r.ref_plate_id)
-            raise LoopError("We have found an infinite loop")
-        base = N.quaternion(1,0,0,0)
-        if r.ref_plate_id is not None:
-            base = __get_rotation(stack, model_query, r.ref_plate_id, time)
+            raise LoopError(r"Plate {r.ref_plate_id} caused an infinite loop")
+
+        base = __get_rotation(stack, model_query, r.ref_plate_id, time, verbose=verbose, depth=depth+1)
 
         q_after = euler_to_quaternion([
             float(i) for i in [r.latitude,r.longitude,r.angle]
@@ -115,10 +120,12 @@ def __get_rotation(stack, model_query, plate_id, time, depth=0, verbose=False):
         # Proportion of time between steps elapsed
         proportion = (time-prev_step)/(float(r.t_step)-prev_step)
         rotation = q_before*(1-proportion) + q_after*proportion
+        break
 
     stack.ids.append(plate_id)
     if rotation is None:
         rotation = N.quaternion(1,0,0,0)
+    print(rotation)
     return rotation
 
 def get_all_rotations(model, time):
