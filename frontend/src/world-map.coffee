@@ -4,7 +4,7 @@ import {min} from 'd3-array'
 import {select} from 'd3-selection'
 import {geoStereographic, geoTransform} from 'd3-geo'
 import {ComposableMap, ZoomableGroup, Geographies, Geography, Graticule} from 'react-simple-maps'
-import {ResizeSensor} from '@blueprintjs/core'
+import {ResizeSensor, Popover} from '@blueprintjs/core'
 import {RotationsContext} from './rotations'
 import styles from './main.styl'
 
@@ -50,7 +50,11 @@ PlatePolygon = (props)->
     trans.stream(projection.stream(s))
   combinedProj = {stream}
 
-  h Geography, {key: id, geography, projection: combinedProj, className: 'plate-polygon'}
+  h Popover, {content: h("text","Plate #{id}"), targetTagName: 'g', wrapperTagName: 'g'}, [
+    h Geography, {
+      key: id, geography, projection: combinedProj, className: 'plate-polygon'
+    }
+  ]
 
 
 class WorldMapInner extends Component

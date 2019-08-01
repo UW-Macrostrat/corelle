@@ -85,6 +85,9 @@ def get_rotation(model_name, plate_id, time, depth=0, verbose=False):
             # Proportion of time between steps elapsed
             proportion = (time-float(r.prev_step))/(float(r.t_step)-float(r.prev_step))
             q = transform*(1-proportion) + q*proportion
+        # relative = rotation/transform
+        # reduced_angle = Q.as_rotation_vector(relative)*proportion
+        # rotation = Q.from_rotation_vector(reduced_angle)*transform
 
         transform = q
 
