@@ -194,7 +194,15 @@ def import_rotations(model_id, rotations):
         elapsed = perf_counter()-start
         print(f"Imported {i+1} rotations in {elapsed:.2f} seconds")
 
+def cache_rotations(model_id):
+    return
+    v = db.execute(__rotation.select(__rotation.c.model_id==model_id))
+    for row in v:
+        q = get_rotation(row.plate_id)
+        print(row.plate)
+
 def import_model(name, plates, rotations, fields=None, drop=False):
     model_id = get_model(name)
     import_plates(model_id, plates, fields=fields)
     import_rotations(model_id, rotations)
+    cache_rotations(model_id)
