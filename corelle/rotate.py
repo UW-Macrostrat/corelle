@@ -72,6 +72,7 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
     # Fetches a sequence of rotations per unit time
     if verbose:
         print(" "*depth, plate_id, time)
+
     if plate_id is None or plate_id == 0:
         return N.quaternion(1,0,0,0)
 
@@ -82,7 +83,8 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
 
 
     rotation = None
-    for r in db.execute(rotations_before):
+    rows = db.execute(rotations_before).fetchall()
+    for r in rows:
         if r.ref_plate_id in loops:
             # We don't want to get into an endless loop
             continue
@@ -102,7 +104,8 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
         prev_step = float(r.t_step)
         break
 
-    for r in db.execute(rotations_after):
+    rows = db.execute(rotations_before).fetchall()
+    for r in rows:
         if rotation is not None:
             break
         if r.ref_plate_id in loops:
