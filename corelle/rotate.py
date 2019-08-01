@@ -99,15 +99,13 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
         ])*base
 
         if r.t_step == time:
-            rotation = q_before
+            return q_before
             # The rotation is simply q_before
         prev_step = float(r.t_step)
         break
 
-    rows = db.execute(rotations_before).fetchall()
+    rows = db.execute(rotations_after).fetchall()
     for r in rows:
-        if rotation is not None:
-            break
         if r.ref_plate_id in loops:
             # We don't want to get into an endless loop
             continue
@@ -122,13 +120,9 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
             float(i) for i in [r.latitude,r.longitude,r.angle]
         ])*base
         # Proportion of time between steps elapsed
+        print(r.t_step, prev_step)
         proportion = (time-prev_step)/(float(r.t_step)-prev_step)
-        rotation = q_before*(1-proportion) + q_after*proportion
-        break
-
-    if rotation is None:
-        rotation = N.quaternion(1,0,0,0)
-    return rotation
+        return q_before*(1-proportion) + q_after*proportion
 
 def get_all_rotations(model, time, verbose=False):
     fn = relative_path(__file__, 'query', 'active-plates-at-time.sql')
