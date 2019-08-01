@@ -43,7 +43,7 @@ conn = db.connect()
 
 class LoopError(Exception):
     def __init__(self, plate_id):
-        super().__init__(self, f"Plate {r.ref_plate_id} caused an infinite loop")
+        super().__init__(self, f"Plate {plate_id} caused an infinite loop")
         self.plate_id = plate_id
 
 class Stack(object):
@@ -87,7 +87,8 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
             # We don't want to get into an endless loop
             continue
         if r.ref_plate_id in stack:
-            raise LoopError(_plate_id)
+            ix = stack.index(r.ref_plate_id)+1
+            raise LoopError(stack[ix])
 
         base = __get_rotation(stack+[plate_id], loops, model_query, r.ref_plate_id, time, verbose=verbose, depth=depth+1)
 
@@ -108,7 +109,9 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
             # We don't want to get into an endless loop
             continue
         if r.ref_plate_id in stack:
-            raise LoopError(plate_id)
+            # Get the index of where we go into the loop
+            ix = stack.index(r.ref_plate_id)+1
+            raise LoopError(stack[ix])
 
         base = __get_rotation(stack+[plate_id], loops, model_query, r.ref_plate_id, time, verbose=verbose, depth=depth+1)
 
@@ -124,13 +127,13 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
         rotation = N.quaternion(1,0,0,0)
     return rotation
 
-def get_all_rotations(model, time):
+def get_all_rotations(model, time, verbose=False):
     fn = relative_path(__file__, 'query', 'active-plates-at-time.sql')
     sql = text(open(fn).read())
     results = conn.execute(sql, time=time, model_name=model)
     for res in results:
         plate_id = res[0]
-        q = get_rotation(model, plate_id, time)
+        q = get_rotation(model, plate_id, time, verbose=True)
         if N.isnan(q.w):
             continue
         yield plate_id, q

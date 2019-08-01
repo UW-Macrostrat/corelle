@@ -12,7 +12,7 @@ from os.path import splitext
 
 from .database import initialize
 from .load_data import import_model, import_features
-from .rotate import build_cache, get_rotation
+from .rotate import build_cache, get_rotation, get_all_rotations
 from .api import app
 
 @group()
@@ -79,6 +79,18 @@ def rotate(model, plate, time, verbose=False):
     q = get_rotation(model, plate, time, verbose=verbose)
     angle = N.degrees(q.angle())
     echo(f"Rotate {angle:.2f}° around {q.vec}")
+
+@cli.command(name='rotate-all')
+@argument('model', type=str)
+@argument('time', type=float)
+@option('--verbose','-v', is_flag=True, default=False)
+def rotate_all(model, time, verbose=False):
+    """
+    Rotate a plate to a time
+    """
+    for plate_id, q in get_all_rotations(model, time, verbose=verbose):
+        angle = N.degrees(q.angle())
+        echo(f"{plate_id}: rotate {angle:.2f}° around {q.vec}")
 
 @cli.command(name='serve')
 @option('-p','--port', type=int, default=5000)
