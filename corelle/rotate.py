@@ -6,7 +6,6 @@ from functools import lru_cache
 from time import sleep
 from pg_viewtils import relative_path
 
-
 from .util import unit_vector
 from .database import db
 
@@ -44,33 +43,50 @@ conn = db.connect()
 # Cache this expensive, recursive function.
 @lru_cache(maxsize=50000)
 def get_rotation(model_name, plate_id, time, depth=0, verbose=False):
-
+    time = float(time)
     # Fetches a sequence of rotations per unit time
     fn = relative_path(__file__, 'query', 'rotation-sequence.sql')
     sql = text(open(fn).read())
     res = conn.execute(sql, model_name=model_name, plate_id=plate_id, time=time)
     rotations = res.fetchall()
+    assert len(rotations) <= 2
+
+    if len(rotations) == 0:
+        return None
 
     transform = N.quaternion(1,0,0,0)
 
     if verbose:
         print(" "*depth, plate_id)
-    for r in rotations:
+
+    for i,r in enumerate(rotations):
+        base = N.quaternion(1,0,0,0)
+        t_step = float(r.t_step)
+        if i == 1:
+            # We are on the second step
+            assert t_step > time
+            t_step = time
+
         if r.ref_plate_id:
             # This rotation is based on another plate
             base = get_rotation(
                 model_name,
                 r.ref_plate_id,
-                r.t_end,
+                t_step,
                 depth=depth+1,
                 verbose=verbose)
-        else:
-            base = N.quaternion(1,0,0,0)
 
+        # Rotate the plate to the base rotation (for the end of time period)
         q = euler_to_quaternion([
-            float(i) for i in r.euler_angle
+            float(i) for i in [r.latitude,r.longitude,r.angle]
         ])
-        transform *= base*q
+
+        if t_step > time:
+            # Proportion of time between steps elapsed
+            proportion = (time-float(r.prev_step))/(float(r.t_step)-float(r.prev_step))
+            q = transform*(1-proportion) + q*proportion
+
+        transform = q
 
     return transform
 
