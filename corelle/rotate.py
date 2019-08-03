@@ -64,7 +64,6 @@ def get_rotation(model_name, plate_id, time, **kwargs):
             return __get_rotation([], loops, model_query, plate_id, time, **kwargs)
         except LoopError as err:
             loops.append(err.plate_id)
-            print(loops)
 
 # Cache this expensive, recursive function.
 def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, depth=0):
@@ -81,10 +80,11 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
     rotations_before = base_query.where(_t <= time).order_by(desc(_t))
     rotations_after = base_query.where(_t > time).order_by(_t)
 
-
     rotation = None
     rows = db.execute(rotations_before).fetchall()
     for r in rows:
+        if r.__cached_rotation is not None:
+            pass
         if r.ref_plate_id in loops:
             # We don't want to get into an endless loop
             continue
@@ -92,7 +92,12 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
             ix = stack.index(r.ref_plate_id)+1
             raise LoopError(stack[ix])
 
-        base = __get_rotation(stack+[plate_id], loops, model_query, r.ref_plate_id, time, verbose=verbose, depth=depth+1)
+        base = __get_rotation(
+            stack+[plate_id],
+            loops, model_query,
+            r.ref_plate_id, time,
+            verbose=verbose,
+            depth=depth+1)
 
         q_before = euler_to_quaternion([
             float(i) for i in [r.latitude,r.longitude,r.angle]
@@ -114,15 +119,22 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
             ix = stack.index(r.ref_plate_id)+1
             raise LoopError(stack[ix])
 
-        base = __get_rotation(stack+[plate_id], loops, model_query, r.ref_plate_id, time, verbose=verbose, depth=depth+1)
+        base = __get_rotation(
+            stack+[plate_id],
+            loops, model_query,
+            r.ref_plate_id,
+            time,
+            verbose=verbose,
+            depth=depth+1)
 
         q_after = euler_to_quaternion([
             float(i) for i in [r.latitude,r.longitude,r.angle]
         ])*base
         # Proportion of time between steps elapsed
-        print(r.t_step, prev_step)
         proportion = (time-prev_step)/(float(r.t_step)-prev_step)
         return q_before*(1-proportion) + q_after*proportion
+
+
 
 def get_all_rotations(model, time, verbose=False):
     fn = relative_path(__file__, 'query', 'active-plates-at-time.sql')
