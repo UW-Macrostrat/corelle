@@ -81,6 +81,8 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
     rotations_after = base_query.where(_t > time).order_by(_t)
 
     def __get_row_rotation(row):
+        if row.__cached_rotation is not None:
+            return N.quaternion(*row.__cached_rotation)
         if row.ref_plate_id in loops:
             # We don't want to get into an endless loop
             return None
@@ -98,7 +100,12 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
         q1 = euler_to_quaternion([
             float(i) for i in [row.latitude,row.longitude,row.angle]
         ])
-        return q1 * base
+        rot = q1 * base
+        if row.__cached_rotation is None:
+            db.execute(__rotation.update()
+                .where(__rotation.c.id == row.id)
+                .values(__cached_rotation=[rot.w, rot.x, rot.y, rot.z]))
+        return rot
 
     rotation = None
     rows = db.execute(rotations_before).fetchall()
@@ -114,7 +121,9 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
             # The rotation is simply q_before
         prev_step = float(r.t_step)
         break
-    q_before = N.quaternion(1,0,0,0)
+
+    if q_before is None:
+        q_before = N.quaternion(1,0,0,0)
 
     rows = db.execute(rotations_after).fetchall()
     for r in rows:
@@ -143,5 +152,5 @@ def get_all_rotations(model, time, verbose=False):
             continue
         yield plate_id, q
 
-def build_cache():
-    pass
+def reset_cache():
+    db.execute(__rotation.update().values(__cached_rotation=None))

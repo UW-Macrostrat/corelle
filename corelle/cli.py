@@ -58,12 +58,14 @@ def _import_features(name, file, overwrite=False):
     from .load_data import import_features
     import_features(name, file, overwrite=False)
 
-@cli.command(name='cache')
+@cli.command(name='reset-cache')
 def cache():
     """
     Compute and cache rotations
     """
-    build_cache()
+    from .rotate import reset_cache
+    reset_cache()
+    echo("Cache was reset!")
 
 @cli.command(name='rotate')
 @argument('model', type=str)
