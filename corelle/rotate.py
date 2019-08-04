@@ -120,6 +120,7 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
             return q_before
             # The rotation is simply q_before
         prev_step = float(r.t_step)
+        r0 = r.ref_plate_id
         break
 
     if q_before is None:
@@ -134,12 +135,14 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
         proportion = (time-prev_step)/(float(r.t_step)-prev_step)
         return q_before*(1-proportion) + q_after*proportion
 
+
     return N.quaternion(1,0,0,0)
 
 def plates_for_model(model):
-    fn = relative_path(__file__, 'query', 'active-plates-at-time.sql')
+    fn = relative_path(__file__, 'query', 'plates-for-model.sql')
     sql = text(open(fn).read())
-    return conn.execute(sql, model_name=model).all()
+    for row in conn.execute(sql, model_name=model):
+        yield row[0]
 
 def get_all_rotations(model, time, verbose=False):
     fn = relative_path(__file__, 'query', 'active-plates-at-time.sql')
@@ -157,8 +160,8 @@ def get_plate_rotations(model, plate_id, verbose=False):
     sql = text(open(fn).read())
     results = conn.execute(sql, plate_id=plate_id, model_name=model)
     for res in results:
-        q = get_rotation(mode, plate_id, res.t_step)
-        yield q
+        q = get_rotation(model, plate_id, res.t_step)
+        yield q, res.t_step
 
 def reset_cache():
     db.execute(__rotation.update().values(__cached_rotation=None))

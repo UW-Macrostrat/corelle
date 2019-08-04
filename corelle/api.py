@@ -84,28 +84,25 @@ class Rotation(RotationsResource):
 
     def get_single(self, args):
         plate_id = args['plate_id']
-        q = get_rotation(args['model_id'], plate_id, args['time'])
+        q = get_rotation(args['model'], plate_id, args['time'])
         return self.reducer(q, args, plate_id)
 
-class Pole(Resource):
-    def __init__(self):
-        super().__init__()
-        self.parser = base_parser()
+class Pole(RotationsResource):
     def get(self):
         args = self.parser.parse_args()
-        if 'plate_id' in args:
-            id = args['plate_id']
+        id = args['plate_id']
+        if id is not None:
             return dict(
                 plate_id=id,
                 rotations=list(self.get_single(id, args)))
         return list(self.get_all(args))
 
     def get_single(self, id, args):
-        for r in get_plate_rotations(args['model_id'], id):
-            yield self.reducer(q, args, r.t_step)
+        for q, t_step in get_plate_rotations(args['model'], id):
+            yield self.reducer(q, args, t_step)
 
-    def get_all(self, id, args):
-        plates = plates_for_model(args['model_id'])
+    def get_all(self, args):
+        plates = plates_for_model(args['model'])
         for id in plates:
             yield dict(
                 plate_id = id,
@@ -114,6 +111,7 @@ class Pole(Resource):
     def reducer(self, q, args, t_step):
         res = super().reducer(q, args)
         res['t_step'] = t_step
+        return res
 
 class Model(Resource):
     def get(self):

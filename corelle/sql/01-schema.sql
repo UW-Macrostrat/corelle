@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS rotation (
   angle numeric,
   ref_plate_id integer,
   metadata text,
-  __cached_rotation integer[4],
+  __cached_rotation numeric[4],
   UNIQUE (plate_id, model_id, t_step, ref_plate_id),
   FOREIGN KEY (plate_id, model_id) REFERENCES plate (id, model_id),
   FOREIGN KEY (ref_plate_id, model_id) REFERENCES plate (id, model_id)
