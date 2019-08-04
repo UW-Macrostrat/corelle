@@ -6,6 +6,7 @@ import {geoStereographic, geoTransform} from 'd3-geo'
 import {ComposableMap, ZoomableGroup, Geographies, Geography, Graticule} from 'react-simple-maps'
 import {ResizeSensor, Popover} from '@blueprintjs/core'
 import {RotationsContext} from './rotations'
+import {Globe} from './globe'
 import styles from './main.styl'
 
 h = hyper.styled(styles)
@@ -68,6 +69,8 @@ class WorldMapInner extends Component
   render: ->
     {width, height} = @props
     {model} = @context
+    return h Globe, {projection: this.projection, width, height}
+
     <ComposableMap
       projection={this.projection}
       projectionConfig={{
