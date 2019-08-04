@@ -46,13 +46,26 @@ class Globe extends StatefulComponent
     height: T.number
   }
 
-  contextValue: ->
-    {width, height} = @props
+  constructor: (props)->
+    super(props)
+
     projection = geoStereographic()
       .center([0,0])
-      .scale(width/2)
+      .scale(@props.width/2)
+
+    @state = {
+      projection
+    }
+
+  updateProjection: (newProj)->
+    @updateState {projection: {$set: newProj}}
+
+  contextValue: ->
+    {width, height} = @props
+    {projection} = @state
+    {updateProjection} = @
     renderPath = geoPath(projection)
-    {projection, renderPath, width, height}
+    {projection, renderPath, width, height, updateProjection}
 
   render: ->
     {width, height, children} = @props

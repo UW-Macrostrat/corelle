@@ -4,7 +4,7 @@ import T from 'prop-types'
 import h from './hyper'
 import {MapContext} from './context'
 import {drag} from 'd3-drag'
-import {select, event as currentEvent} from 'd3-selection'
+import {select, event as currentEvent, mouse} from 'd3-selection'
 
 class DraggableOverlay extends Component
   @contextType: MapContext
@@ -12,23 +12,29 @@ class DraggableOverlay extends Component
     {width, height} = @context
     h 'rect.drag-overlay', {width, height}
 
-  dragStarted: =>
+  dragStarted: (pos)=>
     console.log "Started"
     console.log currentEvent
+    @startPosition = pos
 
-  dragged: =>
+  dragged: (pos)=>
     console.log currentEvent
+    currentPosition = pos
 
-  dragEnded: =>
+  dragEnded: (pos)=>
     console.log currentEvent
 
   componentDidMount: ->
-    {width, height} = @context
+    {width, height, projection} = @context
+    mousePos = (func)-> ->
+      pos = projection.invert(mouse(@))
+      func(pos)
+
     el = select(findDOMNode(@))
     @drag = drag()
-      .on("start", @dragStarted)
-      .on("drag", @dragged)
-      .on("end", @dragEnded)
+      .on "start", mousePos(@dragStarted)
+      .on "drag", mousePos(@dragged)
+      .on "end", mousePos(@dragEnded)
 
     @drag(el)
 

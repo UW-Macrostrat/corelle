@@ -4,7 +4,7 @@ import {APIResultView, APIContext} from '@macrostrat/ui-components'
 import T from 'prop-types'
 import Quaternion from 'quaternion'
 import {geoRotation} from 'd3-geo'
-import {sum} from 'd3-array'
+import {quat2euler, sph2cart, cart2sph} from './math'
 
 # Drag to rotate globe
 # http://bl.ocks.org/ivyywang/7c94cb5a3accd9913263
@@ -12,40 +12,6 @@ import {sum} from 'd3-array'
 # https://www.jasondavies.com/maps/rotate/
 
 RotationsContext = createContext {rotations: null}
-
-# Should replace with inbuilt quaternion function
-to_degrees = 180 / Math.PI
-to_radians = Math.PI / 180
-quat2euler = (q)->
-  {w,x,y,z} = q
-  # Half angle
-  __ang = Math.acos(w)
-  s = Math.sin(__ang)
-
-  angle = 2 * __ang * to_degrees
-  lat = Math.asin(z/s) * to_degrees
-  lon = Math.atan2(y/s,x/s) * to_degrees
-
-  return [lat, lon, angle]
-
-sph2cart = (point)->
-  [lon, lat] = point
-  _lon = lon * to_radians
-  _lat = lat * to_radians
-  vec = [
-    Math.cos(_lat)*Math.cos(_lon)
-    Math.cos(_lat)*Math.sin(_lon)
-    Math.sin(_lat)
-  ]
-  #sq = (d)->Math.pow(d,2)
-  #norm = Math.sqrt(sum(vec.map(sq)))
-  return vec#.map (d)->d/norm
-
-cart2sph = (vec)->
-  [x,y,z] = vec
-  lat = Math.asin(z) * to_degrees
-  lon = Math.atan2(y, x) * to_degrees
-  return [lon, lat]
 
 class __RotationsProvider extends Component
   @propTypes: {
