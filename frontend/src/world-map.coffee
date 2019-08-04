@@ -1,12 +1,15 @@
 import hyper from '@macrostrat/hyper'
 import React, {Component, useContext} from 'react'
+import {APIResultView} from '@macrostrat/ui-components'
 import {min} from 'd3-array'
 import {select} from 'd3-selection'
 import {geoStereographic, geoTransform} from 'd3-geo'
 import {ComposableMap, ZoomableGroup, Geographies, Geography, Graticule} from 'react-simple-maps'
-import {ResizeSensor, Popover} from '@blueprintjs/core'
+import {ResizeSensor, Popover, Spinner} from '@blueprintjs/core'
 import {RotationsContext} from './rotations'
-import {Globe} from './globe'
+import {Globe, MapContext} from './globe'
+import {geoPath} from 'd3-geo'
+
 import styles from './main.styl'
 
 h = hyper.styled(styles)
@@ -32,7 +35,8 @@ class WorldMap extends Component
     )
 
 PlatePolygon = (props)->
-  {geography, projection} = props
+  {geography} = props
+  {projection} = useContext(MapContext)
   {geographyRotator} = useContext(RotationsContext) or {}
   {id} = geography
   if not geographyRotator?
@@ -49,11 +53,14 @@ PlatePolygon = (props)->
     # This ordering makes no sense but whatever
     # https://stackoverflow.com/questions/27557724/what-is-the-proper-way-to-use-d3s-projection-stream
     trans.stream(projection.stream(s))
-  combinedProj = {stream}
 
-  h Popover, {content: h("text","Plate #{id}"), targetTagName: 'g', wrapperTagName: 'g'}, [
-    h Geography, {
-      key: id, geography, projection: combinedProj, className: 'plate-polygon'
+  # Combined projection
+  proj = geoPath({stream})
+  d = proj geography
+
+  h Popover, {content: h("span","Plate #{id}"), targetTagName: 'g', wrapperTagName: 'g'}, [
+    h 'path.plate-polygon', {
+      key: id, d
     }
   ]
 
@@ -69,29 +76,19 @@ class WorldMapInner extends Component
   render: ->
     {width, height} = @props
     {model} = @context
-    return h Globe, {projection: this.projection, width, height}
-
-    <ComposableMap
-      projection={this.projection}
-      projectionConfig={{
-        scale: 600,
-        clipExtent: [[0,0],[width, height]]
-      }}
-      width={width}
-      height={height}
-      style={{
-        width: "100%",
-        height: "auto",
-      }}
-      >
-      <ZoomableGroup center={[0,0]} style={{cursor: "move"}}>
-        <Graticule />{
-        h Geographies, {geography: "/api/plates?model=#{model}"}, (geographies, projection)=>
-          geographies.map (geography, i)=>
-            #return null if i > 100
-            h PlatePolygon, {key: i, geography, projection}
-      }</ZoomableGroup>
-    </ComposableMap>
+    h Globe, {
+      projection: this.projection,
+      width,
+      height
+    }, [
+      h APIResultView, {
+        route: "/api/plates",
+        params: {model},
+        placeholder: ->h(Spinner, {tagName: 'g'})
+      }, (data)=>
+        h 'g.plates', data.map (d, i)->
+          h PlatePolygon, {key: i, geography: d}
+    ]
 
 
 export {WorldMap}

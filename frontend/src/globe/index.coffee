@@ -44,19 +44,22 @@ class Globe extends StatefulComponent
   }
 
   render: ->
-    {width, height} = @props
+    {width, height, children} = @props
     projection = geoStereographic()
       .center([0,0])
       .scale(width)
 
     renderPath = geoPath(projection)
 
+    console.log children
+
     h MapContext.Provider, {value: {projection, renderPath}}, [
       h 'svg.globe', {width, height}, [
         h Background, {fill: 'dodgerblue'}
         h Graticule
+        children
       ]
     ]
 
 
-export {Globe}
+export {Globe, MapContext}
