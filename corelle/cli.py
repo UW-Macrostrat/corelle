@@ -10,11 +10,6 @@ from click import (
     echo, style, Path)
 from os.path import splitext
 
-from .database import initialize
-from .load_data import import_model, import_features
-from .rotate import build_cache, get_rotation
-from .api import app
-
 @group()
 def cli():
     pass
@@ -22,6 +17,7 @@ def cli():
 @cli.command(name='init')
 @option('--drop', is_flag=True, default=False)
 def init(drop=False):
+    from .database import initialize
     initialize(drop=drop)
 
 file = Path(exists=True, dir_okay=False)
@@ -47,6 +43,7 @@ def _import(model_name, plates, rotations, fields=None, drop=False):
     """
     Import a plate-rotation model
     """
+    from .load_data import import_model
     fields = load_fields(fields)
     import_model(model_name, plates, rotations, fields=fields,drop=False)
 
@@ -58,14 +55,17 @@ def _import_features(name, file, overwrite=False):
     """
     Import features that can be associated with the models
     """
+    from .load_data import import_features
     import_features(name, file, overwrite=False)
 
-@cli.command(name='cache')
+@cli.command(name='reset-cache')
 def cache():
     """
     Compute and cache rotations
     """
-    build_cache()
+    from .rotate import reset_cache
+    reset_cache()
+    echo("Cache was reset!")
 
 @cli.command(name='rotate')
 @argument('model', type=str)
@@ -76,16 +76,32 @@ def rotate(model, plate, time, verbose=False):
     """
     Rotate a plate to a time
     """
+    from .rotate import get_rotation
     q = get_rotation(model, plate, time, verbose=verbose)
     angle = N.degrees(q.angle())
     echo(f"Rotate {angle:.2f}° around {q.vec}")
+
+@cli.command(name='rotate-all')
+@argument('model', type=str)
+@argument('time', type=float)
+@option('--verbose','-v', is_flag=True, default=False)
+def rotate_all(model, time, verbose=False):
+    """
+    Rotate all plates in a model to a time
+    """
+    from .rotate import get_all_rotations
+    for plate_id, q in get_all_rotations(model, time, verbose=verbose):
+        angle = N.degrees(q.angle())
+        echo(f"{plate_id}: rotate {angle:.2f}° around {q.vec}")
 
 @cli.command(name='serve')
 @option('-p','--port', type=int, default=5000)
 @option('--debug', is_flag=True, default=False)
 def serve(**kwargs):
+    from .api import app
     app.run(**kwargs)
 
 @cli.command(name='shell')
 def shell():
+    from .api import app
     embed()

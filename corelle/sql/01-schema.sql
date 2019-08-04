@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS plate_polygon (
 );
 
 CREATE TABLE IF NOT EXISTS rotation (
+  id serial PRIMARY KEY,
   plate_id integer NOT NULL,
   model_id integer NOT NULL,
   t_step numeric NOT NULL,
@@ -33,7 +34,8 @@ CREATE TABLE IF NOT EXISTS rotation (
   angle numeric,
   ref_plate_id integer,
   metadata text,
-  PRIMARY KEY (plate_id, model_id, t_step, ref_plate_id),
+  __cached_rotation numeric[4],
+  UNIQUE (plate_id, model_id, t_step, ref_plate_id),
   FOREIGN KEY (plate_id, model_id) REFERENCES plate (id, model_id),
   FOREIGN KEY (ref_plate_id, model_id) REFERENCES plate (id, model_id)
 );
