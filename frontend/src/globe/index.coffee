@@ -3,6 +3,7 @@ import {StatefulComponent} from '@macrostrat/ui-components'
 import T from 'prop-types'
 import h from './hyper'
 import {MapContext} from './context'
+import {DraggableOverlay} from './drag-interaction'
 import {geoStereographic, geoGraticule, geoPath} from 'd3-geo'
 
 GeoPath = (props)->
@@ -36,6 +37,8 @@ Graticule = (props)->
     props...
   }
 
+
+
 class Globe extends StatefulComponent
   @propTypes: {
     #projection: T.func.isRequired,
@@ -43,21 +46,22 @@ class Globe extends StatefulComponent
     height: T.number
   }
 
-  render: ->
-    {width, height, children} = @props
+  contextValue: ->
+    {width, height} = @props
     projection = geoStereographic()
       .center([0,0])
-      .scale(width)
-
+      .scale(width/2)
     renderPath = geoPath(projection)
+    {projection, renderPath, width, height}
 
-    console.log children
-
-    h MapContext.Provider, {value: {projection, renderPath}}, [
+  render: ->
+    {width, height, children} = @props
+    h MapContext.Provider, {value: @contextValue()}, [
       h 'svg.globe', {width, height}, [
         h Background, {fill: 'dodgerblue'}
         h Graticule
         children
+        h DraggableOverlay
       ]
     ]
 
