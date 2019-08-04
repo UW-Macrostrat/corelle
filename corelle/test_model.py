@@ -28,9 +28,7 @@ def test_south_america_cretaceous():
     for r in rotations[1:]:
         assert N.allclose(r, rotations[0])
 
-
-
 def test_south_america_jurassic():
-    rotate = lambda x: get_rotation("Seton2012", x, 143)
+    rotate = lambda x: get_rotation("Seton2012", x, 152)
     assert not N.allclose(rotate(291), rotate(201))
     assert N.allclose(rotate(291), rotate(280))
