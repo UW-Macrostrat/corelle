@@ -41,33 +41,37 @@ def quaternion_to_euler(q):
 
 conn = db.connect()
 
+memo_cache = {}
+
 class LoopError(Exception):
     def __init__(self, plate_id):
         super().__init__(self, f"Plate {plate_id} caused an infinite loop")
         self.plate_id = plate_id
 
-class Stack(object):
-    def __init__(self, loops=[]):
-        self.ids = []
-        self.loops = loops
-
 def get_rotation(model_name, plate_id, time, **kwargs):
     model_id = db.execute(
         __model.select(__model.c.name == model_name)).scalar()
-
-    model_query = __rotation.select().where(__model.c.id == model_id)
 
     loops = []
     for i in range(100):
         # Try 100 times
         try:
-            return __get_rotation([], loops, model_query, plate_id, time, **kwargs)
+            return __get_rotation([], loops, model_id, plate_id, time, **kwargs)
         except LoopError as err:
             loops.append(err.plate_id)
 
+
+cache = {}
+
 # Cache this expensive, recursive function.
-def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, depth=0):
+def __get_rotation(stack, loops, model_id, plate_id, time, verbose=False, depth=0):
     time = float(time)
+    cache_args = (model_id, plate_id, time)
+    if cache_args in cache:
+        return cache[cache_args]
+
+    model_query = __rotation.select().where(__model.c.id == model_id)
+
     # Fetches a sequence of rotations per unit time
     if verbose:
         print(" "*depth, plate_id, time)
@@ -80,9 +84,12 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
     rotations_before = base_query.where(_t <= time).order_by(desc(_t))
     rotations_after = base_query.where(_t > time).order_by(_t)
 
+    def __cache(q):
+        cache[cache_args] = q
+        return q
+
     def __get_row_rotation(row):
-        if row.__cached_rotation is not None:
-            return N.quaternion(*row.__cached_rotation)
+
         if row.ref_plate_id in loops:
             # We don't want to get into an endless loop
             return None
@@ -92,19 +99,15 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
 
         base = __get_rotation(
             stack+[row.plate_id],
-            loops, model_query,
-            row.ref_plate_id, row.t_step,
+            loops, model_id,
+            row.ref_plate_id, time,
             verbose=verbose,
             depth=depth+1)
 
-        q1 = euler_to_quaternion([
+        rot = euler_to_quaternion([
             float(i) for i in [row.latitude,row.longitude,row.angle]
-        ])
-        rot = q1 * base
-        if row.__cached_rotation is None:
-            db.execute(__rotation.update()
-                .where(__rotation.c.id == row.id)
-                .values(__cached_rotation=[rot.w, rot.x, rot.y, rot.z]))
+        ])*base
+
         return rot
 
     rotation = None
@@ -117,7 +120,7 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
             continue
 
         if r.t_step == time:
-            return q_before
+            return __cache(q_before)
             # The rotation is simply q_before
         prev_step = float(r.t_step)
         r0 = r.ref_plate_id
@@ -133,10 +136,10 @@ def __get_rotation(stack, loops, model_query, plate_id, time, verbose=False, dep
             continue
         # Proportion of time between steps elapsed
         proportion = (time-prev_step)/(float(r.t_step)-prev_step)
-        return q_before*(1-proportion) + q_after*proportion
+        return __cache(q_before*(1-proportion) + q_after*proportion)
 
 
-    return N.quaternion(1,0,0,0)
+    return __cache(N.quaternion(1,0,0,0))
 
 def plates_for_model(model):
     fn = relative_path(__file__, 'query', 'plates-for-model.sql')
