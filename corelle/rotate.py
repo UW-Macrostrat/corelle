@@ -62,6 +62,7 @@ def get_rotation(model_name, plate_id, time, **kwargs):
 
 
 cache = {}
+cache_list = []
 
 # Cache this expensive, recursive function.
 def __get_rotation(stack, loops, model_id, plate_id, time, verbose=False, depth=0):
@@ -86,6 +87,10 @@ def __get_rotation(stack, loops, model_id, plate_id, time, verbose=False, depth=
 
     def __cache(q):
         cache[cache_args] = q
+        cache_list.append(cache_args)
+        if len(cache_list) > 5000:
+            id = cache_list.pop(0)
+            del cache[id]
         return q
 
     def __get_row_rotation(row):
