@@ -76,19 +76,19 @@ class DraggableOverlay extends Component
     ]
 
   dragStarted: (pos)=>
+    {projection} = @context
     @setState {mousePosition: {type: "Point", coordinates: pos}}
     @startPosition = sph2cart(pos)
+    @startRotation = projection.rotate()
 
   dragged: (currentPos)=>
     {projection, updateProjection} = @context
-    r0 = projection.rotate()
 
-    q0 = euler2quat(r0)
+    q0 = euler2quat(@startRotation)
     v1 = sph2cart(currentPos)
     q1 = Q.fromBetweenVectors(@startPosition,v1).toVector()
     t = quatMultiply(q0, q1)
     r1 = quat2euler(t)
-    console.log r0, r1
     updateProjection(projection.rotate(r1))
 
   dragEnded: (pos)=>

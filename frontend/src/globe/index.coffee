@@ -50,7 +50,7 @@ class Globe extends StatefulComponent
   constructor: (props)->
     super(props)
 
-    projection = geoOrthographic()
+    projection = geoStereographic()
       .center([0,0])
       .scale(@props.width/2)
 
