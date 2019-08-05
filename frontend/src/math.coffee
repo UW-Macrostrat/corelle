@@ -20,6 +20,13 @@ quat2euler = (q)->
 
   return [lat, lon, angle]
 
+euler2quat = (v)->
+  [lat, lon, angle] = v.map (d)->d*to_radians
+  w = Math.cos(angle/2)
+  _s = Math.sin(angle/2)
+  [x,y,z] = sph2cart([lon,lat]).map (d)->d*_s
+  return new Quaternion(w, x, y, z)
+
 sph2cart = (point)->
   [lon, lat] = point
   _lon = lon * to_radians
@@ -38,4 +45,4 @@ cart2sph = (vec)->
   lon = Math.atan2(y, x) * to_degrees
   return [lon, lat]
 
-export {quat2euler, sph2cart, cart2sph}
+export {quat2euler, euler2quat, sph2cart, cart2sph}

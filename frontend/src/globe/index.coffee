@@ -4,7 +4,7 @@ import T from 'prop-types'
 import h from './hyper'
 import {MapContext} from './context'
 import {DraggableOverlay} from './drag-interaction'
-import {geoStereographic, geoGraticule, geoPath} from 'd3-geo'
+import {geoStereographic, geoOrthographic, geoGraticule, geoPath} from 'd3-geo'
 
 GeoPath = (props)->
   {geometry, rest...} = props
@@ -31,6 +31,7 @@ Graticule = (props)->
         [-180,-80]
         [180,80 + 1e-6]
       ]
+  console.log "Rendering"
   h GeoPath, {
     className: 'graticule',
     geometry: graticule(),
@@ -49,7 +50,7 @@ class Globe extends StatefulComponent
   constructor: (props)->
     super(props)
 
-    projection = geoStereographic()
+    projection = geoOrthographic()
       .center([0,0])
       .scale(@props.width/2)
 
@@ -57,7 +58,10 @@ class Globe extends StatefulComponent
       projection
     }
 
-  updateProjection: (newProj)->
+  updateProjection: (newProj)=>
+    console.log "Updating projection"
+    console.log(newProj == @state.projection)
+    #v = Object.assign({}, newProj)
     @updateState {projection: {$set: newProj}}
 
   contextValue: ->
