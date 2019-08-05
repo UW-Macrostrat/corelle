@@ -63,9 +63,6 @@ class Globe extends StatefulComponent
     }
 
   updateProjection: (newProj)=>
-    console.log "Updating projection"
-    console.log(newProj == @state.projection)
-    #v = Object.assign({}, newProj)
     @updateState {projection: {$set: newProj}}
 
   contextValue: ->
