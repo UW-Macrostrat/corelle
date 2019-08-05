@@ -4,6 +4,7 @@ import T from 'prop-types'
 import h from './hyper'
 import {MapContext} from './context'
 import {DraggableOverlay} from './drag-interaction'
+import {max} from 'd3-array'
 import {geoStereographic, geoOrthographic, geoGraticule, geoPath} from 'd3-geo'
 
 GeoPath = (props)->
@@ -50,9 +51,12 @@ class Globe extends StatefulComponent
   constructor: (props)->
     super(props)
 
-    projection = geoStereographic()
+    maxSize = max [@props.width, @props.height]
+
+    projection = geoOrthographic()
       .center([0,0])
-      .scale(@props.width/2)
+      .scale(maxSize/2)
+      .translate([@props.width/2, @props.height/2])
 
     @state = {
       projection
