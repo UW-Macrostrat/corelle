@@ -5,46 +5,10 @@ import h from './hyper'
 import {MapContext} from './context'
 import {drag} from 'd3-drag'
 import {select, event as currentEvent, mouse} from 'd3-selection'
-#import {sph2cart} from '../math'
+import {sph2cart, quat2euler, euler2quat, quatMultiply, quaternion} from './math'
 import Q from 'quaternion'
 
-to_degrees = 180 / Math.PI
-to_radians = Math.PI / 180
-
-sph2cart = ( coord )->
-	lon = coord[0] * to_radians
-	lat = coord[1] * to_radians
-	x = Math.cos(lat) * Math.cos(lon)
-	y = Math.cos(lat) * Math.sin(lon)
-	z = Math.sin(lat)
-	return [x, y, z]
-
-euler2quat = (e)->
-  # Euler to quaternion function with Euler angles as
-  # yaw, pitch, and roll.
-  roll = .5 * e[0] * to_radians
-  pitch = .5 * e[1] * to_radians
-  yaw = .5 * e[2] * to_radians
-
-  sr = Math.sin(roll)
-  cr = Math.cos(roll)
-  sp = Math.sin(pitch)
-  cp = Math.cos(pitch)
-  sy = Math.sin(yaw)
-  cy = Math.cos(yaw)
-
-  qi = sr*cp*cy - cr*sp*sy
-  qj = cr*sp*cy + sr*cp*sy
-  qk = cr*cp*sy - sr*sp*cy
-  qr = cr*cp*cy + sr*sp*sy
-
-  return [qr, qi, qj, qk]
-
-quat2euler = (t)->
-  [ Math.atan2(2 * (t[0] * t[1] + t[2] * t[3]), 1 - 2 * (t[1] * t[1] + t[2] * t[2])) * to_degrees,
-    Math.asin(Math.max(-1, Math.min(1, 2 * (t[0] * t[2] - t[3] * t[1])))) * to_degrees,
-    Math.atan2(2 * (t[0] * t[3] + t[1] * t[2]), 1 - 2 * (t[2] * t[2] + t[3] * t[3])) * to_degrees ]
-
+###
 quatMultiply = (q1, q2)->
   a = q1[0]
   b = q1[1]
@@ -59,6 +23,7 @@ quatMultiply = (q1, q2)->
     b*e + a*f + c*_h - d*g,
     a*g - b*_h + c*e + d*f,
     a*_h + b*g - c*f + d*e]
+###
 
 class DraggableOverlay extends Component
   @contextType: MapContext
@@ -78,17 +43,15 @@ class DraggableOverlay extends Component
   dragStarted: (pos)=>
     {projection} = @context
     @setState {mousePosition: {type: "Point", coordinates: pos}}
-    @startPosition = sph2cart(pos)
-    @startRotation = projection.rotate()
+    @p0 = sph2cart(pos)
+    @q0 = euler2quat(projection.rotate())
 
   dragged: (currentPos)=>
     {projection, updateProjection} = @context
-
-    q0 = euler2quat(@startRotation)
-    v1 = sph2cart(currentPos)
-    q1 = Q.fromBetweenVectors(@startPosition,v1).toVector()
-    t = quatMultiply(q0, q1)
-    r1 = quat2euler(t)
+    p1 = sph2cart(currentPos)
+    q1 = quaternion(@p0, p1)
+    res = quatMultiply( @q0, q1 )
+    r1 = quat2euler(res)
     updateProjection(projection.rotate(r1))
 
   dragEnded: (pos)=>
