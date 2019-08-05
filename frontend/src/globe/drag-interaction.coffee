@@ -48,6 +48,7 @@ class DraggableOverlay extends Component
 
   dragged: (currentPos)=>
     {projection, updateProjection} = @context
+    @q0 = euler2quat(projection.rotate())
     p1 = sph2cart(currentPos)
     q1 = quaternion(@p0, p1)
     res = quatMultiply( @q0, q1 )
