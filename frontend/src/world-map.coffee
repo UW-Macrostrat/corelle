@@ -35,10 +35,16 @@ class WorldMap extends Component
     )
 
 PlatePolygon = (props)->
-  {geography} = props
+  {feature} = props
+  {geographyRotator, time} = useContext(RotationsContext) or {}
+  {id, properties} = feature
+  {old_lim, young_lim} = properties
+  # Filter out plate polygons that are too young
+  return null if old_lim < time
+  # Filter out plate polygons that are too old (unlikely given current models)
+  return null if young_lim > time
+
   {projection} = useContext(MapContext)
-  {geographyRotator} = useContext(RotationsContext) or {}
-  {id} = geography
   if not geographyRotator?
     return null
   rotate = geographyRotator id
@@ -56,7 +62,7 @@ PlatePolygon = (props)->
 
   # Combined projection
   proj = geoPath({stream})
-  d = proj geography
+  d = proj feature
 
   h Popover, {content: h("span","Plate #{id}"), targetTagName: 'g', wrapperTagName: 'g'}, [
     h 'path.plate-polygon', {
@@ -87,8 +93,8 @@ class WorldMapInner extends Component
         placeholder: null
       }, (data)=>
         return null unless data?
-        h 'g.plates', data.map (d, i)->
-          h PlatePolygon, {key: i, geography: d}
+        h 'g.plates', data.map (feature, i)->
+          h PlatePolygon, {key: i, feature}
     ]
 
 

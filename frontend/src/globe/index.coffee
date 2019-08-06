@@ -25,14 +25,12 @@ class Background extends Component
     }
 
 Graticule = (props)->
-  {renderPath} = useContext(MapContext)
   graticule = geoGraticule()
     .step [10,10]
     .extent [
         [-180,-80]
         [180,80 + 1e-6]
       ]
-  console.log "Rendering"
   h GeoPath, {
     className: 'graticule',
     geometry: graticule(),

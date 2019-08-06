@@ -43,6 +43,7 @@ class DraggableOverlay extends Component
     q1 = quaternion(@p0, p1)
     res = quatMultiply( @q0, q1 )
     r1 = quat2euler(res)
+    return unless r1?
     updateProjection(projection.rotate(r1))
 
   dragEnded: (pos)=>
