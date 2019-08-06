@@ -1,5 +1,5 @@
 import hyper from '@macrostrat/hyper'
-import React, {Component, useContext} from 'react'
+import React, {Component, useContext, createElement} from 'react'
 import {APIResultView} from '@macrostrat/ui-components'
 import {min} from 'd3-array'
 import {select} from 'd3-selection'
@@ -68,32 +68,8 @@ PlatePolygon = (props)->
   {feature, rest...} = props
   {id, properties} = feature
   {old_lim, young_lim} = properties
-  # Filter out features that are too young
-  {geographyRotator, time} = useContext(RotationsContext) or {}
-  return null unless geographyRotator?
-  return null if old_lim < time
-  # Filter out features that are too old (unlikely given current models)
-  return null if young_lim > time
-  {projection} = useContext(MapContext)
-  rotate = geographyRotator id
-
-  trans = geoTransform {
-    point: (lon,lat)->
-      [x,y] = rotate [lon,lat]
-      this.stream.point(x,y)
-  }
-
-  stream = (s)->
-    # This ordering makes no sense but whatever
-    # https://stackoverflow.com/questions/27557724/what-is-the-proper-way-to-use-d3s-projection-stream
-    trans.stream(projection.stream(s))
-
-  # Combined projection
-  proj = geoPath({stream})
-  d = proj feature
-
   h Popover, {content: h("span","Plate #{id}"), targetTagName: 'g', wrapperTagName: 'g'}, [
-    h 'path', {d, rest...}
+    h PlateFeature, {feature, oldLim: old_lim, youngLim: young_lim, plateId: id, rest...}
   ]
 
 PlatePolygons = (props)->
@@ -104,23 +80,23 @@ PlatePolygons = (props)->
     placeholder: null
   }, (data)=>
     return null unless data?
-    h 'g.plates', data.map (feature, i)->
+    h 'g.plates', null, data.map (feature, i)->
       h PlatePolygon, {key: i, feature}
 
 PlateFeatureDataset = (props)->
-  {dataset} = props
+  {name} = props
   {model} = useContext(RotationsContext)
   h APIResultView, {
-    route: "/api/feature/#{dataset}",
+    route: "/api/feature/#{name}",
     params: {model},
     placeholder: null
   }, (data)=>
     return null unless data?
-    h 'g.feature', {className: dataset}, data.map (feature, i)->
+    h 'g', {className: name}, data.map (feature, i)->
       {id, properties} = feature
       {plate_id, old_lim, young_lim} = properties
       h PlateFeature, {
-        key: id,
+        key: i,
         feature,
         plateId: plate_id,
         oldLim: old_lim,
@@ -144,7 +120,7 @@ class WorldMapInner extends Component
       height
     }, [
       h PlatePolygons
-      #h PlateFeatureDataset, {dataset: 'ne_110m_land'}
+      h PlateFeatureDataset, {name: 'ne_110m_land'}
     ]
 
 

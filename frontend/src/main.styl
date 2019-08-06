@@ -21,9 +21,16 @@ plate_color=#888
 g.plates path
   fill: alpha(plate_color,0.2)
   stroke: alpha(plate_color, 0.8)
-  stroke-width: 0.75
+  stroke-width: 1px
   outline: none
   &:hover
-  fill: alpha(plate_color,0.5)
-    stroke-width: 0.75
+    fill: alpha(plate_color,0.5)
+    stroke-width: 1px
     outline: none
+
+land_color=#E9FCEA
+g.ne_110m_land
+  path
+    fill land_color
+    stroke darken(land_color, 10%)
+    stroke-width: 1px

@@ -36,4 +36,10 @@ Implement rotation tree to get an array of quaternions to be applied
 
 Convert *Euler pole* representation to unit rotation quaternions.
 
+### Todo
 
+- [ ] On-database cache of rotations (say, at 1 Ma increments?)
+
+## Math issues
+
+plate 614 at 444 Ma (Seton2012)
