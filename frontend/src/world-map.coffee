@@ -1,11 +1,15 @@
 import hyper from '@macrostrat/hyper'
 import React, {Component, useContext} from 'react'
+import {APIResultView} from '@macrostrat/ui-components'
 import {min} from 'd3-array'
 import {select} from 'd3-selection'
 import {geoStereographic, geoTransform} from 'd3-geo'
 import {ComposableMap, ZoomableGroup, Geographies, Geography, Graticule} from 'react-simple-maps'
-import {ResizeSensor, Popover} from '@blueprintjs/core'
+import {ResizeSensor, Popover, Spinner} from '@blueprintjs/core'
 import {RotationsContext} from './rotations'
+import {Globe, MapContext} from './globe'
+import {geoPath} from 'd3-geo'
+
 import styles from './main.styl'
 
 h = hyper.styled(styles)
@@ -31,9 +35,16 @@ class WorldMap extends Component
     )
 
 PlatePolygon = (props)->
-  {geography, projection} = props
-  {geographyRotator} = useContext(RotationsContext) or {}
-  {id} = geography
+  {feature} = props
+  {geographyRotator, time} = useContext(RotationsContext) or {}
+  {id, properties} = feature
+  {old_lim, young_lim} = properties
+  # Filter out plate polygons that are too young
+  return null if old_lim < time
+  # Filter out plate polygons that are too old (unlikely given current models)
+  return null if young_lim > time
+
+  {projection} = useContext(MapContext)
   if not geographyRotator?
     return null
   rotate = geographyRotator id
@@ -48,11 +59,14 @@ PlatePolygon = (props)->
     # This ordering makes no sense but whatever
     # https://stackoverflow.com/questions/27557724/what-is-the-proper-way-to-use-d3s-projection-stream
     trans.stream(projection.stream(s))
-  combinedProj = {stream}
 
-  h Popover, {content: h("text","Plate #{id}"), targetTagName: 'g', wrapperTagName: 'g'}, [
-    h Geography, {
-      key: id, geography, projection: combinedProj, className: 'plate-polygon'
+  # Combined projection
+  proj = geoPath({stream})
+  d = proj feature
+
+  h Popover, {content: h("span","Plate #{id}"), targetTagName: 'g', wrapperTagName: 'g'}, [
+    h 'path.plate-polygon', {
+      key: id, d
     }
   ]
 
@@ -68,27 +82,20 @@ class WorldMapInner extends Component
   render: ->
     {width, height} = @props
     {model} = @context
-    <ComposableMap
-      projection={this.projection}
-      projectionConfig={{
-        scale: 600,
-        clipExtent: [[0,0],[width, height]]
-      }}
-      width={width}
-      height={height}
-      style={{
-        width: "100%",
-        height: "auto",
-      }}
-      >
-      <ZoomableGroup center={[0,0]} style={{cursor: "move"}}>
-        <Graticule />{
-        h Geographies, {geography: "/api/plates?model=#{model}"}, (geographies, projection)=>
-          geographies.map (geography, i)=>
-            #return null if i > 100
-            h PlatePolygon, {key: i, geography, projection}
-      }</ZoomableGroup>
-    </ComposableMap>
+    h Globe, {
+      projection: this.projection,
+      width,
+      height
+    }, [
+      h APIResultView, {
+        route: "/api/plates",
+        params: {model},
+        placeholder: null
+      }, (data)=>
+        return null unless data?
+        h 'g.plates', data.map (feature, i)->
+          h PlatePolygon, {key: i, feature}
+    ]
 
 
 export {WorldMap}

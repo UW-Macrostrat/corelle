@@ -32,3 +32,18 @@ def test_south_america_jurassic():
     rotate = lambda x: get_rotation("Seton2012", x, 152)
     assert not N.allclose(rotate(291), rotate(201))
     assert N.allclose(rotate(291), rotate(280))
+
+times = [2,5,10]
+@pytest.mark.xfail()
+@pytest.mark.parametrize('time', times)
+def test_plate_disappearance(time):
+    """
+    Plates should not have a valid rotation after their `old_lim`...
+    """
+    for t in times:
+        rotations = get_all_rotations("Seton2012", t)
+        plate_ids = [p for p,q in rotations]
+        if t <= 5:
+            assert 322 in plate_ids
+        else:
+            assert not (322 in plate_ids)
