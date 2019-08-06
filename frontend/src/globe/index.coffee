@@ -1,4 +1,4 @@
-import React, {Component, createContext, useContext} from 'react'
+import React, {Component, createContext, useContext, createRef} from 'react'
 import {StatefulComponent} from '@macrostrat/ui-components'
 import T from 'prop-types'
 import h from './hyper'
@@ -51,6 +51,7 @@ class Globe extends StatefulComponent
   constructor: (props)->
     super(props)
 
+    @mapElement = createRef()
     maxSize = max [@props.width, @props.height]
 
     projection = geoOrthographic()
@@ -65,21 +66,27 @@ class Globe extends StatefulComponent
   updateProjection: (newProj)=>
     @updateState {projection: {$set: newProj}}
 
+  dispatchEvent: (evt)=>
+    # Simulate an event directly on the map's DOM element
+    @mapElement.dispatchEvent(evt)
+
   contextValue: ->
     {width, height} = @props
     {projection} = @state
-    {updateProjection} = @
+    actions = do => {updateProjection, dispatchEvent} = @
     renderPath = geoPath(projection)
-    {projection, renderPath, width, height, updateProjection}
+    {projection, renderPath, width, height, actions...}
 
   render: ->
     {width, height, children} = @props
     h MapContext.Provider, {value: @contextValue()}, [
       h 'svg.globe', {width, height}, [
-        h Background, {fill: 'dodgerblue'}
-        h Graticule
-        children
-        h DraggableOverlay
+        h 'g.map', {ref: @mapElement}, [
+          h Background, {fill: 'dodgerblue'}
+          h Graticule
+          h DraggableOverlay
+          children
+        ]
       ]
     ]
 

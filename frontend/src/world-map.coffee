@@ -84,8 +84,9 @@ class WorldMapInner extends Component
       h APIResultView, {
         route: "/api/plates",
         params: {model},
-        placeholder: ->h(Spinner, {tagName: 'g'})
+        placeholder: null
       }, (data)=>
+        return null unless data?
         h 'g.plates', data.map (d, i)->
           h PlatePolygon, {key: i, geography: d}
     ]

@@ -6,36 +6,26 @@ import {MapContext} from './context'
 import {drag} from 'd3-drag'
 import {select, event as currentEvent, mouse} from 'd3-selection'
 import {sph2cart, quat2euler, euler2quat, quatMultiply, quaternion} from './math'
-import Q from 'quaternion'
-
-###
-quatMultiply = (q1, q2)->
-  a = q1[0]
-  b = q1[1]
-  c = q1[2]
-  d = q1[3]
-  e = q2[0]
-  f = q2[1]
-  g = q2[2]
-  _h = q2[3]
-  return [
-    a*e - b*f - c*g - d*_h,
-    b*e + a*f + c*_h - d*g,
-    a*g - b*_h + c*e + d*f,
-    a*_h + b*g - c*f + d*e]
-###
 
 class DraggableOverlay extends Component
   @contextType: MapContext
+  @propTypes: {
+    showMousePosition: T.bool
+  }
+  @defaultProps: {
+    showMousePosition: true
+  }
   constructor: ->
     super arguments...
     @state = {mousePosition: null}
   render: ->
+    # https://medium.com/dev-shack/clicking-and-dragging-svg-with-react-and-d3-js-5639cd0c3c3b
     {width, height, renderPath} = @context
+    {showMousePosition} = @props
     {mousePosition} = @state
     h 'g.drag-overlay', [
       h 'rect.drag-mouse-target', {width, height}
-      h.if(mousePosition?) 'path.mouse-position', {
+      h.if(mousePosition? and showMousePosition) 'path.mouse-position', {
         d: renderPath(mousePosition)
       }
     ]
@@ -57,7 +47,6 @@ class DraggableOverlay extends Component
 
   dragEnded: (pos)=>
     @setState {mousePosition: null}
-    console.log currentEvent
 
   componentDidMount: ->
     {width, height, projection} = @context
@@ -67,10 +56,12 @@ class DraggableOverlay extends Component
 
     el = select(findDOMNode(@))
     @drag = drag()
+      .clickDistance 2
       .on "start", mousePos(@dragStarted)
       .on "drag", mousePos(@dragged)
       .on "end", mousePos(@dragEnded)
 
     @drag(el)
+
 
 export {DraggableOverlay}

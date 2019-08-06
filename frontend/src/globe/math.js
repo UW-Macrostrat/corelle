@@ -1,4 +1,8 @@
-// From http://bl.ocks.org/ivyywang/7c94cb5a3accd9913263
+/*
+We have a somewhat different implementation of quaternions than
+the plate rotation code
+From http://bl.ocks.org/ivyywang/7c94cb5a3accd9913263
+*/
 
 var to_radians = Math.PI / 180;
 var to_degrees = 180 / Math.PI;
