@@ -34,19 +34,47 @@ class WorldMap extends Component
       )
     )
 
-PlatePolygon = (props)->
-  {feature} = props
+PlateFeature = (props)->
+  # An arbitrary feature tied to a plate
+  {feature, youngLim, oldLim, plateId, rest...} = props
+  # Filter out features that are too young
   {geographyRotator, time} = useContext(RotationsContext) or {}
+  return null unless geographyRotator?
+  return null if oldLim < time
+  # Filter out features that are too old (unlikely given current models)
+  return null if youngLim > time
+  {projection} = useContext(MapContext)
+  rotate = geographyRotator plateId
+
+  trans = geoTransform {
+    point: (lon,lat)->
+      [x,y] = rotate [lon,lat]
+      this.stream.point(x,y)
+  }
+
+  stream = (s)->
+    # This ordering makes no sense but whatever
+    # https://stackoverflow.com/questions/27557724/what-is-the-proper-way-to-use-d3s-projection-stream
+    trans.stream(projection.stream(s))
+
+  # Combined projection
+  proj = geoPath({stream})
+  d = proj feature
+
+  h 'path', {d, rest...}
+
+PlatePolygon = (props)->
+  # An arbitrary feature tied to a plate
+  {feature, rest...} = props
   {id, properties} = feature
   {old_lim, young_lim} = properties
-  # Filter out plate polygons that are too young
+  # Filter out features that are too young
+  {geographyRotator, time} = useContext(RotationsContext) or {}
+  return null unless geographyRotator?
   return null if old_lim < time
-  # Filter out plate polygons that are too old (unlikely given current models)
+  # Filter out features that are too old (unlikely given current models)
   return null if young_lim > time
-
   {projection} = useContext(MapContext)
-  if not geographyRotator?
-    return null
   rotate = geographyRotator id
 
   trans = geoTransform {
@@ -65,11 +93,39 @@ PlatePolygon = (props)->
   d = proj feature
 
   h Popover, {content: h("span","Plate #{id}"), targetTagName: 'g', wrapperTagName: 'g'}, [
-    h 'path.plate-polygon', {
-      key: id, d
-    }
+    h 'path', {d, rest...}
   ]
 
+PlatePolygons = (props)->
+  {model} = useContext(RotationsContext)
+  h APIResultView, {
+    route: "/api/plates",
+    params: {model},
+    placeholder: null
+  }, (data)=>
+    return null unless data?
+    h 'g.plates', data.map (feature, i)->
+      h PlatePolygon, {key: i, feature}
+
+PlateFeatureDataset = (props)->
+  {dataset} = props
+  {model} = useContext(RotationsContext)
+  h APIResultView, {
+    route: "/api/feature/#{dataset}",
+    params: {model},
+    placeholder: null
+  }, (data)=>
+    return null unless data?
+    h 'g.feature', {className: dataset}, data.map (feature, i)->
+      {id, properties} = feature
+      {plate_id, old_lim, young_lim} = properties
+      h PlateFeature, {
+        key: id,
+        feature,
+        plateId: plate_id,
+        oldLim: old_lim,
+        youngLim: young_lim
+      }
 
 class WorldMapInner extends Component
   @contextType: RotationsContext
@@ -87,14 +143,8 @@ class WorldMapInner extends Component
       width,
       height
     }, [
-      h APIResultView, {
-        route: "/api/plates",
-        params: {model},
-        placeholder: null
-      }, (data)=>
-        return null unless data?
-        h 'g.plates', data.map (feature, i)->
-          h PlatePolygon, {key: i, feature}
+      h PlatePolygons
+      #h PlateFeatureDataset, {dataset: 'ne_110m_land'}
     ]
 
 

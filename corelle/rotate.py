@@ -88,9 +88,12 @@ def __get_rotation(stack, loops, model_id, plate_id, time, verbose=False, depth=
     def __cache(q):
         cache[cache_args] = q
         cache_list.append(cache_args)
-        if len(cache_list) > 5000:
+        if len(cache_list) > 50000:
             id = cache_list.pop(0)
-            del cache[id]
+            try:
+                del cache[id]
+            except KeyError:
+                pass
         return q
 
     def __get_row_rotation(row):
@@ -164,12 +167,10 @@ def get_all_rotations(model, time, verbose=False):
         yield plate_id, q
 
 def get_plate_rotations(model, plate_id, verbose=False):
-    fn = relative_path(__file__, 'query', 'time-steps-for-plate.sql')
-    sql = text(open(fn).read())
-    results = conn.execute(sql, plate_id=plate_id, model_name=model)
-    for res in results:
-        q = get_rotation(model, plate_id, res.t_step)
-        yield q, res.t_step
+    time_step = 1
+    time_range = (0,500)
+    time_steps = range(0,500,1)
+    return ((get_rotation(model, plate_id, t), t) for t in time_steps)
 
 def reset_cache():
     db.execute(__rotation.update().values(__cached_rotation=None))

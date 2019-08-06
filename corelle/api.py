@@ -31,12 +31,25 @@ def get_plate_polygons(model):
             properties = props,
             geometry = geom)
 
-class ModernPlates(Resource):
+
+
+class ModelResource(Resource):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.parser = RequestParser()
         self.parser.add_argument('model', type=str, required=True)
 
+class Features(ModelResource):
+    def get(self, dataset):
+        args = self.parser.parse_args()
+        fn = relative_path(__file__, 'query', 'feature-dataset.sql')
+        sql = text(open(fn).read())
+        res = conn.execute(sql,
+            model_name=args['model'],
+            dataset=dataset)
+        return [dict(row) for row in res]
+
+class ModernPlates(ModelResource):
     def get(self):
         args = self.parser.parse_args()
         return list(get_plate_polygons(args['model']))
@@ -88,6 +101,9 @@ class Rotation(RotationsResource):
         return self.reducer(q, args, plate_id)
 
 class Pole(RotationsResource):
+    """
+    Get poles for plate(s)
+    """
     def get(self):
         args = self.parser.parse_args()
         id = args['plate_id']
@@ -121,5 +137,6 @@ class Model(Resource):
 api.add_resource(Help, '/api')
 api.add_resource(ModernPlates, "/api/plates")
 api.add_resource(Rotation, "/api/rotate")
+api.add_resource(Features, "/api/feature/<string:dataset>")
 api.add_resource(Pole, "/api/pole")
 api.add_resource(Model, "/api/model")

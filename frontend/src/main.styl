@@ -16,18 +16,14 @@ html, body
   width: 100%
   height: 100vh
 
-.plate-polygon
-  fill: #ECEFF1
-  stroke: #607D8B
+plate_color=#888
+
+g.plates path
+  fill: alpha(plate_color,0.2)
+  stroke: alpha(plate_color, 0.8)
   stroke-width: 0.75
   outline: none
   &:hover
-    fill: #607D8B
-    stroke: #607D8B
+  fill: alpha(plate_color,0.5)
     stroke-width: 0.75
-    outline: none
-  &:pressed
-    fill: #FF5722
-    stroke: #607D8B
-    strokeWidth: 0.75
     outline: none
