@@ -1,7 +1,7 @@
 import numpy as N
 import quaternion
 from .util import vector, unit_vector
-from .rotate import sph2cart, cart2sph, euler_to_quaternion, quaternion_to_euler
+from .math import sph2cart, cart2sph, euler_to_quaternion, quaternion_to_euler
 
 equal = N.allclose
 

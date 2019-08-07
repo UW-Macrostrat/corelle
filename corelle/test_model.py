@@ -1,4 +1,7 @@
 import pytest
+import json
+from pg_viewtils import relative_path
+from os import path
 import numpy as N
 from .rotate import get_rotation, get_all_rotations, quaternion_to_euler
 
@@ -47,3 +50,10 @@ def test_plate_disappearance(time):
             assert 322 in plate_ids
         else:
             assert not (322 in plate_ids)
+
+
+# Test against gplates web service data
+def get_fixture(key):
+    dn = relative_path(__file__, '..', 'test-data', key+'.geojson')
+    with open(fn,'r') as f:
+        return json.load(f)

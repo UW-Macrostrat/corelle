@@ -2,39 +2,13 @@ import numpy as N
 import quaternion as Q
 from sqlalchemy import text, and_, desc
 from pg_viewtils import reflect_table, relative_path
+from .math import cart2sph, sph2cart, euler_to_quaternion, quaternion_to_euler
 
-from .util import unit_vector
-from .database import db
+from ..database import db
 
 __model = reflect_table(db, 'model')
 __plate = reflect_table(db, 'plate')
 __rotation = reflect_table(db, 'rotation')
-
-def sph2cart(lon,lat):
-    _lon = N.radians(lon)
-    _lat = N.radians(lat)
-    x = N.cos(_lat)*N.cos(_lon)
-    y = N.cos(_lat)*N.sin(_lon)
-    z = N.sin(_lat)
-    return unit_vector(x,y,z)
-
-def cart2sph(unit_vec):
-    (x, y, z) = unit_vec
-    lat = N.arcsin(z)
-    lon = N.arctan2(y, x)
-    return N.degrees(lon), N.degrees(lat)
-
-def euler_to_quaternion(euler_pole):
-    lat, lon, angle = [float(i) for i in euler_pole]
-    angle = N.radians(angle)
-    w = N.cos(angle/2)
-    v = sph2cart(lon, lat)*N.sin(angle/2)
-    return N.quaternion(w, *v)
-
-def quaternion_to_euler(q):
-    angle = 2*N.arccos(q.w)
-    lon, lat = cart2sph(q.vec/N.sin(angle/2))
-    return lat, lon, N.degrees(angle)
 
 conn = db.connect()
 
@@ -145,13 +119,18 @@ def __get_rotation(stack, loops, model_id, plate_id, time, verbose=False, depth=
     return __cache(N.quaternion(1,0,0,0))
 
 def plates_for_model(model):
-    fn = relative_path(__file__, 'query', 'plates-for-model.sql')
+    fn = relative_path(__file__, '..', 'query', 'plates-for-model.sql')
     sql = text(open(fn).read())
     for row in conn.execute(sql, model_name=model):
         yield row[0]
 
+def rotate_point(point, model, time):
+    q = get_rotation(model, plate_id, time)
+    import IPython; IPython.embed(); raise
+
+
 def get_all_rotations(model, time, verbose=False):
-    fn = relative_path(__file__, 'query', 'active-plates-at-time.sql')
+    fn = relative_path(__file__, '..', 'query', 'active-plates-at-time.sql')
     sql = text(open(fn).read())
     results = conn.execute(sql, time=time, model_name=model)
     for res in results:
