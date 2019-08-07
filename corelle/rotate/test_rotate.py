@@ -1,5 +1,6 @@
 import numpy as N
-import quaternion
+import quaternion as Q
+import pytest
 from .util import vector, unit_vector
 from .math import sph2cart, cart2sph, euler_to_quaternion, quaternion_to_euler
 from . import rotate_point
@@ -36,9 +37,18 @@ def test_cartesian_recovery():
     v = unit_vector(1.2,4,2.5)
     assert equal(v, sph2cart(*cart2sph(v)))
 
-r = (25, 80, 32)
-def test_euler_recovery():
-    assert equal(r, quaternion_to_euler(euler_to_quaternion(r)))
+r = [(25, 80, 32), (22,-10,-20), (-80, 120, 5.2)]
+@pytest.mark.parametrize("angles", r)
+def test_euler_recovery(angles):
+    a2 = list(quaternion_to_euler(euler_to_quaternion(angles)))
+    if N.sign(angles[0]) != N.sign(a2[0]):
+        a2[0] *= -1
+        a2[1] += 180
+        if a2[1] > 180:
+            a2[1] -= 360
+        a2[2] *= -1
+
+    assert Q.allclose(angles, tuple(a2), atol=0.001)
 
 def test_quaternion_angle_recovery():
     axis = sph2cart(r[1],r[0])

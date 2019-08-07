@@ -69,3 +69,6 @@ def test_simple_rotation():
     euler1 = quaternion_to_euler(q)
     assert N.allclose(euler, euler1)
     assert N.allclose(q, q1)
+
+    q2 = get_rotation("seton2012", 702, 10)
+    assert N.allclose(q1,q2)
