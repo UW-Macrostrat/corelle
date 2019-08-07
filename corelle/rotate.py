@@ -1,10 +1,7 @@
 import numpy as N
 import quaternion as Q
 from sqlalchemy import text, and_, desc
-from pg_viewtils import reflect_table
-from functools import lru_cache
-from time import sleep
-from pg_viewtils import relative_path
+from pg_viewtils import reflect_table, relative_path
 
 from .util import unit_vector
 from .database import db
@@ -40,8 +37,6 @@ def quaternion_to_euler(q):
     return lat, lon, N.degrees(angle)
 
 conn = db.connect()
-
-memo_cache = {}
 
 class LoopError(Exception):
     def __init__(self, plate_id):
@@ -171,6 +166,3 @@ def get_plate_rotations(model, plate_id, verbose=False):
     time_range = (0,500)
     time_steps = range(0,500,1)
     return ((get_rotation(model, plate_id, t), t) for t in time_steps)
-
-def reset_cache():
-    db.execute(__rotation.update().values(__cached_rotation=None))
