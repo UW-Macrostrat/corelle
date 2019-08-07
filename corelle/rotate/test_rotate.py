@@ -2,6 +2,7 @@ import numpy as N
 import quaternion
 from .util import vector, unit_vector
 from .math import sph2cart, cart2sph, euler_to_quaternion, quaternion_to_euler
+from . import rotate_point
 
 equal = N.allclose
 
@@ -36,7 +37,6 @@ def test_cartesian_recovery():
     assert equal(v, sph2cart(*cart2sph(v)))
 
 r = (25, 80, 32)
-
 def test_euler_recovery():
     assert equal(r, quaternion_to_euler(euler_to_quaternion(r)))
 
@@ -48,8 +48,14 @@ def test_quaternion_angle_recovery():
     assert equal(q1.angle(), angle)
     assert q1.w == N.cos(q1.angle()/2)
     assert equal(q1.vec, axis*N.sin(angle/2))
+    assert N.allclose(quaternion_to_euler(q1), r)
 
 def test_quaternion_equivalence():
     q = euler_to_quaternion(r)
     angle = 2*N.arccos(q.w)
     assert equal(N.degrees(angle), r[-1])
+
+def test_rotate_now():
+    point = [90, -50]
+    new_point = rotate_point(point, "Seton2012", 0)
+    assert N.allclose(point, new_point)

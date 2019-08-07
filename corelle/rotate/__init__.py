@@ -124,9 +124,19 @@ def plates_for_model(model):
         yield row[0]
 
 def rotate_point(point, model, time):
+    if time == 0:
+        return point
+    sql = get_sql('plate-for-point')
+    plate_id = conn.execute(sql,
+        lon=point[0],
+        lat=point[1],
+        model_name=model,
+        time=time).scalar()
+    if plate_id is None: return None
     q = get_rotation(model, plate_id, time)
-    import IPython; IPython.embed(); raise
-
+    v0 = sph2cart(*point)
+    v1 = Q.rotate_vectors(q, v0)
+    return cart2sph(v1)
 
 def get_all_rotations(model, time, verbose=False):
     sql = get_sql('active-plates-at-time')

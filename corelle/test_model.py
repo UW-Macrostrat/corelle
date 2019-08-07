@@ -3,7 +3,7 @@ import json
 from pg_viewtils import relative_path
 from os import path
 import numpy as N
-from .rotate import get_rotation, get_all_rotations, quaternion_to_euler
+from .rotate import get_rotation, get_all_rotations, quaternion_to_euler, euler_to_quaternion
 
 def test_seton_recursion():
     """
@@ -51,9 +51,21 @@ def test_plate_disappearance(time):
         else:
             assert not (322 in plate_ids)
 
+# Test identity
+def test_identity():
+    time = 10
+    plate_id = 1
+    q = get_rotation("Seton2012", plate_id, 10)
+    q1 = N.quaternion(1,0,0,0)
+    assert N.allclose(q,q1)
 
-# Test against gplates web service data
-def get_fixture(key):
-    dn = relative_path(__file__, '..', 'test-data', key+'.geojson')
-    with open(fn,'r') as f:
-        return json.load(f)
+# Make sure simple rotation is right
+def test_simple_rotation():
+    time = 10
+    plate_id = 701
+    euler = (46.19, -87.86, -1.92)
+    q = get_rotation("Seton2012", plate_id, time)
+    q1 = euler_to_quaternion(euler)
+    euler1 = quaternion_to_euler(q)
+    assert N.allclose(euler, euler1)
+    assert N.allclose(q, q1)

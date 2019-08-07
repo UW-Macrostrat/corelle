@@ -3,7 +3,8 @@ import json
 from pg_viewtils import relative_path
 from os import path
 import numpy as N
-from .rotate import get_rotation, get_all_rotations, quaternion_to_euler
+from .rotate import get_rotation, get_all_rotations, rotate_point
+from .rotate.math import quaternion_to_euler
 
 # Test against gplates web service data
 def get_fixture(key):
@@ -15,19 +16,19 @@ def get_coordinates(fc):
     """
     Get the coordinates from a feature collection
     """
-    return fc['features'][0]['geometry']['coordinates'][0][0]
+    return fc['features'][0]['geometry']['coordinates'][0]
 
 req = get_fixture("seton2012-gws-request")
-times = [140,200]
+times = [0, 120, 1,10,140,200]
 @pytest.mark.parametrize("time", times)
 def test_against_gplates(time):
-    res = get_fixture("seton2012-gws-response-140")
+    res = get_fixture(f"seton2012-gws-response-{time}")
 
     now = get_coordinates(req)
     prev = get_coordinates(res)
     assert len(now) == len(prev)
 
     for c0,ct in zip(now, prev):
-        pass
-
-    assert True
+        print(c0)
+        p1 = rotate_point(c0, "Seton2012", time)
+        assert N.allclose(p1,ct)
