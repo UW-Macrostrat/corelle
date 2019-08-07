@@ -3,7 +3,8 @@ import json
 from pg_viewtils import relative_path
 from os import path
 import numpy as N
-from .rotate import get_rotation, get_all_rotations, quaternion_to_euler, euler_to_quaternion
+from .rotate import get_rotation, get_all_rotations
+from .rotate.math import euler_equal, quaternion_to_euler, euler_to_quaternion
 
 def test_seton_recursion():
     """
@@ -67,7 +68,7 @@ def test_simple_rotation():
     q = get_rotation("Seton2012", plate_id, time)
     q1 = euler_to_quaternion(euler)
     euler1 = quaternion_to_euler(q)
-    assert N.allclose(euler, euler1)
+    assert euler_equal(euler, euler1)
     assert N.allclose(q, q1)
 
     q2 = get_rotation("seton2012", 702, 10)

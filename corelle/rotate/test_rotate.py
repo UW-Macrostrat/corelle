@@ -2,7 +2,9 @@ import numpy as N
 import quaternion as Q
 import pytest
 from .util import vector, unit_vector
-from .math import sph2cart, cart2sph, euler_to_quaternion, quaternion_to_euler
+from .math import (
+    sph2cart, cart2sph, euler_to_quaternion,
+    quaternion_to_euler, euler_equal )
 from . import rotate_point
 
 equal = N.allclose
@@ -40,30 +42,26 @@ def test_cartesian_recovery():
 r = [(25, 80, 32), (22,-10,-20), (-80, 120, 5.2)]
 @pytest.mark.parametrize("angles", r)
 def test_euler_recovery(angles):
-    a2 = list(quaternion_to_euler(euler_to_quaternion(angles)))
-    if N.sign(angles[0]) != N.sign(a2[0]):
-        a2[0] *= -1
-        a2[1] += 180
-        if a2[1] > 180:
-            a2[1] -= 360
-        a2[2] *= -1
+    a2 = quaternion_to_euler(euler_to_quaternion(angles))
+    assert euler_equal(angles, a2)
 
-    assert Q.allclose(angles, tuple(a2), atol=0.001)
+@pytest.mark.parametrize("angles", r)
+def test_quaternion_angle_recovery(angles):
+    axis = sph2cart(angles[1],angles[0])
+    angle = N.radians(angles[2])
+    q1 = Q.from_rotation_vector(axis*angle)
 
-def test_quaternion_angle_recovery():
-    axis = sph2cart(r[1],r[0])
-    angle = N.radians(r[2])
-    q1 = quaternion.from_rotation_vector(axis*angle)
-
-    assert equal(q1.angle(), angle)
+    assert equal(N.abs(q1.angle()), N.abs(angle))
     assert q1.w == N.cos(q1.angle()/2)
     assert equal(q1.vec, axis*N.sin(angle/2))
-    assert N.allclose(quaternion_to_euler(q1), r)
+    assert euler_equal(quaternion_to_euler(q1), angles)
 
-def test_quaternion_equivalence():
-    q = euler_to_quaternion(r)
-    angle = 2*N.arccos(q.w)
-    assert equal(N.degrees(angle), r[-1])
+@pytest.mark.parametrize("angles", r)
+def test_quaternion_equivalence(angles):
+    q = euler_to_quaternion(angles)
+    # Make sure sign is the same
+    angle = N.degrees(2*N.arccos(q.w))
+    assert equal(N.abs(angle), N.abs(angles[-1]), atol=0.001)
 
 def test_rotate_now():
     point = [90, -50]
