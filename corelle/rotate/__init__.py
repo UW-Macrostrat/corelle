@@ -3,7 +3,7 @@ import quaternion as Q
 from sqlalchemy import text, and_, desc
 from pg_viewtils import reflect_table, relative_path
 from .math import cart2sph, sph2cart, euler_to_quaternion, quaternion_to_euler
-
+from ..query import get_sql
 from ..database import db
 
 __model = reflect_table(db, 'model')
@@ -119,8 +119,7 @@ def __get_rotation(stack, loops, model_id, plate_id, time, verbose=False, depth=
     return __cache(N.quaternion(1,0,0,0))
 
 def plates_for_model(model):
-    fn = relative_path(__file__, '..', 'query', 'plates-for-model.sql')
-    sql = text(open(fn).read())
+    sql = get_sql('plates-for-model')
     for row in conn.execute(sql, model_name=model):
         yield row[0]
 
@@ -130,8 +129,7 @@ def rotate_point(point, model, time):
 
 
 def get_all_rotations(model, time, verbose=False):
-    fn = relative_path(__file__, '..', 'query', 'active-plates-at-time.sql')
-    sql = text(open(fn).read())
+    sql = get_sql('active-plates-at-time')
     results = conn.execute(sql, time=time, model_name=model)
     for res in results:
         plate_id = res[0]
