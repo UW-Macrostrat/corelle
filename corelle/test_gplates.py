@@ -19,7 +19,7 @@ def get_coordinates(fc):
     return fc['features'][0]['geometry']['coordinates'][0]
 
 req = get_fixture("seton2012-gws-request")
-times = [0, 120, 1,10,140,200]
+times = [0,1,10,120,140,200]
 @pytest.mark.parametrize("time", times)
 def test_against_gplates(time):
     res = get_fixture(f"seton2012-gws-response-{time}")
@@ -29,6 +29,5 @@ def test_against_gplates(time):
     assert len(now) == len(prev)
 
     for c0,ct in zip(now, prev):
-        print(c0)
         p1 = rotate_point(c0, "Seton2012", time)
-        assert N.allclose(p1,ct)
+        assert N.allclose(p1,ct, atol=0.03)

@@ -71,5 +71,5 @@ def test_simple_rotation():
     assert euler_equal(euler, euler1)
     assert N.allclose(q, q1)
 
-    q2 = get_rotation("seton2012", 702, 10)
+    q2 = get_rotation("Seton2012", 702, 10)
     assert N.allclose(q1,q2)

@@ -1,6 +1,5 @@
 import numpy as N
 import quaternion as Q
-from sqlalchemy import text, and_, desc
 from pg_viewtils import reflect_table, relative_path
 from .math import cart2sph, sph2cart, euler_to_quaternion, quaternion_to_euler
 from ..query import get_sql
@@ -74,7 +73,7 @@ def __get_rotation(stack, loops, model_name, plate_id, time, verbose=False, dept
         base = __get_rotation(
             stack+[row.plate_id],
             loops, model_name,
-            row.ref_plate_id, row.t_step,
+            row.ref_plate_id, time,
             verbose=verbose,
             depth=depth+1)
 
