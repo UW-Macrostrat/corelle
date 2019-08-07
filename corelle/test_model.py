@@ -73,3 +73,22 @@ def test_simple_rotation():
 
     q2 = get_rotation("Seton2012", 702, 10)
     assert N.allclose(q1,q2)
+
+@pytest.mark.xfail("We don't have good error handling right now")
+def test_undefined_model():
+    """
+    Make sure there is an error when we specify a bad model.
+    """
+    r = get_rotation("Adsdfs", 10, 10)
+    assert r is None
+
+def test_mongol_okhotsk():
+    """
+    The Mongol-Okhotsk basin in Seton2012 should not show up prior to 320 Ma
+    (its earliest defined rotation time step)
+    """
+    q = get_rotation("Seton2012", 417, 318)
+    assert q is not None
+
+    q = get_rotation("Seton2012", 417, 322)
+    assert q is None

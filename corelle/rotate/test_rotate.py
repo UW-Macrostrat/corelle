@@ -39,6 +39,15 @@ def test_cartesian_recovery():
     v = unit_vector(1.2,4,2.5)
     assert equal(v, sph2cart(*cart2sph(v)))
 
+def test_quaternion_composition():
+    """Compose two rotations"""
+    vert = unit_vector(0,0,1)
+    q1 = Q.from_rotation_vector(vert*N.radians(90))
+    q2 = Q.from_rotation_vector(vert*N.radians(-30))
+    qc = q1*q2
+    assert N.allclose(N.degrees(qc.angle()), 60) 
+
+
 r = [(25, 80, 32), (22,-10,-20), (-80, 120, 5.2)]
 @pytest.mark.parametrize("angles", r)
 def test_euler_recovery(angles):

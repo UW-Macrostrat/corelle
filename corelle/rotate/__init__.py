@@ -36,9 +36,8 @@ def __get_rotation(stack, loops, model_name, plate_id, time, verbose=False, dept
     if cache_args in cache:
         return cache[cache_args]
 
-    # Fetches a sequence of rotations per unit time
     if verbose:
-        print(" "*depth, plate_id, time)
+        print((" "*depth)[1:], plate_id, time)
 
     if plate_id is None or plate_id == 0:
         return N.quaternion(1,0,0,0)
@@ -51,6 +50,7 @@ def __get_rotation(stack, loops, model_name, plate_id, time, verbose=False, dept
         time = time)
 
     def __cache(q):
+        # Fetches a sequence of rotations per unit time
         cache[cache_args] = q
         cache_list.append(cache_args)
         if len(cache_list) > 50000:
@@ -65,10 +65,13 @@ def __get_rotation(stack, loops, model_name, plate_id, time, verbose=False, dept
 
         if row.ref_plate_id in loops:
             # We don't want to get into an endless loop
-            return None
+            raise LoopError(row.ref_plate_id)
         if row.ref_plate_id in stack:
             ix = stack.index(row.ref_plate_id)
             raise LoopError(stack[ix])
+
+        q = euler_to_quaternion([row.latitude,row.longitude,row.angle])
+        if q is None: return None
 
         base = __get_rotation(
             stack+[row.plate_id],
@@ -76,19 +79,26 @@ def __get_rotation(stack, loops, model_name, plate_id, time, verbose=False, dept
             row.ref_plate_id, time,
             verbose=verbose,
             depth=depth+1)
-
-        rot = euler_to_quaternion([row.latitude,row.longitude,row.angle])*base
-
-        return rot
+        if base is None:
+            base = N.quaternion(1,0,0,0)
+        return q*base
 
     rotation = None
     rows = db.execute(__before, **params).fetchall()
     prev_step = 0
     q_before = None
     for r in rows:
-        q_before = __get_row_rotation(r)
+        try:
+            q_before = __get_row_rotation(r)
+        except LoopError as err:
+            if err.plate_id == r.ref_plate_id:
+                continue
+            else:
+                print("Raising err")
+                raise err
+
         if q_before is None:
-            continue
+            return None
 
         if r.t_step == time:
             return __cache(q_before)
@@ -102,15 +112,19 @@ def __get_rotation(stack, loops, model_name, plate_id, time, verbose=False, dept
 
     rows = db.execute(__after, **params).fetchall()
     for r in rows:
-        q_after = __get_row_rotation(r)
-        if q_after is None:
-            continue
+        try:
+            q_after = __get_row_rotation(r)
+        except LoopError as err:
+            if err.plate_id == r.ref_plate_id:
+                continue
+            else:
+                raise err
         # Proportion of time between steps elapsed
-        proportion = (time-prev_step)/(float(r.t_step)-prev_step)
-        return __cache(q_before*(1-proportion) + q_after*proportion)
+        # Interpolate between these two rotors (GPlates uses this linear interpolation)
+        res = Q.slerp(q_before,q_after, float(prev_step), float(r.t_step), float(time))
+        return __cache(res)
 
-
-    return __cache(N.quaternion(1,0,0,0))
+    return None
 
 def plates_for_model(model):
     sql = get_sql('plates-for-model')
@@ -138,6 +152,8 @@ def get_all_rotations(model, time, verbose=False):
     for res in results:
         plate_id = res[0]
         q = get_rotation(model, plate_id, time, verbose=verbose)
+        if q is None:
+            continue
         if N.isnan(q.w):
             continue
         yield plate_id, q
