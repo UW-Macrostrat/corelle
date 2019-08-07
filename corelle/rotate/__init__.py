@@ -17,15 +17,12 @@ class LoopError(Exception):
         super().__init__(self, f"Plate {plate_id} caused an infinite loop")
         self.plate_id = plate_id
 
-def get_rotation(model_name, plate_id, time, **kwargs):
-    model_id = db.execute(
-        __model.select(__model.c.name == model_name)).scalar()
-
+def get_rotation(*args, **kwargs):
     loops = []
     for i in range(100):
         # Try 100 times
         try:
-            return __get_rotation([], loops, model_id, plate_id, time, **kwargs)
+            return __get_rotation([], loops, *args, **kwargs)
         except LoopError as err:
             loops.append(err.plate_id)
 
@@ -34,13 +31,11 @@ cache = {}
 cache_list = []
 
 # Cache this expensive, recursive function.
-def __get_rotation(stack, loops, model_id, plate_id, time, verbose=False, depth=0):
+def __get_rotation(stack, loops, model_name, plate_id, time, verbose=False, depth=0):
     time = float(time)
-    cache_args = (model_id, plate_id, time)
+    cache_args = (model_name, plate_id, time)
     if cache_args in cache:
         return cache[cache_args]
-
-    model_query = __rotation.select().where(__model.c.id == model_id)
 
     # Fetches a sequence of rotations per unit time
     if verbose:
@@ -49,10 +44,12 @@ def __get_rotation(stack, loops, model_id, plate_id, time, verbose=False, depth=
     if plate_id is None or plate_id == 0:
         return N.quaternion(1,0,0,0)
 
-    base_query = model_query.where(__rotation.c.plate_id==plate_id)
-    _t = __rotation.c.t_step
-    rotations_before = base_query.where(_t <= time).order_by(desc(_t))
-    rotations_after = base_query.where(_t > time).order_by(_t)
+    __before = get_sql("rotations-before")
+    __after = get_sql("rotations-after")
+    params = dict(
+        plate_id = plate_id,
+        model_name = model_name,
+        time = time)
 
     def __cache(q):
         cache[cache_args] = q
@@ -76,19 +73,17 @@ def __get_rotation(stack, loops, model_id, plate_id, time, verbose=False, depth=
 
         base = __get_rotation(
             stack+[row.plate_id],
-            loops, model_id,
-            row.ref_plate_id, time,
+            loops, model_name,
+            row.ref_plate_id, row.t_step,
             verbose=verbose,
             depth=depth+1)
 
-        rot = euler_to_quaternion([
-            float(i) for i in [row.latitude,row.longitude,row.angle]
-        ])*base
+        rot = euler_to_quaternion([row.latitude,row.longitude,row.angle])*base
 
         return rot
 
     rotation = None
-    rows = db.execute(rotations_before).fetchall()
+    rows = db.execute(__before, **params).fetchall()
     prev_step = 0
     q_before = None
     for r in rows:
@@ -106,7 +101,7 @@ def __get_rotation(stack, loops, model_id, plate_id, time, verbose=False, depth=
     if q_before is None:
         q_before = N.quaternion(1,0,0,0)
 
-    rows = db.execute(rotations_after).fetchall()
+    rows = db.execute(__after, **params).fetchall()
     for r in rows:
         q_after = __get_row_rotation(r)
         if q_after is None:
