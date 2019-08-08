@@ -10,7 +10,7 @@ ControlPanel = (props)->
   {time, setTime} = props
   max = 500
   h 'div.control-panel', [
-    h 'h1', "Corelle"
+    h 'h1', "Corelle"  
     h Slider, {
       min: 0,
       max,
