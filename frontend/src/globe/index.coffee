@@ -59,6 +59,7 @@ class Globe extends StatefulComponent
       .scale(maxSize/2)
       .clipAngle(90)
       .translate([@props.width/2, @props.height/2])
+      .precision(0.5)
 
     @state = {
       projection

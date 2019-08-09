@@ -1,16 +1,30 @@
-import {Component} from 'react'
+import {Component, useContext} from 'react'
 import hyper from '@macrostrat/hyper'
-import {Slider} from '@blueprintjs/core'
+import {Slider, HTMLSelect, FormGroup} from '@blueprintjs/core'
+import {RotationsContext} from './rotations'
 import styles from './main.styl'
 import T from 'prop-types'
 
 h = hyper.styled(styles)
 
+SelectModel = (props)->
+  {model} = useContext(RotationsContext)
+  {setModel, models} = props
+  onChange = (e)->
+    setModel(e.currentTarget.value)
+  h FormGroup, {label: 'Model'}, [
+    h HTMLSelect, {onChange}, models.map (d)->
+      selected = d == model
+      h 'option', {value: d, selected}, d
+  ]
+
 ControlPanel = (props)->
-  {time, setTime} = props
+  {setTime, setModel, models} = props
+  {time, model} = useContext RotationsContext
   max = 500
   h 'div.control-panel', [
-    h 'h1', "Corelle"  
+    h 'h1', "Corelle"
+    h SelectModel, {setModel, models}
     h Slider, {
       min: 0,
       max,
@@ -31,8 +45,8 @@ ControlPanel = (props)->
   ]
 
 ControlPanel.propTypes = {
-  time: T.number.isRequired
   setTime: T.func
+  setModel: T.func
 }
 
 export default ControlPanel

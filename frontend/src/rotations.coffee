@@ -20,7 +20,7 @@ class __RotationsProvider extends Component
     rotations: T.arrayOf(T.object)
   }
   render: ->
-    {rotations, time, model} = @props
+    {rotations, time, model, models} = @props
     value = {
       rotations,
       model,
