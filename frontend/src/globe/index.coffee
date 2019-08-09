@@ -90,13 +90,13 @@ class Globe extends StatefulComponent
   render: ->
     {width, height, children} = @props
     h MapContext.Provider, {value: @contextValue()}, [
-      h 'svg.globe', {width, height}, [
-        h 'g.map', {ref: @mapElement}, [
-          h Background, {fill: 'dodgerblue'}
+      h 'div.map', {width, height}, [
+        children
+        h 'svg.map-layer', {width, height}, [
+          #h Background, {fill: 'dodgerblue'}
           h Graticule
-          children
+          h DraggableOverlay
         ]
-        h DraggableOverlay
       ]
     ]
 

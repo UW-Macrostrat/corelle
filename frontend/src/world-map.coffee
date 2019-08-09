@@ -9,6 +9,8 @@ import {ResizeSensor, Popover, Spinner} from '@blueprintjs/core'
 import {RotationsContext} from './rotations'
 import {Globe, MapContext} from './globe'
 import {geoPath} from 'd3-geo'
+import {MapCanvas} from './globe/canvas'
+import {Path, Text} from 'react-konva'
 
 import styles from './main.styl'
 
@@ -60,17 +62,15 @@ PlateFeature = (props)->
   # Combined projection
   proj = geoPath({stream})
   d = proj feature
-
-  h 'path', {d, rest...}
+  console.log d
+  h Path, {data: d, x: 0, y: 0, rest...}
 
 PlatePolygon = (props)->
   # An arbitrary feature tied to a plate
   {feature, rest...} = props
   {id, properties} = feature
   {old_lim, young_lim} = properties
-  h Popover, {content: h("span","Plate #{id}"), targetTagName: 'g', wrapperTagName: 'g'}, [
-    h PlateFeature, {feature, oldLim: old_lim, youngLim: young_lim, plateId: id, rest...}
-  ]
+  h PlateFeature, {feature, oldLim: old_lim, youngLim: young_lim, plateId: id, rest...}
 
 PlatePolygons = (props)->
   {model} = useContext(RotationsContext)
@@ -80,7 +80,7 @@ PlatePolygons = (props)->
     placeholder: null
   }, (data)=>
     return null unless data?
-    h 'g.plates', null, data.map (feature, i)->
+    h MapCanvas.Layer, null, data.map (feature, i)->
       h PlatePolygon, {key: i, feature}
 
 PlateFeatureDataset = (props)->
@@ -92,7 +92,7 @@ PlateFeatureDataset = (props)->
     placeholder: null
   }, (data)=>
     return null unless data?
-    h 'g', {className: name}, data.map (feature, i)->
+    h MapCanvas.Layer, {className: name}, data.map (feature, i)->
       {id, properties} = feature
       {plate_id, old_lim, young_lim} = properties
       h PlateFeature, {
@@ -119,8 +119,13 @@ class WorldMapInner extends Component
       width,
       height
     }, [
-      h PlatePolygons
-      h PlateFeatureDataset, {name: 'ne_110m_land'}
+      h MapCanvas, [
+        h PlatePolygons
+        h PlateFeatureDataset, {name: 'ne_110m_land'}
+        h MapCanvas.Layer, ->
+          h Text, {x: 10, y: 10, text: "Try click on rect"}
+
+      ]
     ]
 
 
