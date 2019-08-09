@@ -6,12 +6,26 @@ web application that implements client-side rotations based on this platform.
 
 ## Installation
 
-A recent (>3.6) version of Python is required to run the backend code.
+A recent (>3.6) version of Python is required to run the backend code. A recent
+node is required to run the frontend. The Python module is currently hard-coded
+to require the `postgresql:///plate-rotations` database, but this can be
+easily changed.
+
+To install the backend, run `make install` in this repository. The `plates`
+executable should become available on your path. `make init` imports models and
+feature datasets. Then `plates serve` starts the testing API server.
+
+To run the frontend, move to the `frontend/` subdirectory and run `npm run dev`.
+A backend API server will be started and proxied.
 
 ## Todo
 
 - [ ] Fix subtle math bugs!
 - [ ] On-database cache of rotations (say, at 1 Ma increments?)
+- [ ] Return pre-rotated feature datasets (rather than just modern versions)
+- [ ] Materialized view for split feature datasets
+- [ ] Allow feature datasets to be listed
+- [ ] Create a dockerized version
 - [ ] Polish the frontend demo
 
 ## API Reference
@@ -78,21 +92,28 @@ at the specified time, for client-side rotation of points.
 }
 ```
 
-## Rotated features
+### Features for rotation
 
-### A named feature dataset
+For right now, features are not returned pre-rotated, but this capability will
+be added to the API. Instead, features are returned as-is, with
+`plate_id`, `old_lim`, and `young_lim` properties so they can be rotated client-side.
 
-These feature datasets must be imported in advance; they are returned split on plate
-boundaries and with `plate_id`, `old_lim`, and `young_lim` properties so they can be
-rotated on the client side. The example below fetches the `ne_110m_land` dataset.
+#### A named feature dataset
+
+Arbitrary feature datasets (imported in advance on the backend).
+The datasets are returned split on plate boundaries and  so they can be
+rotated on the client side.
+The example below fetches the `ne_110m_land` dataset.
 
 ```
 /api/feature/ne_110m_land?model=Seton2012
 ```
 
+TODO: allow listing of all named feature datasets.
+
 #### Modern plate polygons
 
-This route feature returns the plate polygons themselves.
+This route returns the plate polygons features themselves.
 
 ```
 /api/plates?model=Seton2012
