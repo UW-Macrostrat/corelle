@@ -36,7 +36,22 @@ E.g. `20,-20 10,10` to rotate two points becomes
 This route gives you the axis-angle or quaternion representation of plate rotations
 at the specified time, for client-side rotation of points.
 
-An axis-angle rotation:
+#### All rotations defined by the model
+
+```
+/api/rotate?time=10&model=Seton2012&quaternion=true
+```
+
+#### Rotation for a specific plate
+
+```
+/api/rotate?time=10&model=Seton2012&plate_id=quaternion=true
+```
+
+#### Return formats
+
+##### Axis-angle
+
 ```json
 {
   "axis": [
@@ -49,8 +64,9 @@ An axis-angle rotation:
 }
 ```
 
-A quaternion rotation:
-```
+##### Quaternion
+
+```json
 {
   "quaternion": [
       0.9990020102870522,
@@ -60,18 +76,6 @@ A quaternion rotation:
   ],
   "plate_id": 311
 }
-```
-
-#### All rotations defined by the model
-
-```
-/api/rotate?time=10&model=Seton2012&quaternion=true
-```
-
-#### Rotation for a specific plate
-
-```
-/api/rotate?time=10&model=Seton2012&plate_id=quaternion=true
 ```
 
 ## Rotated features
