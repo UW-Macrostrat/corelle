@@ -1,5 +1,5 @@
 import hyper from '@macrostrat/hyper'
-import React, {Component, useContext, createElement} from 'react'
+import React, {Component, useContext, createElement, useState} from 'react'
 import {APIResultView} from '@macrostrat/ui-components'
 import {min} from 'd3-array'
 import {select} from 'd3-selection'
@@ -64,15 +64,19 @@ PlateFeature = (props)->
   h 'path', {d, rest...}
 
 PlatePolygon = (props)->
-  # An arbitrary feature tied to a plate
-  {feature, rest...} = props
+  {feature, isSelected, setSelectedPlate, rest...} = props
   {id, properties} = feature
   {old_lim, young_lim} = properties
-  h Popover, {content: h("span","Plate #{id}"), targetTagName: 'g', wrapperTagName: 'g'}, [
-    h PlateFeature, {feature, oldLim: old_lim, youngLim: young_lim, plateId: id, rest...}
-  ]
+  h PlateFeature, {
+    feature,
+    oldLim: old_lim,
+    youngLim: young_lim,
+    plateId: id,
+    onClick: => setSelectedPlate(feature)
+    rest...}
 
 PlatePolygons = (props)->
+  {selectedPlate, setSelectedPlate} = props
   {model} = useContext(RotationsContext)
   h APIResultView, {
     route: "/api/plates",
@@ -81,7 +85,8 @@ PlatePolygons = (props)->
   }, (data)=>
     return null unless data?
     h 'g.plates', null, data.map (feature, i)->
-      h PlatePolygon, {key: i, feature}
+      isSelected = feature == selectedPlate
+      h PlatePolygon, {key: i, feature, isSelected, setSelectedPlate}
 
 PlateFeatureDataset = (props)->
   {name} = props
@@ -103,8 +108,18 @@ PlateFeatureDataset = (props)->
         youngLim: young_lim
       }
 
+SelectedPlateName = (props)->
+  {geoPath} = useContext(MapContext)
+  {selectedPlate} = props
+  return null unless selectedPlate?
+  loc = geoPath.centroid
+  h 'text.selected-plate-name', {}, "Plate #{selectedPlate.id}"
+
 class WorldMapInner extends Component
   @contextType: RotationsContext
+  constructor: (props)->
+    super props
+    @state = {selectedPlate: null}
   projection: (width, height, config)->
     return geoStereographic()
       .center([0,0])
@@ -113,14 +128,21 @@ class WorldMapInner extends Component
 
   render: ->
     {width, height} = @props
+    {selectedPlate} = @state
     {model} = @context
+
+    setSelectedPlate = (id)=>
+      id = null if id == selectedPlate
+      @setState {selectedPlate: id}
+
     h Globe, {
       projection: this.projection,
       width,
       height
     }, [
-      h PlatePolygons
+      h PlatePolygons, {selectedPlate, setSelectedPlate}
       h PlateFeatureDataset, {name: 'ne_110m_land'}
+      h SelectedPlateName, {selectedPlate}
     ]
 
 

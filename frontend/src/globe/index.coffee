@@ -39,8 +39,6 @@ Graticule = (props)->
     props...
   }
 
-
-
 class Globe extends StatefulComponent
   @propTypes: {
     #projection: T.func.isRequired,
@@ -72,10 +70,8 @@ class Globe extends StatefulComponent
     el = v.getElementsByClassName(styles.map)[0]
     # Simulate an event directly on the map's DOM element
     {clientX, clientY} = evt
-    console.log evt
-    e1 = new Event "mousedown", {clientX, clientY}
-    e2 = new Event "mouseup", {clientX, clientY}
-    console.log e1, e2
+    e1 = new MouseEvent "mousedown", {clientX, clientY}
+    e2 = new MouseEvent "mouseup", {clientX, clientY}
     el.dispatchEvent(e1)
     el.dispatchEvent(e2)
 
@@ -89,13 +85,13 @@ class Globe extends StatefulComponent
   render: ->
     {width, height, children} = @props
     h MapContext.Provider, {value: @contextValue()}, [
-      h 'svg.globe', {width, height}, [
-        h 'g.map', {ref: @mapElement}, [
+      h 'svg.globe', {width, height, ref: @mapElement}, [
+        h DraggableOverlay
+        h 'g.map', [
           h Background, {fill: 'dodgerblue'}
           h Graticule
           children
         ]
-        h DraggableOverlay
       ]
     ]
 

@@ -50,7 +50,7 @@ class DraggableOverlay extends Component
     @setState {mousePosition: null}
 
   componentDidMount: ->
-    {width, height, projection, dispatchEvent} = @context
+    {width, height, projection, dispatchEvent, mapElement} = @context
     mousePos = (func)-> ->
       pos = projection.invert(mouse(@))
       func(pos)

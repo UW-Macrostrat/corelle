@@ -6,9 +6,11 @@ div
   stroke #aaa
   stroke-width 1px
   stroke-dasharray 2,2
+  pointer-events: none
 
 .background
   fill: #AFE6F0
+  pointer-events: none
 
 rect.drag-mouse-target
   fill transparent
@@ -21,3 +23,7 @@ path.mouse-position
 
 g.map
   all: inherit
+  pointer-events none
+
+g.drag-overlay
+  pointer-events: all
