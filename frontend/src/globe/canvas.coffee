@@ -7,8 +7,12 @@ import styles from './module.styl'
 import Konva from 'konva'
 
 MapCanvas = (props)->
-  {width, height} = useContext(MapContext)
-  h Stage, {width, height, className: styles['map-layer'], props...}
+  {children, rest...} = props
+  value = useContext(MapContext)
+  {width, height} = value
+  h Stage, {width, height, className: styles['map-layer'], rest...}, (
+     h MapContext.Provider, {value}, children
+  )
 
 MapCanvas.Layer = (props)->
   createElement Layer, props

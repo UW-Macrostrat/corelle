@@ -74,14 +74,18 @@ PlatePolygon = (props)->
 
 PlatePolygons = (props)->
   {model} = useContext(RotationsContext)
+  console.log model
   h APIResultView, {
     route: "/api/plates",
     params: {model},
     placeholder: null
   }, (data)=>
     return null unless data?
-    h MapCanvas.Layer, null, data.map (feature, i)->
-      h PlatePolygon, {key: i, feature}
+    console.log data
+    h MapCanvas, [
+      h MapCanvas.Layer, null, data.map (feature, i)->
+        h PlatePolygon, {key: i, feature}
+    ]
 
 PlateFeatureDataset = (props)->
   {name} = props
@@ -92,16 +96,19 @@ PlateFeatureDataset = (props)->
     placeholder: null
   }, (data)=>
     return null unless data?
-    h MapCanvas.Layer, {className: name}, data.map (feature, i)->
-      {id, properties} = feature
-      {plate_id, old_lim, young_lim} = properties
-      h PlateFeature, {
-        key: i,
-        feature,
-        plateId: plate_id,
-        oldLim: old_lim,
-        youngLim: young_lim
-      }
+    console.log data
+    h MapCanvas, [
+      h MapCanvas.Layer, {className: name}, data.map (feature, i)->
+        {id, properties} = feature
+        {plate_id, old_lim, young_lim} = properties
+        h PlateFeature, {
+          key: i,
+          feature,
+          plateId: plate_id,
+          oldLim: old_lim,
+          youngLim: young_lim
+        }
+    ]
 
 class WorldMapInner extends Component
   @contextType: RotationsContext
@@ -119,13 +126,8 @@ class WorldMapInner extends Component
       width,
       height
     }, [
-      h MapCanvas, [
-        h PlatePolygons
-        h PlateFeatureDataset, {name: 'ne_110m_land'}
-        h MapCanvas.Layer, ->
-          h Text, {x: 10, y: 10, text: "Try click on rect"}
-
-      ]
+      h PlatePolygons
+      h PlateFeatureDataset, {name: 'ne_110m_land'}
     ]
 
 
