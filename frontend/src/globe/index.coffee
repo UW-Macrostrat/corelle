@@ -1,4 +1,5 @@
 import React, {Component, createContext, useContext, createRef} from 'react'
+import {findDOMNode} from 'react-dom'
 import {StatefulComponent} from '@macrostrat/ui-components'
 import T from 'prop-types'
 import h from './hyper'
@@ -6,6 +7,7 @@ import {MapContext} from './context'
 import {DraggableOverlay} from './drag-interaction'
 import {max} from 'd3-array'
 import {geoStereographic, geoOrthographic, geoGraticule, geoPath} from 'd3-geo'
+import styles from './module.styl'
 
 GeoPath = (props)->
   {geometry, rest...} = props
@@ -55,7 +57,9 @@ class Globe extends StatefulComponent
     projection = geoOrthographic()
       .center([0,0])
       .scale(maxSize/2)
+      .clipAngle(90)
       .translate([@props.width/2, @props.height/2])
+      .precision(0.5)
 
     @state = {
       projection
@@ -65,8 +69,16 @@ class Globe extends StatefulComponent
     @updateState {projection: {$set: newProj}}
 
   dispatchEvent: (evt)=>
+    v = findDOMNode(@)
+    el = v.getElementsByClassName(styles.map)[0]
     # Simulate an event directly on the map's DOM element
-    @mapElement.dispatchEvent(evt)
+    {clientX, clientY} = evt
+    console.log evt
+    e1 = new Event "mousedown", {clientX, clientY}
+    e2 = new Event "mouseup", {clientX, clientY}
+    console.log e1, e2
+    el.dispatchEvent(e1)
+    el.dispatchEvent(e2)
 
   contextValue: ->
     {width, height} = @props
@@ -82,9 +94,9 @@ class Globe extends StatefulComponent
         h 'g.map', {ref: @mapElement}, [
           h Background, {fill: 'dodgerblue'}
           h Graticule
-          h DraggableOverlay
           children
         ]
+        h DraggableOverlay
       ]
     ]
 

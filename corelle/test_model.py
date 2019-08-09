@@ -1,6 +1,10 @@
 import pytest
+import json
+from pg_viewtils import relative_path
+from os import path
 import numpy as N
-from .rotate import get_rotation, get_all_rotations, quaternion_to_euler
+from .rotate import get_rotation, get_all_rotations
+from .rotate.math import euler_equal, quaternion_to_euler, euler_to_quaternion
 
 def test_seton_recursion():
     """
@@ -47,3 +51,44 @@ def test_plate_disappearance(time):
             assert 322 in plate_ids
         else:
             assert not (322 in plate_ids)
+
+# Test identity
+def test_identity():
+    time = 10
+    plate_id = 1
+    q = get_rotation("Seton2012", plate_id, 10)
+    q1 = N.quaternion(1,0,0,0)
+    assert N.allclose(q,q1)
+
+# Make sure simple rotation is right
+def test_simple_rotation():
+    time = 10
+    plate_id = 701
+    euler = (46.19, -87.86, -1.92)
+    q = get_rotation("Seton2012", plate_id, time)
+    q1 = euler_to_quaternion(euler)
+    euler1 = quaternion_to_euler(q)
+    assert euler_equal(euler, euler1)
+    assert N.allclose(q, q1)
+
+    q2 = get_rotation("Seton2012", 702, 10)
+    assert N.allclose(q1,q2)
+
+@pytest.mark.xfail("We don't have good error handling right now")
+def test_undefined_model():
+    """
+    Make sure there is an error when we specify a bad model.
+    """
+    r = get_rotation("Adsdfs", 10, 10)
+    assert r is None
+
+def test_mongol_okhotsk():
+    """
+    The Mongol-Okhotsk basin in Seton2012 should not show up prior to 320 Ma
+    (its earliest defined rotation time step)
+    """
+    q = get_rotation("Seton2012", 417, 318)
+    assert q is not None
+
+    q = get_rotation("Seton2012", 417, 322)
+    assert q is None

@@ -1,40 +1,13 @@
 import numpy as N
 import quaternion as Q
-from sqlalchemy import text, and_, desc
 from pg_viewtils import reflect_table, relative_path
-
-from .util import unit_vector
-from .database import db
+from .math import cart2sph, sph2cart, euler_to_quaternion, quaternion_to_euler
+from ..query import get_sql
+from ..database import db
 
 __model = reflect_table(db, 'model')
 __plate = reflect_table(db, 'plate')
 __rotation = reflect_table(db, 'rotation')
-
-def sph2cart(lon,lat):
-    _lon = N.radians(lon)
-    _lat = N.radians(lat)
-    x = N.cos(_lat)*N.cos(_lon)
-    y = N.cos(_lat)*N.sin(_lon)
-    z = N.sin(_lat)
-    return unit_vector(x,y,z)
-
-def cart2sph(unit_vec):
-    (x, y, z) = unit_vec
-    lat = N.arcsin(z)
-    lon = N.arctan2(y, x)
-    return N.degrees(lon), N.degrees(lat)
-
-def euler_to_quaternion(euler_pole):
-    lat, lon, angle = [float(i) for i in euler_pole]
-    angle = N.radians(angle)
-    w = N.cos(angle/2)
-    v = sph2cart(lon, lat)*N.sin(angle/2)
-    return N.quaternion(w, *v)
-
-def quaternion_to_euler(q):
-    angle = 2*N.arccos(q.w)
-    lon, lat = cart2sph(q.vec/N.sin(angle/2))
-    return lat, lon, N.degrees(angle)
 
 conn = db.connect()
 
@@ -43,15 +16,12 @@ class LoopError(Exception):
         super().__init__(self, f"Plate {plate_id} caused an infinite loop")
         self.plate_id = plate_id
 
-def get_rotation(model_name, plate_id, time, **kwargs):
-    model_id = db.execute(
-        __model.select(__model.c.name == model_name)).scalar()
-
+def get_rotation(*args, **kwargs):
     loops = []
     for i in range(100):
         # Try 100 times
         try:
-            return __get_rotation([], loops, model_id, plate_id, time, **kwargs)
+            return __get_rotation([], loops, *args, **kwargs)
         except LoopError as err:
             loops.append(err.plate_id)
 
@@ -60,27 +30,27 @@ cache = {}
 cache_list = []
 
 # Cache this expensive, recursive function.
-def __get_rotation(stack, loops, model_id, plate_id, time, verbose=False, depth=0):
+def __get_rotation(stack, loops, model_name, plate_id, time, verbose=False, depth=0):
     time = float(time)
-    cache_args = (model_id, plate_id, time)
+    cache_args = (model_name, plate_id, time)
     if cache_args in cache:
         return cache[cache_args]
 
-    model_query = __rotation.select().where(__model.c.id == model_id)
-
-    # Fetches a sequence of rotations per unit time
     if verbose:
-        print(" "*depth, plate_id, time)
+        print((" "*depth)[1:], plate_id, time)
 
     if plate_id is None or plate_id == 0:
         return N.quaternion(1,0,0,0)
 
-    base_query = model_query.where(__rotation.c.plate_id==plate_id)
-    _t = __rotation.c.t_step
-    rotations_before = base_query.where(_t <= time).order_by(desc(_t))
-    rotations_after = base_query.where(_t > time).order_by(_t)
+    __before = get_sql("rotations-before")
+    __after = get_sql("rotations-after")
+    params = dict(
+        plate_id = plate_id,
+        model_name = model_name,
+        time = time)
 
     def __cache(q):
+        # Fetches a sequence of rotations per unit time
         cache[cache_args] = q
         cache_list.append(cache_args)
         if len(cache_list) > 50000:
@@ -95,32 +65,40 @@ def __get_rotation(stack, loops, model_id, plate_id, time, verbose=False, depth=
 
         if row.ref_plate_id in loops:
             # We don't want to get into an endless loop
-            return None
+            raise LoopError(row.ref_plate_id)
         if row.ref_plate_id in stack:
             ix = stack.index(row.ref_plate_id)
             raise LoopError(stack[ix])
 
+        q = euler_to_quaternion([row.latitude,row.longitude,row.angle])
+        if q is None: return None
+
         base = __get_rotation(
             stack+[row.plate_id],
-            loops, model_id,
+            loops, model_name,
             row.ref_plate_id, time,
             verbose=verbose,
             depth=depth+1)
-
-        rot = euler_to_quaternion([
-            float(i) for i in [row.latitude,row.longitude,row.angle]
-        ])*base
-
-        return rot
+        if base is None:
+            base = N.quaternion(1,0,0,0)
+        return q*base
 
     rotation = None
-    rows = db.execute(rotations_before).fetchall()
+    rows = db.execute(__before, **params).fetchall()
     prev_step = 0
     q_before = None
     for r in rows:
-        q_before = __get_row_rotation(r)
+        try:
+            q_before = __get_row_rotation(r)
+        except LoopError as err:
+            if err.plate_id == r.ref_plate_id:
+                continue
+            else:
+                print("Raising err")
+                raise err
+
         if q_before is None:
-            continue
+            return None
 
         if r.t_step == time:
             return __cache(q_before)
@@ -132,31 +110,50 @@ def __get_rotation(stack, loops, model_id, plate_id, time, verbose=False, depth=
     if q_before is None:
         q_before = N.quaternion(1,0,0,0)
 
-    rows = db.execute(rotations_after).fetchall()
+    rows = db.execute(__after, **params).fetchall()
     for r in rows:
-        q_after = __get_row_rotation(r)
-        if q_after is None:
-            continue
+        try:
+            q_after = __get_row_rotation(r)
+        except LoopError as err:
+            if err.plate_id == r.ref_plate_id:
+                continue
+            else:
+                raise err
         # Proportion of time between steps elapsed
-        proportion = (time-prev_step)/(float(r.t_step)-prev_step)
-        return __cache(q_before*(1-proportion) + q_after*proportion)
+        # Interpolate between these two rotors (GPlates uses this linear interpolation)
+        res = Q.slerp(q_before,q_after, float(prev_step), float(r.t_step), float(time))
+        return __cache(res)
 
-
-    return __cache(N.quaternion(1,0,0,0))
+    return None
 
 def plates_for_model(model):
-    fn = relative_path(__file__, 'query', 'plates-for-model.sql')
-    sql = text(open(fn).read())
+    sql = get_sql('plates-for-model')
     for row in conn.execute(sql, model_name=model):
         yield row[0]
 
+def rotate_point(point, model, time):
+    if time == 0:
+        return point
+    sql = get_sql('plate-for-point')
+    plate_id = conn.execute(sql,
+        lon=point[0],
+        lat=point[1],
+        model_name=model,
+        time=time).scalar()
+    if plate_id is None: return None
+    q = get_rotation(model, plate_id, time)
+    v0 = sph2cart(*point)
+    v1 = Q.rotate_vectors(q, v0)
+    return cart2sph(v1)
+
 def get_all_rotations(model, time, verbose=False):
-    fn = relative_path(__file__, 'query', 'active-plates-at-time.sql')
-    sql = text(open(fn).read())
+    sql = get_sql('active-plates-at-time')
     results = conn.execute(sql, time=time, model_name=model)
     for res in results:
         plate_id = res[0]
         q = get_rotation(model, plate_id, time, verbose=verbose)
+        if q is None:
+            continue
         if N.isnan(q.w):
             continue
         yield plate_id, q

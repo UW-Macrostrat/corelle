@@ -78,6 +78,9 @@ def rotate(model, plate, time, verbose=False):
     """
     from .rotate import get_rotation
     q = get_rotation(model, plate, time, verbose=verbose)
+    if q is None:
+        echo(f"No rotation for plate {plate} at {time} Ma.")
+        return
     angle = N.degrees(q.angle())
     echo(f"Rotate {angle:.2f}° around {q.vec}")
 
