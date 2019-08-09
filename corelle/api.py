@@ -6,7 +6,7 @@ from sqlalchemy import text
 from simplejson import loads, JSONEncoder
 
 from .database import db
-from .rotate import get_rotation, get_all_rotations, get_plate_rotations, plates_for_model
+from .rotate import get_rotation, get_all_rotations, get_plate_rotations, plates_for_model, rotate_point
 
 app = Flask(__name__)
 app.config['RESTFUL_JSON'] = dict(cls=JSONEncoder)
@@ -127,9 +127,34 @@ class Model(Resource):
         results = conn.execute("SELECT id, name FROM model")
         return [dict(r) for r in results]
 
+class Point(ModelResource):
+    def __init__(self):
+        super().__init__()
+        self.parser.add_argument('data', type=str, required=True)
+        self.parser.add_argument('time', required=True)
+        self.parser.add_argument('include_failures', type=bool, default=False)
+    def get(self):
+        args = self.parser.parse_args()
+        points = args.data.split()
+        out_points = []
+        for p in points:
+            [lon,lat] = p.split(",")
+            pt = [float(lon), float(lat)]
+            res = rotate_point(pt, args['model'], args['time'])
+            if res is not None:
+                res = dict(
+                    type="Feature",
+                    geometry=dict(type="Point", coordinates=res))
+                out_points.append(res)
+            else:
+                if args['include_failures']:
+                    out_points.append(None)
+        return out_points
+
 api.add_resource(Help, '/api')
 api.add_resource(ModernPlates, "/api/plates")
 api.add_resource(Rotation, "/api/rotate")
 api.add_resource(Features, "/api/feature/<string:dataset>")
 api.add_resource(Pole, "/api/pole")
+api.add_resource(Point, "/api/point")
 api.add_resource(Model, "/api/model")
