@@ -4,7 +4,7 @@ SELECT
 		'plate_id', plate_id,
 		'young_lim', coalesce(young_lim, 0),
 		'old_lim', old_lim) properties,
-	ST_AsGeoJSON(ST_Intersection(p.geometry, ST_Buffer(f.geometry, 0)))::json geometry,
+	ST_AsGeoJSON(ST_Intersection(ST_Buffer(p.geometry,0), ST_Buffer(f.geometry, 0)))::json geometry,
 	'Feature' "type"
 FROM feature f
 JOIN plate_polygon p
