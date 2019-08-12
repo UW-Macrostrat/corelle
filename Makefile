@@ -16,7 +16,7 @@ init:
 	plates import "Seton2012" \
 		--fields data/seton-fields.yaml \
 		data/seton_2012.geojson \
-		data/seton_2012.rot
+		data/Seton_etal_ESR2012_2012.1.rot
 	plates import "Wright2013" \
 		--fields data/wright-fields.yaml \
 		data/wright_plates.geojson \
