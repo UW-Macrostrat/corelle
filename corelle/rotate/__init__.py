@@ -1,6 +1,8 @@
 import numpy as N
 import quaternion as Q
 from pg_viewtils import reflect_table, relative_path
+from click import secho
+
 from .math import cart2sph, sph2cart, euler_to_quaternion, quaternion_to_euler
 from ..query import get_sql
 from ..database import db
@@ -11,16 +13,14 @@ __rotation = reflect_table(db, 'rotation')
 
 conn = db.connect()
 
-class UndefinedRotationError(Exception):
+class RotationError(Exception):
+    pass
+
+class UndefinedRotationError(RotationError):
     def __init__(self, plate_id, time):
         super().__init__(self, f"No rotation found for plate {plate_id} at time {time}")
         self.plate_id = plate_id
         self.time = time
-
-class LoopError(Exception):
-    def __init__(self, plate_id):
-        super().__init__(self, f"Plate {plate_id} caused an infinite loop")
-        self.plate_id = plate_id
 
 def get_rotation(*args, **kwargs):
     loops = []
@@ -35,15 +35,25 @@ def get_rotation(*args, **kwargs):
 cache = {}
 cache_list = []
 
+def model_id(name):
+    stmt = __model.select().where(__model.c.name==name)
+    return conn.execute(stmt).scalar()
+
 # Cache this expensive, recursive function.
-def __get_rotation(stack, loops, model_name, plate_id, time, verbose=False, depth=0):
+def get_rotation(model_name, plate_id, time, verbose=False, depth=0):
     time = float(time)
     cache_args = (model_name, plate_id, time)
     if cache_args in cache:
         return cache[cache_args]
 
+    # Make sure our model id actually exists
+    id = model_id(model_name)
+    if id is None:
+        raise RotationError('Unknown model id')
+
+    prefix = " "*depth
     if verbose:
-        print((" "*depth)[1:], plate_id, time)
+        secho(prefix+str(plate_id))
 
     if plate_id is None or plate_id == 0:
         return N.quaternion(1,0,0,0)
@@ -69,19 +79,21 @@ def __get_rotation(stack, loops, model_name, plate_id, time, verbose=False, dept
     pairs = db.execute(__sql, **params).fetchall()
     if len(pairs) == 0:
         return None
-        #raise UndefinedRotationError(plate_id, time)
+    if verbose:
+        for i, pair in enumerate(pairs):
+            color = 'green' if i == 0 else 'gray'
+            secho(prefix+f"{pair.plate_id} → {pair.ref_plate_id}", fg=color)
     row = pairs[0]
 
     q1 = euler_to_quaternion(row.r1_rotation)
 
-    base = __get_rotation(
-        stack+[row.plate_id],
-        loops, model_name,
+    base = get_rotation(
+        model_name,
         row.ref_plate_id, time,
         verbose=verbose,
         depth=depth+1)
     if base is None:
-        base = N.quaternion(1,0,0,0)
+        return None
 
     if not row.interpolated:
         # Just a precautionary guard, this should be assured by our SQL
@@ -91,7 +103,7 @@ def __get_rotation(stack, loops, model_name, plate_id, time, verbose=False, dept
     ## Interpolated rotations
     q2 = euler_to_quaternion(row.r2_rotation)
     res = Q.slerp(q1, q2, float(row.r1_step), float(row.r2_step), float(time))
-    return __cache(res)
+    return __cache(base*res)
 
 
 def plates_for_model(model):

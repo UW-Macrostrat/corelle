@@ -3,7 +3,7 @@ import json
 from pg_viewtils import relative_path
 from os import path
 import numpy as N
-from .rotate import get_rotation, get_all_rotations
+from .rotate import get_rotation, get_all_rotations, RotationError
 from .rotate.math import euler_equal, quaternion_to_euler, euler_to_quaternion
 
 def test_seton_recursion():
@@ -78,16 +78,25 @@ def test_undefined_model():
     """
     Make sure there is an error when we specify a bad model.
     """
-    r = get_rotation("Adsdfs", 10, 10)
-    assert r is None
+    did_throw = False
+    try:
+        r = get_rotation("Adsdfs", 10, 10)
+    except RotationError as err:
+        did_throw = True
+    assert did_throw
 
 def test_mongol_okhotsk():
     """
     The Mongol-Okhotsk basin in Seton2012 should not show up prior to 320 Ma
     (its earliest defined rotation time step)
+    Amendment: it also should not show up prior to ~200 Ma when the last rotation
+    for plate 701 in its reconstruction tree is defined.
     """
-    q = get_rotation("Seton2012", 417, 318)
+    q = get_rotation("Seton2012", 417, 200)
     assert q is not None
+
+    q = get_rotation("Seton2012", 417, 318)
+    assert q is None
 
     q = get_rotation("Seton2012", 417, 322)
     assert q is None
