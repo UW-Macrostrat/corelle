@@ -4,6 +4,7 @@ warnings.filterwarnings("ignore")
 import json, yaml
 import numpy as N
 from IPython import embed
+from .rotate.math import quaternion_to_euler
 
 from click import (
     group, argument, option,
@@ -83,6 +84,8 @@ def rotate(model, plate, time, verbose=False):
         return
     angle = N.degrees(q.angle())
     echo(f"Rotate {angle:.2f}° around {q.vec}")
+    lat, lon, angle = quaternion_to_euler(q)
+    echo(f"Pole: {lat:.2f}°, {lon:.2f}°; Angle: {angle:.2f}°")
 
 @cli.command(name='rotate-all')
 @argument('model', type=str)

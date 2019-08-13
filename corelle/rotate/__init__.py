@@ -97,9 +97,6 @@ def __get_rotation(stack, loops, model_name, plate_id, time, verbose=False, dept
                 print("Raising err")
                 raise err
 
-        if q_before is None:
-            return None
-
         if r.t_step == time:
             return __cache(q_before)
             # The rotation is simply q_before
@@ -121,7 +118,7 @@ def __get_rotation(stack, loops, model_name, plate_id, time, verbose=False, dept
                 raise err
         # Proportion of time between steps elapsed
         # Interpolate between these two rotors (GPlates uses this linear interpolation)
-        res = Q.slerp(q_before,q_after, float(prev_step), float(r.t_step), float(time))
+        res = Q.slerp(q_before, q_after, float(prev_step), float(r.t_step), float(time))
         return __cache(res)
 
     return None
