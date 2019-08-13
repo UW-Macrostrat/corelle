@@ -3,14 +3,14 @@ import json
 from pg_viewtils import relative_path
 from os import path
 import numpy as N
-from .rotate import get_rotation, get_all_rotations
+from .rotate import get_rotation, get_all_rotations, RotationError
 from .rotate.math import euler_equal, quaternion_to_euler, euler_to_quaternion
 
 def test_seton_recursion():
     """
     There is a self-referential loop in the Seton2012 plate model
     that we need to make sure our code can handle without infinite
-    recursion (which affected the naive implementation).
+    recursion (which affected our first, naive implementation).
     """
     q = get_rotation("Seton2012", 502, 130)
     assert q is not None
@@ -37,20 +37,21 @@ def test_south_america_jurassic():
     assert not N.allclose(rotate(291), rotate(201))
     assert N.allclose(rotate(291), rotate(280))
 
-times = [2,5,10]
-@pytest.mark.xfail()
+times = [2,5,9.8,10]
 @pytest.mark.parametrize('time', times)
 def test_plate_disappearance(time):
     """
     Plates should not have a valid rotation after their `old_lim`...
+    Amendment: actually this is perfectly fine, because different plate polygons
+    can appear and disappear at different times. What plates shouldn't have are
+    defined rotations outside the time range for which rotations are explicitly defined.
     """
-    for t in times:
-        rotations = get_all_rotations("Seton2012", t)
-        plate_ids = [p for p,q in rotations]
-        if t <= 5:
-            assert 322 in plate_ids
-        else:
-            assert not (322 in plate_ids)
+    rotations = get_all_rotations("Seton2012", time, active_only=False)
+    plate_ids = [p for p,q in rotations]
+    if time <= 9.8:
+        assert 922 in plate_ids
+    else:
+        assert not (922 in plate_ids)
 
 # Test identity
 def test_identity():
@@ -74,21 +75,29 @@ def test_simple_rotation():
     q2 = get_rotation("Seton2012", 702, 10)
     assert N.allclose(q1,q2)
 
-@pytest.mark.xfail("We don't have good error handling right now")
 def test_undefined_model():
     """
     Make sure there is an error when we specify a bad model.
     """
-    r = get_rotation("Adsdfs", 10, 10)
-    assert r is None
+    did_throw = False
+    try:
+        r = get_rotation("Adsdfs", 10, 10)
+    except RotationError as err:
+        did_throw = True
+    assert did_throw
 
 def test_mongol_okhotsk():
     """
     The Mongol-Okhotsk basin in Seton2012 should not show up prior to 320 Ma
     (its earliest defined rotation time step)
+    Amendment: it also should not show up prior to ~200 Ma when the last rotation
+    for plate 701 in its reconstruction tree is defined.
     """
-    q = get_rotation("Seton2012", 417, 318)
+    q = get_rotation("Seton2012", 417, 200)
     assert q is not None
+
+    q = get_rotation("Seton2012", 417, 318)
+    assert q is None
 
     q = get_rotation("Seton2012", 417, 322)
     assert q is None
