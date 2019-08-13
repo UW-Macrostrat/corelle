@@ -95,14 +95,19 @@ def get_rotation(model_name, plate_id, time, verbose=False, depth=0):
     if base is None:
         return None
 
+    r1_step = float(row.r1_step)
+
     if not row.interpolated:
+        # We have an exact match!
         # Just a precautionary guard, this should be assured by our SQL
-        assert row.r1_step == time
+        assert N.allclose(r1_step, time)
         return __cache(base*q1)
+
+    r2_step = float(row.r2_step)
 
     ## Interpolated rotations
     q2 = euler_to_quaternion(row.r2_rotation)
-    res = Q.slerp(q1, q2, float(row.r1_step), float(row.r2_step), float(time))
+    res = Q.slerp(q1, q2, r1_step, r2_step, time)
     return __cache(base*res)
 
 

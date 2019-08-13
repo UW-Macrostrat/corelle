@@ -37,20 +37,21 @@ def test_south_america_jurassic():
     assert not N.allclose(rotate(291), rotate(201))
     assert N.allclose(rotate(291), rotate(280))
 
-times = [2,5,10]
-@pytest.mark.xfail()
+times = [2,5,9.8,10]
 @pytest.mark.parametrize('time', times)
 def test_plate_disappearance(time):
     """
     Plates should not have a valid rotation after their `old_lim`...
+    Amendment: actually this is perfectly fine, because different plate polygons
+    can appear and disappear at different times. What plates shouldn't have are
+    defined rotations outside the time range for which rotations are explicitly defined.
     """
-    for t in times:
-        rotations = get_all_rotations("Seton2012", t)
-        plate_ids = [p for p,q in rotations]
-        if t <= 5:
-            assert 322 in plate_ids
-        else:
-            assert not (322 in plate_ids)
+    rotations = get_all_rotations("Seton2012", time)
+    plate_ids = [p for p,q in rotations]
+    if time <= 9.8:
+        assert 922 in plate_ids
+    else:
+        assert not (922 in plate_ids)
 
 # Test identity
 def test_identity():
