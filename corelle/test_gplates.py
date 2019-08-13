@@ -7,9 +7,12 @@ from .rotate import get_rotation, get_all_rotations, rotate_point
 from .rotate.math import quaternion_to_euler, euler_equal
 
 # Test against gplates web service data
-def get_fixture(key):
-    fn = relative_path(__file__, '..', 'test-data', key+'.geojson')
-    with open(fn,'r') as f:
+def fixture(filename):
+    fn = relative_path(__file__, '..', 'test-data', filename)
+    return open(fn,'r')
+
+def get_geojson(key):
+    with fixture(key+".geojson") as f:
         return json.load(f)
 
 def get_coordinates(fc):
@@ -21,8 +24,8 @@ def get_coordinates(fc):
 times = [0,1,10,120,140,200]
 @pytest.mark.parametrize("time", times)
 def test_against_gplates_web_service(time):
-    req = get_fixture("seton2012-gws-request")
-    res = get_fixture(f"seton2012-gws-response-{time}")
+    req = get_geojson("seton2012-gws-request")
+    res = get_geojson(f"seton2012-gws-response-{time}")
 
     now = get_coordinates(req)
     prev = get_coordinates(res)
@@ -34,8 +37,8 @@ def test_against_gplates_web_service(time):
 
 def test_against_gplates_web_service_africa():
     time = 140
-    req = get_fixture("seton2012-gws-request-africa")
-    res = get_fixture(f"seton2012-gws-response-africa-{time}")
+    req = get_geojson("seton2012-gws-request-africa")
+    res = get_geojson(f"seton2012-gws-response-africa-{time}")
 
     now = get_coordinates(req)
     prev = get_coordinates(res)
@@ -68,8 +71,7 @@ def test_all_gplates(time):
     """
     Test against all GPlates rotations at a given time step
     """
-    fn = relative_path(__file__, '..', 'test-data', f"Seton2012-rotations-{time}Ma.csv")
-    with open(fn, 'r') as f:
+    with fixture(f"Seton2012-rotations-{time}Ma.csv") as f:
         for row in f:
             v = row.split(",")
             check_seton2012_rotation(time, *v)
