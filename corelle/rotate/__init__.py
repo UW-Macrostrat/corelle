@@ -11,6 +11,12 @@ __rotation = reflect_table(db, 'rotation')
 
 conn = db.connect()
 
+class UndefinedRotationError(Exception):
+    def __init__(self, plate_id, time):
+        super().__init__(self, f"No rotation found for plate {plate_id} at time {time}")
+        self.plate_id = plate_id
+        self.time = time
+
 class LoopError(Exception):
     def __init__(self, plate_id):
         super().__init__(self, f"Plate {plate_id} caused an infinite loop")
@@ -42,8 +48,7 @@ def __get_rotation(stack, loops, model_name, plate_id, time, verbose=False, dept
     if plate_id is None or plate_id == 0:
         return N.quaternion(1,0,0,0)
 
-    __before = get_sql("rotations-before")
-    __after = get_sql("rotations-after")
+    __sql = get_sql("rotation-pairs")
     params = dict(
         plate_id = plate_id,
         model_name = model_name,
@@ -61,67 +66,33 @@ def __get_rotation(stack, loops, model_name, plate_id, time, verbose=False, dept
                 pass
         return q
 
-    def __get_row_rotation(row):
+    pairs = db.execute(__sql, **params).fetchall()
+    if len(pairs) == 0:
+        return None
+        #raise UndefinedRotationError(plate_id, time)
+    row = pairs[0]
 
-        if row.ref_plate_id in loops:
-            # We don't want to get into an endless loop
-            raise LoopError(row.ref_plate_id)
-        if row.ref_plate_id in stack:
-            ix = stack.index(row.ref_plate_id)
-            raise LoopError(stack[ix])
+    q1 = euler_to_quaternion(row.r1_rotation)
 
-        q = euler_to_quaternion([row.latitude,row.longitude,row.angle])
-        if q is None: return None
+    base = __get_rotation(
+        stack+[row.plate_id],
+        loops, model_name,
+        row.ref_plate_id, time,
+        verbose=verbose,
+        depth=depth+1)
+    if base is None:
+        base = N.quaternion(1,0,0,0)
 
-        base = __get_rotation(
-            stack+[row.plate_id],
-            loops, model_name,
-            row.ref_plate_id, time,
-            verbose=verbose,
-            depth=depth+1)
-        if base is None:
-            base = N.quaternion(1,0,0,0)
-        return q*base
+    if not row.interpolated:
+        # Just a precautionary guard, this should be assured by our SQL
+        assert row.r1_step == time
+        return __cache(base*q1)
 
-    rotation = None
-    rows = db.execute(__before, **params).fetchall()
-    prev_step = 0
-    q_before = None
-    for r in rows:
-        try:
-            q_before = __get_row_rotation(r)
-        except LoopError as err:
-            if err.plate_id == r.ref_plate_id:
-                continue
-            else:
-                print("Raising err")
-                raise err
+    ## Interpolated rotations
+    q2 = euler_to_quaternion(row.r2_rotation)
+    res = Q.slerp(q1, q2, float(row.r1_step), float(row.r2_step), float(time))
+    return __cache(res)
 
-        if r.t_step == time:
-            return __cache(q_before)
-            # The rotation is simply q_before
-        prev_step = float(r.t_step)
-        r0 = r.ref_plate_id
-        break
-
-    if q_before is None:
-        q_before = N.quaternion(1,0,0,0)
-
-    rows = db.execute(__after, **params).fetchall()
-    for r in rows:
-        try:
-            q_after = __get_row_rotation(r)
-        except LoopError as err:
-            if err.plate_id == r.ref_plate_id:
-                continue
-            else:
-                raise err
-        # Proportion of time between steps elapsed
-        # Interpolate between these two rotors (GPlates uses this linear interpolation)
-        res = Q.slerp(q_before, q_after, float(prev_step), float(r.t_step), float(time))
-        return __cache(res)
-
-    return None
 
 def plates_for_model(model):
     sql = get_sql('plates-for-model')
