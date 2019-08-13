@@ -10,7 +10,7 @@ def test_seton_recursion():
     """
     There is a self-referential loop in the Seton2012 plate model
     that we need to make sure our code can handle without infinite
-    recursion (which affected the naive implementation).
+    recursion (which affected our first, naive implementation).
     """
     q = get_rotation("Seton2012", 502, 130)
     assert q is not None

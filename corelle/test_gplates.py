@@ -19,9 +19,8 @@ def get_coordinates(fc):
     return fc['features'][0]['geometry']['coordinates'][0]
 
 times = [0,1,10,120,140,200]
-@pytest.mark.skip()
 @pytest.mark.parametrize("time", times)
-def test_against_gplates(time):
+def test_against_gplates_web_service(time):
     req = get_fixture("seton2012-gws-request")
     res = get_fixture(f"seton2012-gws-response-{time}")
 
@@ -33,8 +32,7 @@ def test_against_gplates(time):
         p1 = rotate_point(c0, "Seton2012", time)
         assert N.allclose(p1,ct, atol=0.01)
 
-@pytest.mark.skip()
-def test_africa_against_gplates():
+def test_against_gplates_web_service_africa():
     time = 140
     req = get_fixture("seton2012-gws-request-africa")
     res = get_fixture(f"seton2012-gws-response-africa-{time}")
@@ -63,12 +61,14 @@ def check_seton2012_rotation(time, *row):
     v = quaternion_to_euler(rot)
     assert euler_equal(v, (lat,lon,angle))
 
-
+times = [10,100]
 ### Test against all GPlates rotations ###
-@pytest.mark.xfail()
-def test_gplates_10Ma():
-    fn = relative_path(__file__, '..', 'test-data', 'Seton2012-rotations-10Ma.csv')
-    time = 10
+@pytest.mark.parametrize("time", times)
+def test_all_gplates(time):
+    """
+    Test against all GPlates rotations at a given time step
+    """
+    fn = relative_path(__file__, '..', 'test-data', f"Seton2012-rotations-{time}Ma.csv")
     with open(fn, 'r') as f:
         for row in f:
             v = row.split(",")
