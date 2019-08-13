@@ -74,7 +74,6 @@ def test_simple_rotation():
     q2 = get_rotation("Seton2012", 702, 10)
     assert N.allclose(q1,q2)
 
-@pytest.mark.xfail("We don't have good error handling right now")
 def test_undefined_model():
     """
     Make sure there is an error when we specify a bad model.

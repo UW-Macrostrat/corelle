@@ -65,6 +65,7 @@ def check_seton2012_rotation(time, *row):
 
 
 ### Test against all GPlates rotations ###
+@pytest.mark.xfail()
 def test_gplates_10Ma():
     fn = relative_path(__file__, '..', 'test-data', 'Seton2012-rotations-10Ma.csv')
     time = 10
