@@ -69,7 +69,7 @@ def get_rotation(model_name, plate_id, time, verbose=False, depth=0):
         secho(prefix+str(plate_id))
 
     if plate_id is None or plate_id == 0:
-        return N.quaternion(1,0,0,0)
+        return __cache(N.quaternion(1,0,0,0))
 
     __sql = get_sql("rotation-pairs")
     params = dict(
@@ -94,7 +94,7 @@ def get_rotation(model_name, plate_id, time, verbose=False, depth=0):
         verbose=verbose,
         depth=depth+1)
     if base is None:
-        return None
+        return __cache(None)
 
     r1_step = float(row.r1_step)
 
