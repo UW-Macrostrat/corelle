@@ -46,7 +46,7 @@ def test_plate_disappearance(time):
     can appear and disappear at different times. What plates shouldn't have are
     defined rotations outside the time range for which rotations are explicitly defined.
     """
-    rotations = get_all_rotations("Seton2012", time)
+    rotations = get_all_rotations("Seton2012", time, active_only=False)
     plate_ids = [p for p,q in rotations]
     if time <= 9.8:
         assert 922 in plate_ids

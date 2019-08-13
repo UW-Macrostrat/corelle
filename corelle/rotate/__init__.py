@@ -131,9 +131,13 @@ def rotate_point(point, model, time):
     v1 = Q.rotate_vectors(q, v0)
     return cart2sph(v1)
 
-def get_all_rotations(model, time, verbose=False):
-    sql = get_sql('active-plates-at-time')
-    results = conn.execute(sql, time=time, model_name=model)
+def get_all_rotations(model, time, verbose=False, active_only=True):
+    if active_only:
+        sql = get_sql('active-plates-at-time')
+        results = conn.execute(sql, time=time, model_name=model)
+    else:
+        sql = get_sql('plates-for-model')
+        results = conn.execute(sql, model_name=model)
     for res in results:
         plate_id = res[0]
         q = get_rotation(model, plate_id, time, verbose=verbose)
