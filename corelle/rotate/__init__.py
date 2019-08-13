@@ -34,6 +34,17 @@ def get_rotation(*args, **kwargs):
 
 cache = {}
 cache_list = []
+def build_cache(q, cache_args):
+    # Fetches a sequence of rotations per unit time
+    cache[cache_args] = q
+    cache_list.append(cache_args)
+    if len(cache_list) > 50000:
+        id = cache_list.pop(0)
+        try:
+            del cache[id]
+        except KeyError:
+            pass
+    return q
 
 def model_id(name):
     stmt = __model.select().where(__model.c.name==name)
@@ -45,6 +56,8 @@ def get_rotation(model_name, plate_id, time, verbose=False, depth=0):
     cache_args = (model_name, plate_id, time)
     if cache_args in cache:
         return cache[cache_args]
+
+    __cache = lambda q: build_cache(q, cache_args)
 
     # Make sure our model id actually exists
     id = model_id(model_name)
@@ -63,18 +76,6 @@ def get_rotation(model_name, plate_id, time, verbose=False, depth=0):
         plate_id = plate_id,
         model_name = model_name,
         time = time)
-
-    def __cache(q):
-        # Fetches a sequence of rotations per unit time
-        cache[cache_args] = q
-        cache_list.append(cache_args)
-        if len(cache_list) > 50000:
-            id = cache_list.pop(0)
-            try:
-                del cache[id]
-            except KeyError:
-                pass
-        return q
 
     pairs = db.execute(__sql, **params).fetchall()
     if len(pairs) == 0:
