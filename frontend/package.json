@@ -10,6 +10,8 @@
   "author": "Daven Quinn",
   "license": "ISC",
   "devDependencies": {
+    "@babel/core": "^7.5.5",
+    "@babel/preset-react": "^7.0.0",
     "coffeescript": "^2.4.1",
     "esm": "^3.2.25",
     "express": "^4.17.1",
@@ -18,17 +20,19 @@
     "stylus": "^0.54.5"
   },
   "dependencies": {
-    "@blueprintjs/core": "^3.17.1",
-    "@blueprintjs/datetime": "^3.11.0",
+    "@blueprintjs/core": "^3.18.0",
     "@macrostrat/hyper": "^1.1.1",
-    "@macrostrat/ui-components": "^0.0.7",
+    "@macrostrat/ui-components": "^0.1.1",
     "d3-array": "^2.2.0",
+    "d3-drag": "^1.2.4",
     "d3-geo": "^1.11.6",
     "d3-selection": "^1.4.0",
     "postcss-modules": "^1.4.1",
     "quaternion": "^1.1.0",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0",
+    "react-router": "^5.0.1",
+    "react-router-dom": "^5.0.1",
     "react-simple-maps": "^0.12.1"
   }
 }
