@@ -201,7 +201,8 @@ def cache_rotations(model_id):
         q = get_rotation(row.plate_id)
         print(row.plate)
 
-def import_model(name, plates, rotations, fields=None, drop=False):
+def import_model(name, plates, rotations, fields=None, overwrite=False):
+    import IPython; IPython.embed(); raise
     model_id = get_model(name)
     import_plates(model_id, plates, fields=fields)
     import_rotations(model_id, rotations)

@@ -1,3 +1,8 @@
+/*
+This dev server supports local development.
+For development in a Docker containerized setting,
+parcel should be run directly.
+*/
 import Bundler from 'parcel-bundler';
 import express from 'express';
 import proxy from 'http-proxy-middleware';

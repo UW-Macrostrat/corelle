@@ -38,14 +38,14 @@ def load_fields(fn):
 @argument('plates', type=file)
 @argument('rotations', type=file)
 @option('--fields', type=file)
-@option('--drop', is_flag=True, default=False)
-def _import(model_name, plates, rotations, fields=None, drop=False):
+@option('--overwrite', is_flag=True, default=False)
+def _import(model_name, plates, rotations, fields=None, overwrite=False):
     """
     Import a plate-rotation model
     """
     from .load_data import import_model
     fields = load_fields(fields)
-    import_model(model_name, plates, rotations, fields=fields,drop=False)
+    import_model(model_name, plates, rotations, fields=fields, overwrite=False)
 
 @cli.command(name='import-features')
 @argument('name')

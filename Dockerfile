@@ -6,6 +6,16 @@ COPY ./build-deps.sh .
 RUN sh ./build-deps.sh
 
 COPY ./requirements.txt .
-RUN apk add --no-cache --virtual .build_deps git \
- && pip install -r requirements.txt \
- && apk del .build_deps
+RUN pip install -r requirements.txt
+
+WORKDIR /module
+COPY ./setup.py /module/
+COPY ./corelle /module/corelle/
+
+RUN pip install -e .
+ENV CORELLE_DB=postgresql://postgres@database:5432/corelle
+
+WORKDIR /run
+COPY ./run-docker .
+
+CMD ./run-docker
