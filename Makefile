@@ -9,10 +9,10 @@ install:
 init:
 	-createdb plate-rotations
 	plates init --drop
-	# plates import "PalaeoPlates" \
-	# 	--fields data/eglington-fields.yaml \
-	# 	data/eglington/PlatePolygons2016All.json \
-	# 	data/eglington/T_Rot_Model_PalaeoPlates_2019_20190302_experiment.rot
+	plates import "PalaeoPlates" \
+		--fields data/eglington-fields.yaml \
+		data/eglington/PlatePolygons2016All.json \
+		data/eglington/T_Rot_Model_PalaeoPlates_2019_20190302_experiment.rot
 	plates import "Seton2012" \
 		--fields data/seton-fields.yaml \
 		data/seton_2012.geojson \
