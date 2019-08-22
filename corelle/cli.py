@@ -4,7 +4,6 @@ warnings.filterwarnings("ignore")
 import json, yaml
 import numpy as N
 from IPython import embed
-from .rotate.math import quaternion_to_euler
 
 from click import (
     group, argument, option,
@@ -78,6 +77,8 @@ def rotate(model, plate, time, verbose=False):
     Rotate a plate to a time
     """
     from .rotate import get_rotation
+    from .rotate.math import quaternion_to_euler
+
     q = get_rotation(model, plate, time, verbose=verbose)
     if q is None:
         echo(f"No rotation for plate {plate} at {time} Ma.")
