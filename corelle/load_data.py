@@ -5,10 +5,11 @@ from sqlalchemy.dialects.postgresql import insert
 from time import perf_counter
 from json import dumps
 import fiona
-import csv
 from click import echo, style
 
 from .database import db, create_session
+
+
 
 __conn = None
 def connect():
@@ -202,7 +203,14 @@ def cache_rotations(model_id):
         print(row.plate)
 
 def import_model(name, plates, rotations, fields=None, overwrite=False):
-    import IPython; IPython.embed(); raise
+    conn = connect()
+    model = reflect_table(db, 'model')
+    rows = conn.execute(
+        model.select().where(model.c.name==name)).fetchall()
+    if len(rows) == 1 and not overwrite:
+        print("Model has already been imported.")
+        return
+
     model_id = get_model(name)
     import_plates(model_id, plates, fields=fields)
     import_rotations(model_id, rotations)
