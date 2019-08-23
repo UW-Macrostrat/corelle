@@ -12,7 +12,7 @@ const port = 3432;
 const mainPort = 5000;
 // Run the backend dev server (quits on exiting this script)
 const backend = spawn(
-  'plates',
+  'corelle',
   ['serve', '--debug', '-p', port], {
   stdio: ['ignore', 'inherit', 'inherit']
 });
