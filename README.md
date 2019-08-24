@@ -26,7 +26,7 @@ Simply install Docker and run `docker-compose up --build` in the root directory.
 
 ## Todo
 
-- [ ] Fix subtle math bugs!
+- [x] Fix subtle math bugs!
 - [ ] On-database cache of rotations (say, at 1 Ma increments?)
 - [ ] Return pre-rotated feature datasets (rather than just modern versions)
 - [ ] Materialized view for split feature datasets
