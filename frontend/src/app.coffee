@@ -4,13 +4,13 @@ import ControlPanel from './control-panel'
 import h from '@macrostrat/hyper'
 import {RotationsProvider} from './rotations'
 import T from 'prop-types'
-import {get} from 'axios'
-import {APIProvider} from '@macrostrat/ui-components'
+import {APIProvider, APIContext} from '@macrostrat/ui-components'
 
 baseURL = process.env.PUBLIC_URL or ""
 baseURL += "/api"
 
 class App extends Component
+  @contextType: APIContext
   constructor: ->
     super arguments...
     @state = {
@@ -27,7 +27,8 @@ class App extends Component
       console.log "Could not get model data"
 
   getModelData: ->
-    {data} = await get "#{baseURL}/model"
+    {get} = @context
+    data = await get "/model"
     models = data.map (d)->d.name
     @setState {models}
 
@@ -51,4 +52,4 @@ WrappedApp = (props)->
     h App, props
   )
 
-export default App
+export default WrappedApp
