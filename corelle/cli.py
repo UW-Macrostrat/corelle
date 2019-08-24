@@ -106,7 +106,7 @@ def rotate_all(model, time, verbose=False):
 @option('--debug', is_flag=True, default=False)
 def serve(**kwargs):
     from .api import app
-    app.run(**kwargs)
+    app.run(host='0.0.0.0', **kwargs)
 
 @cli.command(name='shell')
 def shell():
