@@ -31,7 +31,7 @@ Simply install Docker and run `docker-compose up --build` in the root directory.
 - [ ] Return pre-rotated feature datasets (rather than just modern versions)
 - [ ] Materialized view for split feature datasets
 - [ ] Allow feature datasets to be listed
-- [ ] Create a dockerized version
+- [x] Create a dockerized version
 - [ ] Polish the frontend demo
 
 ## API Reference
