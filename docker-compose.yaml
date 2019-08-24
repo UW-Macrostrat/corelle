@@ -9,7 +9,7 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       # Serve frontend directly (build happens locally)
-      - ./frontend/dist:/frontend:ro
+      - frontend_dist:/frontend:ro
   api:
     build: .
     expose:
@@ -28,5 +28,10 @@ services:
       - POSTGRES_DB=corelle
     volumes:
       - db_cluster:/var/lib/postgresql/data
+  frontend:
+    build: frontend
+    volumes:
+      - frontend_dist:/app/dist
 volumes:
   db_cluster:
+  frontend_dist:

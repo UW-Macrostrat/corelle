@@ -43,4 +43,6 @@ corelle import "Scotese" \
   scotese.geojson \
   scotese.rot
 
+/run/load-features $args
+
 corelle serve
