@@ -1,3 +1,8 @@
+/*
+This dev server supports local development.
+For development in a Docker containerized setting,
+parcel should be run directly.
+*/
 import Bundler from 'parcel-bundler';
 import express from 'express';
 import proxy from 'http-proxy-middleware';
@@ -7,7 +12,7 @@ const port = 3432;
 const mainPort = 5000;
 // Run the backend dev server (quits on exiting this script)
 const backend = spawn(
-  'plates',
+  'corelle',
   ['serve', '--debug', '-p', port], {
   stdio: ['ignore', 'inherit', 'inherit']
 });

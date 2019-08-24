@@ -1,0 +1,48 @@
+#!/usr/bin/env sh
+
+args='-h database -d corelle -p 5432 -U postgres'
+until pg_isready $args
+do
+  echo "Waiting for database"
+  sleep 1
+done
+
+function should_import {
+  if [ ! -d /data ]; then
+    return 1
+  fi
+  v=$(psql $args -tA -c "SELECT count(*) FROM model WHERE name = '$1'")
+  if [ $v = 0 ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+corelle init
+
+cd /data
+
+corelle import "PalaeoPlates" \
+  --fields eglington-fields.yaml \
+  eglington/PlatePolygons2016All.json \
+  eglington/T_Rot_Model_PalaeoPlates_2019_20190302_experiment.rot
+
+corelle import "Seton2012" \
+  --fields seton-fields.yaml \
+  seton_2012.geojson \
+  Seton_etal_ESR2012_2012.1.rot
+
+corelle import "Wright2013" \
+  --fields wright-fields.yaml \
+  wright_plates.geojson \
+  wright_2013.rot
+
+corelle import "Scotese" \
+  --fields scotese-fields.yaml \
+  scotese.geojson \
+  scotese.rot
+
+/run/load-features $args
+
+corelle serve

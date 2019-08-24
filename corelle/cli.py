@@ -4,7 +4,6 @@ warnings.filterwarnings("ignore")
 import json, yaml
 import numpy as N
 from IPython import embed
-from .rotate.math import quaternion_to_euler
 
 from click import (
     group, argument, option,
@@ -39,14 +38,14 @@ def load_fields(fn):
 @argument('plates', type=file)
 @argument('rotations', type=file)
 @option('--fields', type=file)
-@option('--drop', is_flag=True, default=False)
-def _import(model_name, plates, rotations, fields=None, drop=False):
+@option('--overwrite', is_flag=True, default=False)
+def _import(model_name, plates, rotations, fields=None, overwrite=False):
     """
     Import a plate-rotation model
     """
     from .load_data import import_model
     fields = load_fields(fields)
-    import_model(model_name, plates, rotations, fields=fields,drop=False)
+    import_model(model_name, plates, rotations, fields=fields, overwrite=False)
 
 @cli.command(name='import-features')
 @argument('name')
@@ -78,6 +77,8 @@ def rotate(model, plate, time, verbose=False):
     Rotate a plate to a time
     """
     from .rotate import get_rotation
+    from .rotate.math import quaternion_to_euler
+
     q = get_rotation(model, plate, time, verbose=verbose)
     if q is None:
         echo(f"No rotation for plate {plate} at {time} Ma.")
@@ -105,7 +106,7 @@ def rotate_all(model, time, verbose=False):
 @option('--debug', is_flag=True, default=False)
 def serve(**kwargs):
     from .api import app
-    app.run(**kwargs)
+    app.run(host='0.0.0.0', **kwargs)
 
 @cli.command(name='shell')
 def shell():

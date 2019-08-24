@@ -1,10 +1,11 @@
-from os import path, listdir
+from os import path, listdir, environ
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from pg_viewtils import run_sql_file, relative_path
 
-db = create_engine("postgresql:///plate-rotations")
+conn_string = environ.get("CORELLE_DB", "postgresql:///plate-rotations")
+db = create_engine(conn_string)
 create_session = sessionmaker(bind=db)
 
 __drop_tables = """

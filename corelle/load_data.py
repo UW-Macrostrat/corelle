@@ -1,11 +1,10 @@
 from pg_viewtils import reflect_table
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.dialects.postgresql import insert
 from time import perf_counter
 from json import dumps
 import fiona
-import csv
 from click import echo, style
 
 from .database import db, create_session
@@ -201,7 +200,14 @@ def cache_rotations(model_id):
         q = get_rotation(row.plate_id)
         print(row.plate)
 
-def import_model(name, plates, rotations, fields=None, drop=False):
+def import_model(name, plates, rotations, fields=None, overwrite=False):
+    conn = connect()
+    q = text("SELECT count(*) FROM model WHERE name=:name")
+    res = conn.execute(q, name=name).scalar()
+    if res == 1 and not overwrite:
+        print("Model has already been imported.")
+        return
+
     model_id = get_model(name)
     import_plates(model_id, plates, fields=fields)
     import_rotations(model_id, rotations)

@@ -8,20 +8,20 @@ install:
 
 init:
 	-createdb plate-rotations
-	plates init --drop
-	# plates import "PalaeoPlates" \
-	# 	--fields data/eglington-fields.yaml \
-	# 	data/eglington/PlatePolygons2016All.json \
-	# 	data/eglington/T_Rot_Model_PalaeoPlates_2019_20190302_experiment.rot
-	plates import "Seton2012" \
+	corelle init --drop
+	corelle import "PalaeoPlates" \
+		--fields data/eglington-fields.yaml \
+		data/eglington/PlatePolygons2016All.json \
+		data/eglington/T_Rot_Model_PalaeoPlates_2019_20190302_experiment.rot
+	corelle import "Seton2012" \
 		--fields data/seton-fields.yaml \
 		data/seton_2012.geojson \
 		data/Seton_etal_ESR2012_2012.1.rot
-	plates import "Wright2013" \
+	corelle import "Wright2013" \
 		--fields data/wright-fields.yaml \
 		data/wright_plates.geojson \
 		data/wright_2013.rot
-	plates import "Scotese" \
+	corelle import "Scotese" \
 		--fields data/scotese-fields.yaml \
 		data/scotese.geojson \
 		data/scotese.rot
