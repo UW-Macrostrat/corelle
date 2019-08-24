@@ -1,6 +1,6 @@
 all: install
 
-.PHONY: install init update_functions test
+.PHONY: install init update_functions test dev
 
 install:
 	pip install -r requirements.txt
@@ -36,3 +36,6 @@ load_features: bin/load-features
 
 test:
 	bin/run-tests
+
+dev:
+	cd frontend && npm run dev

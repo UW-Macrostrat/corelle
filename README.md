@@ -6,17 +6,23 @@ web application that implements client-side rotations based on this platform.
 
 ## Installation
 
+### Local development
+
 A recent (>3.6) version of Python is required to run the backend code. A recent
-node is required to run the frontend. The Python module is currently hard-coded
-to require the `postgresql:///plate-rotations` database, but this can be
-easily changed.
+version of Node.js is required to bundle the frontend. The Python module expects
+to use the `postgresql:///plate-rotations` database by default, but this can be
+easily changed using the `CORELLE_DB` environment variable.
 
-To install the backend, run `make install` in this repository. The `plates`
+To install the backend, run `make install` in this repository. The `corelle`
 executable should become available on your path. `make init` imports models and
-feature datasets. Then `plates serve` starts the testing API server.
+feature datasets. Then `corelle serve` starts the testing API server.
 
-To run the frontend, move to the `frontend/` subdirectory and run `npm run dev`.
+To build (and continuously watch) the frontend, run `make dev`.
 A backend API server will be started and proxied.
+
+### Installation with Docker
+
+Simply install Docker and run `docker-compose up --build` in the root directory.
 
 ## Todo
 
