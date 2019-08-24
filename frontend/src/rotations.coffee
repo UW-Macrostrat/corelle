@@ -1,6 +1,6 @@
 import {Component, createContext} from 'react'
 import h from 'react-hyperscript'
-import {APIResultView, APIContext} from '@macrostrat/ui-components'
+import {APIResultView} from '@macrostrat/ui-components'
 import T from 'prop-types'
 import Quaternion from 'quaternion'
 import {geoRotation} from 'd3-geo'
