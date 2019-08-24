@@ -72,7 +72,7 @@ class __RotationsProvider extends Component
 RotationsProvider = (props)->
   {time, children, model} = props
   h APIResultView, {
-    route: "/api/rotate",
+    route: "/rotate",
     params: {time, model, quaternion: true}
     placeholder: null
     debounce: 1000

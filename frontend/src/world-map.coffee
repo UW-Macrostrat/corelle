@@ -74,7 +74,7 @@ PlatePolygon = (props)->
 PlatePolygons = (props)->
   {model} = useContext(RotationsContext)
   h APIResultView, {
-    route: "/api/plates",
+    route: "/plates",
     params: {model},
     placeholder: null
   }, (data)=>
@@ -86,7 +86,7 @@ PlateFeatureDataset = (props)->
   {name} = props
   {model} = useContext(RotationsContext)
   h APIResultView, {
-    route: "/api/feature/#{name}",
+    route: "/feature/#{name}",
     params: {model},
     placeholder: null
   }, (data)=>
