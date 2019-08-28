@@ -3,6 +3,9 @@ import {StatefulComponent} from '@macrostrat/ui-components'
 import h from '@macrostrat/hyper'
 import {geoOrthographic, geoStereographic, geoGnomonic, geoNaturalEarth1} from 'd3-geo'
 
+# Animate these projection transformations
+# https://bl.ocks.org/mbostock/3711652
+
 projections = [
   {
     id: "Orthographic",
