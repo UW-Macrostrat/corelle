@@ -19,7 +19,6 @@ class CanvasLayer extends Component
       # The canvas rendering context
       context: null
     }
-    #@contextValue = memoize @contextValue
 
   render: ->
     # https://medium.com/dev-shack/clicking-and-dragging-svg-with-react-and-d3-js-5639cd0c3c3b

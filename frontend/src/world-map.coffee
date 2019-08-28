@@ -38,7 +38,7 @@ class WorldMap extends Component
     {width, height} = @state
     h ResizeSensor, {onResize: @onResize}, (
       h 'div.world-map', null, (
-        h WorldMapInner, {width, height}
+        h WorldMapInner, {width, height, margin: 10}
       )
     )
 
@@ -139,20 +139,14 @@ PlateFeatureDataset = (props)->
 
 class WorldMapInner extends Component
   @contextType: RotationsContext
-  projection: (width, height, config)->
-    return geoStereographic()
-      .center([0,0])
-      .scale(config.scale)
-      .clipAngle(90)
-      #.clipExtent(config.clipExtent)
-
   render: ->
-    {width, height} = @props
+    {width, height, margin, marginRight} = @props
     {model} = @context
     h Globe, {
       projection: this.projection,
-      width,
-      height
+      width: width-2*margin,
+      height: height-2*margin
+      style: {margin: margin}
     }, [
       h PlatePolygons
       h PlateFeatureDataset, {name: 'ne_110m_land'}

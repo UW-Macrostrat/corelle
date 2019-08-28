@@ -5,7 +5,7 @@ import T from 'prop-types'
 import h from './hyper'
 import {MapContext} from './context'
 import {DraggableOverlay} from './drag-interaction'
-import {max} from 'd3-array'
+import {min, max} from 'd3-array'
 import {geoStereographic, geoOrthographic, geoGraticule, geoPath} from 'd3-geo'
 import styles from './module.styl'
 import FPSStats from "react-fps-stats"
@@ -51,19 +51,26 @@ class Globe extends StatefulComponent
     super(props)
 
     @mapElement = createRef()
-    maxSize = max [@props.width, @props.height]
 
     projection = geoOrthographic()
       .center([0,0])
-      .scale(maxSize/2)
       .clipAngle(90)
-      .translate([@props.width/2, @props.height/2])
       .precision(0.5)
 
     @state = {
       projection
       canvasContexts: new Set([])
     }
+
+  componentDidUpdate: (prevProps)=>
+    {width, height} = @props
+    return if prevProps.width == width and prevProps.height == height
+    {projection} = @state
+    maxSize = min [width, height]
+    console.log width, height
+    newProj = projection.scale(maxSize/2)
+      .translate([width/2, height/2])
+    @updateProjection newProj
 
   updateProjection: (newProj)=>
     @updateState {projection: {$set: newProj}}
@@ -94,8 +101,11 @@ class Globe extends StatefulComponent
   deregisterCanvasContext: =>
     @updateState {canvasContexts: {$remove: [ctx]}}
 
+  componentDidMount: =>
+    @componentDidUpdate.call(@,arguments)
+
   render: ->
-    {width, height, children} = @props
+    {width, height, children, rest...} = @props
 
     {projection} = @state
     actions = do => {
@@ -108,7 +118,7 @@ class Globe extends StatefulComponent
     value = {projection, renderPath, width, height, actions...}
 
     h MapContext.Provider, {value}, [
-      h 'svg.globe', {width, height}, [
+      h 'svg.globe', {width, height, rest...}, [
         h 'g.map', {ref: @mapElement}, [
           h Background, {fill: 'dodgerblue'}
           h Graticule
