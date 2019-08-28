@@ -122,7 +122,7 @@ PlateFeatureDataset = (props)->
 
     style = {
       fill: '#E9FCEA'
-      stroke: chroma('#E9FCEA').darken(2).hex()
+      stroke: chroma('#E9FCEA').darken().hex()
       strokeWidth: 1
     }
 
