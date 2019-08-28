@@ -24,9 +24,19 @@ class CanvasLayer extends Component
   render: ->
     # https://medium.com/dev-shack/clicking-and-dragging-svg-with-react-and-d3-js-5639cd0c3c3b
     {width, height} = @context
-    {children} = @props
+    {children, style} = @props
     {context} = @state
     value = {context, inCanvas: true}
+
+
+    if context?
+      style ?= {}
+      {fill, stroke, strokeWidth} = style
+      fill ?= "rgba(200,200,200,0.5)"
+      stroke ?= "#444"
+      context.lineWidth = strokeWidth or 1
+      context.strokeStyle = stroke
+      context.fillStyle = fill
 
     h MapCanvasContext.Provider, {value}, (
       createElement 'foreignObject', {width, height}, [
@@ -48,13 +58,8 @@ class CanvasLayer extends Component
   componentDidUpdate: =>
     {context} = @state
     return null if not context?
-    fill = "rgba(200,200,200,0.5)"
-    stroke = "#444"
-    context.lineWidth = 1
-    context.strokeStyle = stroke
-    context.fillStyle = fill
-    context.stroke()
     context.fill()
+    context.stroke()
 
   componentWillUnmount: =>
     {deregisterCanvasContext} = @context

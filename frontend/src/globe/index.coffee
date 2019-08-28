@@ -72,7 +72,6 @@ class Globe extends StatefulComponent
     {canvasContexts} = @state
     {width, height} = @props
     canvasContexts.forEach (ctx)->
-      console.log "Clearing canvas"
       ctx.clearRect(0, 0, width, height)
       ctx.beginPath()
 
@@ -81,21 +80,23 @@ class Globe extends StatefulComponent
     el = v.getElementsByClassName(styles.map)[0]
     # Simulate an event directly on the map's DOM element
     {clientX, clientY} = evt
-    console.log evt
+
     e1 = new Event "mousedown", {clientX, clientY}
     e2 = new Event "mouseup", {clientX, clientY}
-    console.log e1, e2
+
     el.dispatchEvent(e1)
     el.dispatchEvent(e2)
 
   registerCanvasContext: (ctx)=>
     console.log "Registering canvas context"
+    ctx.beginPath()
     @updateState {canvasContexts: {$add: [ctx]}}
   deregisterCanvasContext: =>
     @updateState {canvasContexts: {$remove: [ctx]}}
 
-  contextValue: ->
-    {width, height} = @props
+  render: ->
+    {width, height, children} = @props
+
     {projection} = @state
     actions = do => {
       updateProjection,
@@ -104,11 +105,9 @@ class Globe extends StatefulComponent
       deregisterCanvasContext
       } = @
     renderPath = geoPath(projection)
-    {projection, renderPath, width, height, actions...}
+    value = {projection, renderPath, width, height, actions...}
 
-  render: ->
-    {width, height, children} = @props
-    h MapContext.Provider, {value: @contextValue()}, [
+    h MapContext.Provider, {value}, [
       h 'svg.globe', {width, height}, [
         h 'g.map', {ref: @mapElement}, [
           h Background, {fill: 'dodgerblue'}
