@@ -23,6 +23,7 @@ A backend API server will be started and proxied.
 ### Installation with Docker
 
 Simply install Docker and run `docker-compose up --build` in the root directory.
+This will build the application, install test data, and spin up the development server.
 
 ## Todo
 

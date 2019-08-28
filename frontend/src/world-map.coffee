@@ -8,6 +8,7 @@ import {ResizeSensor, Popover, Spinner} from '@blueprintjs/core'
 import {RotationsContext} from './rotations'
 import {Globe, MapContext} from './globe'
 import {geoPath} from 'd3-geo'
+import {MapCanvasContext, CanvasLayer} from './globe/canvas-layer'
 
 import styles from './main.styl'
 
@@ -56,6 +57,13 @@ PlateFeature = (props)->
     # https://stackoverflow.com/questions/27557724/what-is-the-proper-way-to-use-d3s-projection-stream
     trans.stream(projection.stream(s))
 
+  # Make it work in canvas
+  {inCanvas, context} = useContext(MapCanvasContext)
+  if inCanvas
+    proj = geoPath({stream}, context)
+    proj feature
+    return null
+
   # Combined projection
   proj = geoPath({stream})
   d = proj feature
@@ -67,20 +75,32 @@ PlatePolygon = (props)->
   {feature, rest...} = props
   {id, properties} = feature
   {old_lim, young_lim} = properties
-  h Popover, {content: h("span","Plate #{id}"), targetTagName: 'g', wrapperTagName: 'g'}, [
-    h PlateFeature, {feature, oldLim: old_lim, youngLim: young_lim, plateId: id, rest...}
-  ]
+  h PlateFeature, {feature, oldLim: old_lim, youngLim: young_lim, plateId: id, rest...}
 
 PlatePolygons = (props)->
   {model} = useContext(RotationsContext)
+  {inCanvas, clearCanvas} = useContext(MapCanvasContext)
+
   h APIResultView, {
     route: "/plates",
     params: {model},
     placeholder: null
   }, (data)=>
     return null unless data?
+
+    if inCanvas
+      return h data.map (feature, i)->
+        h PlatePolygon, {key: i, feature}
+
     h 'g.plates', null, data.map (feature, i)->
       h PlatePolygon, {key: i, feature}
+
+FeatureLayer = (props)->
+  {useCanvas, rest...} = props
+  useCanvas ?= true
+  if useCanvas
+    return h CanvasLayer, rest
+  return h 'g', rest
 
 PlateFeatureDataset = (props)->
   {name} = props
@@ -91,7 +111,7 @@ PlateFeatureDataset = (props)->
     placeholder: null
   }, (data)=>
     return null unless data?
-    h 'g', {className: name}, data.map (feature, i)->
+    h FeatureLayer, {className: name, useCanvas: true}, data.map (feature, i)->
       {id, properties} = feature
       {plate_id, old_lim, young_lim} = properties
       h PlateFeature, {
@@ -108,6 +128,7 @@ class WorldMapInner extends Component
     return geoStereographic()
       .center([0,0])
       .scale(config.scale)
+      .clipAngle(90)
       #.clipExtent(config.clipExtent)
 
   render: ->
@@ -118,7 +139,9 @@ class WorldMapInner extends Component
       width,
       height
     }, [
-      h PlatePolygons
+      h FeatureLayer, {useCanvas: true, className: 'plates'}, [
+        h PlatePolygons
+      ]
       h PlateFeatureDataset, {name: 'ne_110m_land'}
     ]
 

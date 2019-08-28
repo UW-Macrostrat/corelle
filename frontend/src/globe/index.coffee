@@ -8,6 +8,7 @@ import {DraggableOverlay} from './drag-interaction'
 import {max} from 'd3-array'
 import {geoStereographic, geoOrthographic, geoGraticule, geoPath} from 'd3-geo'
 import styles from './module.styl'
+import FPSStats from "react-fps-stats"
 
 GeoPath = (props)->
   {geometry, rest...} = props
@@ -39,8 +40,6 @@ Graticule = (props)->
     props...
   }
 
-
-
 class Globe extends StatefulComponent
   @propTypes: {
     #projection: T.func.isRequired,
@@ -63,10 +62,19 @@ class Globe extends StatefulComponent
 
     @state = {
       projection
+      canvasContexts: new Set([])
     }
 
   updateProjection: (newProj)=>
     @updateState {projection: {$set: newProj}}
+
+  componentWillUpdate: =>
+    {canvasContexts} = @state
+    {width, height} = @props
+    canvasContexts.forEach (ctx)->
+      console.log "Clearing canvas"
+      ctx.clearRect(0, 0, width, height)
+      ctx.beginPath()
 
   dispatchEvent: (evt)=>
     v = findDOMNode(@)
@@ -80,10 +88,21 @@ class Globe extends StatefulComponent
     el.dispatchEvent(e1)
     el.dispatchEvent(e2)
 
+  registerCanvasContext: (ctx)=>
+    console.log "Registering canvas context"
+    @updateState {canvasContexts: {$add: [ctx]}}
+  deregisterCanvasContext: =>
+    @updateState {canvasContexts: {$remove: [ctx]}}
+
   contextValue: ->
     {width, height} = @props
     {projection} = @state
-    actions = do => {updateProjection, dispatchEvent} = @
+    actions = do => {
+      updateProjection,
+      dispatchEvent,
+      registerCanvasContext,
+      deregisterCanvasContext
+      } = @
     renderPath = geoPath(projection)
     {projection, renderPath, width, height, actions...}
 
@@ -98,6 +117,7 @@ class Globe extends StatefulComponent
         ]
         h DraggableOverlay
       ]
+      h FPSStats
     ]
 
 
