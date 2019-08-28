@@ -38,10 +38,10 @@ class WorldMap extends Component
 
   render: ->
     {width, height} = @state
-    {keepNorthUp} = @context
+    {keepNorthUp, projection} = @context
     h ResizeSensor, {onResize: @onResize}, (
       h 'div.world-map', null, (
-        h WorldMapInner, {width, height, margin: 10, keepNorthUp}
+        h WorldMapInner, {width, height, margin: 10, keepNorthUp, projection}
       )
     )
 
@@ -143,11 +143,11 @@ PlateFeatureDataset = (props)->
 class WorldMapInner extends Component
   @contextType: RotationsContext
   render: ->
-    {width, height, margin, marginRight, keepNorthUp} = @props
+    {width, height, margin, marginRight, keepNorthUp, projection} = @props
     {model} = @context
     h Globe, {
       keepNorthUp: keepNorthUp
-      projection: this.projection,
+      projection: projection.func,
       width: width-2*margin,
       height: height-2*margin
       style: {margin: margin}

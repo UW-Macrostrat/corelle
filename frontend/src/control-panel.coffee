@@ -20,15 +20,31 @@ SelectModel = (props)->
       h 'option', {value: d, selected}, d
   ]
 
+SelectProjection = (props)->
+  {projection, projections, updateState} = useContext(MapSettingsContext)
+  {setModel, models} = props
+  onChange = (e)->
+    lbl = e.currentTarget.value
+    p = projections.find (d)->d.id == lbl
+    console.log p
+    updateState {projection: {$set: p}}
+  h FormGroup, {label: 'Projection'}, [
+    h HTMLSelect, {onChange}, projections.map (d)->
+      selected = d.func == projection
+      h 'option', {value: d.id, selected}, d.id
+  ]
+
 MapSettingsPanel = (props)->
   {keepNorthUp, updateState} = useContext MapSettingsContext
 
-  h Switch, {
-    label: "Keep north up",
-    checked: keepNorthUp,
-    onChange: -> updateState {$toggle: ['keepNorthUp']}
-  }
-
+  h 'div', [
+    h SelectProjection
+    h Switch, {
+      label: "Keep north up",
+      checked: keepNorthUp,
+      onChange: -> updateState {$toggle: ['keepNorthUp']}
+    }
+  ]
 
 ControlPanel = (props)->
   {setTime, setModel, models} = props

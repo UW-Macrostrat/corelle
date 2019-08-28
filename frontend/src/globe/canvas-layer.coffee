@@ -37,9 +37,11 @@ class CanvasLayer extends Component
       context.strokeStyle = stroke
       context.fillStyle = fill
 
+    # hack for safari to display div
+    xmlns = "http://www.w3.org/1999/xhtml"
     h MapCanvasContext.Provider, {value}, (
       createElement 'foreignObject', {width, height}, [
-        createElement 'canvas', {width, height, ref: @canvas}
+        createElement 'canvas', {xmlns, width, height, ref: @canvas}
         children
       ]
     )

@@ -1,4 +1,4 @@
-import React, {Component, createContext, useContext, createRef} from 'react'
+import React, {Component, createContext, useContext, createRef, createElement} from 'react'
 import {findDOMNode} from 'react-dom'
 import {StatefulComponent} from '@macrostrat/ui-components'
 import T from 'prop-types'
@@ -61,7 +61,6 @@ class Globe extends StatefulComponent
     @mapElement = createRef()
 
     {projection} = @props
-
     projection.center([0,0])
 
     @state = {
@@ -71,10 +70,14 @@ class Globe extends StatefulComponent
 
   componentDidUpdate: (prevProps)=>
     {width, height} = @props
-    return if prevProps.width == width and prevProps.height == height
-    {projection} = @state
+    sameDimensions = prevProps.width == width and prevProps.height == height
+    sameProjection = prevProps.projection == @props.projection
+    return if sameDimensions and sameProjection
+    if sameProjection
+      {projection} = @state
+    else
+      {projection} = @props
     maxSize = min [width, height]
-    console.log width, height
     newProj = projection.scale(maxSize/2)
       .translate([width/2, height/2])
     @updateProjection newProj
@@ -124,8 +127,10 @@ class Globe extends StatefulComponent
     renderPath = geoPath(projection)
     value = {projection, renderPath, width, height, actions...}
 
+    xmlns = "http://www.w3.org/2000/svg"
+
     h MapContext.Provider, {value}, [
-      h 'svg.globe', {width, height, rest...}, [
+      createElement 'svg', {className: 'globe', xmlns, width, height, rest...}, [
         h 'g.map', {ref: @mapElement}, [
           h Background, {fill: 'dodgerblue'}
           h Graticule

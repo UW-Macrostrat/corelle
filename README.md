@@ -18,7 +18,8 @@ executable should become available on your path. `make init` imports models and
 feature datasets. Then `corelle serve` starts the testing API server.
 
 To build (and continuously watch) the frontend, run `make dev`.
-A backend API server will be started and proxied.
+A backend API server will be started and proxied, so you don't have to run
+`corelle serve`.
 
 ### Installation with Docker
 
