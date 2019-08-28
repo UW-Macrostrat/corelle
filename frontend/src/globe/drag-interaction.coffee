@@ -11,7 +11,7 @@ class DraggableOverlay extends Component
   @contextType: MapContext
   @propTypes: {
     showMousePosition: T.bool
-    pinNorthUp: T.bool
+    keepNorthUp: T.bool
   }
   @defaultProps: {
     showMousePosition: true
@@ -39,14 +39,14 @@ class DraggableOverlay extends Component
     @q0 = euler2quat(projection.rotate())
 
   dragged: (currentPos)=>
-    {pinNorthUp} = @props
+    {keepNorthUp} = @props
     {projection, updateProjection} = @context
     @q0 = euler2quat(projection.rotate())
     p1 = sph2cart(currentPos)
     q1 = quaternion(@p0, p1)
     res = quatMultiply( @q0, q1 )
     r1 = quat2euler(res)
-    if pinNorthUp
+    if keepNorthUp
       r1 = [r1[0], r1[1], 0]
     return unless r1?
     updateProjection(projection.rotate(r1))

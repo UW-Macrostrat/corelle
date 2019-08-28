@@ -8,7 +8,6 @@ import {DraggableOverlay} from './drag-interaction'
 import {min, max} from 'd3-array'
 import {geoStereographic, geoOrthographic, geoGraticule, geoPath} from 'd3-geo'
 import styles from './module.styl'
-import FPSStats from "react-fps-stats"
 
 GeoPath = (props)->
   {geometry, rest...} = props
@@ -42,9 +41,18 @@ Graticule = (props)->
 
 class Globe extends StatefulComponent
   @propTypes: {
-    #projection: T.func.isRequired,
+    projection: T.func.isRequired,
     width: T.number,
-    height: T.number
+    height: T.number,
+    keepNorthUp: T.bool,
+    allowDragging: T.bool
+  }
+  @defaultProps: {
+    keepNorthUp: false
+    allowDragging: true
+    projection: geoOrthographic()
+      .clipAngle(90)
+      .precision(0.5)
   }
 
   constructor: (props)->
@@ -52,10 +60,9 @@ class Globe extends StatefulComponent
 
     @mapElement = createRef()
 
-    projection = geoOrthographic()
-      .center([0,0])
-      .clipAngle(90)
-      .precision(0.5)
+    {projection} = @props
+
+    projection.center([0,0])
 
     @state = {
       projection
@@ -105,7 +112,7 @@ class Globe extends StatefulComponent
     @componentDidUpdate.call(@,arguments)
 
   render: ->
-    {width, height, children, rest...} = @props
+    {width, height, children, keepNorthUp, allowDragging, rest...} = @props
 
     {projection} = @state
     actions = do => {
@@ -124,9 +131,8 @@ class Globe extends StatefulComponent
           h Graticule
           children
         ]
-        h DraggableOverlay
+        h.if(allowDragging) DraggableOverlay, {keepNorthUp}
       ]
-      h FPSStats
     ]
 
 

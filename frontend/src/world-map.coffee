@@ -9,6 +9,7 @@ import {RotationsContext} from './rotations'
 import {Globe, MapContext} from './globe'
 import {geoPath} from 'd3-geo'
 import {MapCanvasContext, CanvasLayer} from './globe/canvas-layer'
+import {MapSettingsContext} from './map-settings'
 import chroma from 'chroma-js'
 
 import styles from './main.styl'
@@ -23,6 +24,7 @@ FeatureLayer = (props)->
   return h 'g', rest
 
 class WorldMap extends Component
+  @contextType: MapSettingsContext
   constructor: ->
     super arguments...
     @state = {
@@ -36,9 +38,10 @@ class WorldMap extends Component
 
   render: ->
     {width, height} = @state
+    {keepNorthUp} = @context
     h ResizeSensor, {onResize: @onResize}, (
       h 'div.world-map', null, (
-        h WorldMapInner, {width, height, margin: 10}
+        h WorldMapInner, {width, height, margin: 10, keepNorthUp}
       )
     )
 
@@ -140,9 +143,10 @@ PlateFeatureDataset = (props)->
 class WorldMapInner extends Component
   @contextType: RotationsContext
   render: ->
-    {width, height, margin, marginRight} = @props
+    {width, height, margin, marginRight, keepNorthUp} = @props
     {model} = @context
     h Globe, {
+      keepNorthUp: keepNorthUp
       projection: this.projection,
       width: width-2*margin,
       height: height-2*margin
