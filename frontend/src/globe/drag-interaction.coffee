@@ -37,26 +37,27 @@ class DraggableOverlay extends Component
       }
     ]
 
-  dragStarted: (pos)=>
+  dragStarted: (mousePos)=>
     {projection} = @context
+    pos = projection.invert(mousePos)
     @setState {mousePosition: {type: "Point", coordinates: pos}}
     @p0 = sph2cart(pos)
     @q0 = euler2quat(projection.rotate())
 
-  dragged: (currentPos)=>
+  dragged: (mousePos)=>
     {keepNorthUp} = @props
     {projection, updateProjection} = @context
     @q0 = euler2quat(projection.rotate())
-    p1 = sph2cart(currentPos)
+    p1 = sph2cart(projection.invert(mousePos))
     q1 = quaternion(@p0, p1)
     res = quatMultiply( @q0, q1 )
     r1 = quat2euler(res)
+    return unless r1?
     if keepNorthUp
       r1 = [r1[0], r1[1], 0]
-    return unless r1?
     updateProjection(projection.rotate(r1))
 
-  dragEnded: (pos)=>
+  dragEnded: =>
     @setState {mousePosition: null}
 
   zoomed: =>
@@ -67,16 +68,15 @@ class DraggableOverlay extends Component
 
   componentDidMount: ->
     {width, height, projection, dispatchEvent} = @context
-    mousePos = (func)-> ->
-      pos = projection.invert(mouse(@))
-      func(pos)
+    forwardMousePos = (func)-> ->
+      func(mouse(@))
 
     el = select(findDOMNode(@))
     @drag = drag()
       .clickDistance 2
-      .on "start", mousePos(@dragStarted)
-      .on "drag", mousePos(@dragged)
-      .on "end", mousePos(@dragEnded)
+      .on "start", forwardMousePos(@dragStarted)
+      .on "drag", forwardMousePos(@dragged)
+      .on "end", @dragEnded
     @drag(el)
     el.on 'click', ->
       dispatchEvent currentEvent
