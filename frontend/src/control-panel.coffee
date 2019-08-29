@@ -4,7 +4,7 @@ import {Slider, HTMLSelect, FormGroup, Switch, Alignment, NumericInput} from '@b
 import {RotationsContext} from './rotations'
 import styles from './main.styl'
 import T from 'prop-types'
-import FPSStats from "react-fps-stats"
+#import FPSStats from "react-fps-stats"
 import {MapSettingsContext} from './map-settings'
 
 h = hyper.styled(styles)
@@ -17,6 +17,16 @@ SelectModel = (props)->
   h FormGroup, {label: 'Model', inline: true}, [
     h HTMLSelect, {onChange}, models.map (d)->
       selected = d == model
+      h 'option', {value: d, selected}, d
+  ]
+
+SelectFeatureDataset = (props)->
+  {setFeatureDataset, featureDataset, featureDatasets} = props
+  onChange = (e)->
+    setFeatureDataset(e.currentTarget.value)
+  h FormGroup, {label: 'Features', inline: true}, [
+    h HTMLSelect, {onChange}, featureDatasets.map (d)->
+      selected = d == featureDataset
       h 'option', {value: d, selected}, d
   ]
 
@@ -47,13 +57,14 @@ MapSettingsPanel = (props)->
   ]
 
 ControlPanel = (props)->
-  {setTime, setModel, models} = props
+  {setTime, setModel, models, featureDatasets, featureDataset, setFeatureDataset} = props
   {time, model} = useContext RotationsContext
   {keepNorthUp} =
   max = 1200
   h 'div.control-panel', [
     h 'h1', "Corelle"
     h SelectModel, {setModel, models}
+    h SelectFeatureDataset, {setFeatureDataset, featureDataset, featureDatasets}
     h FormGroup, {
       label: 'Reconstruction time'
     }, [
@@ -72,7 +83,7 @@ ControlPanel = (props)->
       }
     ]
     h MapSettingsPanel
-    h FPSStats
+    #h FPSStats
     props.children
   ]
 
