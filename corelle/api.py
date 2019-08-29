@@ -6,6 +6,7 @@ from sqlalchemy import text
 from simplejson import loads, JSONEncoder
 
 from .database import db
+from .query import get_sql
 from .rotate import get_rotation, get_all_rotations, get_plate_rotations, plates_for_model, rotate_point
 
 app = Flask(__name__)
@@ -19,9 +20,11 @@ class Help(Resource):
         return {'routes': []}
 
 def get_plate_polygons(model):
-    fn = relative_path(__file__, 'query', 'modern-plate-polygons.sql')
-    sql = text(open(fn).read())
-    results = conn.execute(sql, model_name=model)
+    """
+    Uncached version of modern plate polygons query
+    """
+    q = get_sql('modern-plate-polygons')
+    results = conn.execute(q, model_name=model)
     for row in results:
         props = dict(row)
         geom = loads(props.pop("geometry"))
@@ -31,7 +34,9 @@ def get_plate_polygons(model):
             properties = props,
             geometry = geom)
 
-
+def get_plate_polygons_cached(model):
+    q = get_sql('modern-plate-polygons-cached')
+    return conn.execute(q, model_name=model).scalar()
 
 class ModelResource(Resource):
     def __init__(self, *args, **kwargs):
@@ -39,20 +44,23 @@ class ModelResource(Resource):
         self.parser = RequestParser()
         self.parser.add_argument('model', type=str, required=True)
 
+class AllFeatures(Resource):
+    def get(self):
+        q = text("SELECT DISTINCT dataset_id FROM cache.feature")
+        return [r[0] for r in conn.execute(q)]
+
 class Features(ModelResource):
     def get(self, dataset):
         args = self.parser.parse_args()
-        fn = relative_path(__file__, 'query', 'feature-dataset.sql')
-        sql = text(open(fn).read())
-        res = conn.execute(sql,
+        q = get_sql('feature-dataset-cached')
+        return conn.execute(q,
             model_name=args['model'],
-            dataset=dataset)
-        return [dict(row) for row in res]
+            dataset=dataset).scalar()
 
 class ModernPlates(ModelResource):
     def get(self):
         args = self.parser.parse_args()
-        return list(get_plate_polygons(args['model']))
+        return get_plate_polygons_cached(args['model'])
 
 def base_parser():
     r = RequestParser()
@@ -154,6 +162,7 @@ class Point(ModelResource):
 api.add_resource(Help, '/api')
 api.add_resource(ModernPlates, "/api/plates")
 api.add_resource(Rotation, "/api/rotate")
+api.add_resource(AllFeatures, "/api/feature")
 api.add_resource(Features, "/api/feature/<string:dataset>")
 api.add_resource(Pole, "/api/pole")
 api.add_resource(Point, "/api/point")

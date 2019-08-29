@@ -107,6 +107,9 @@ def import_plates(model_id, plates, fields={}):
 
         trans.commit()
 
+        # For faster updates, this materialized view could become an actual table
+        conn.execute("REFRESH MATERIALIZED VIEW cache.plate_polygon")
+
 def import_feature(dataset, feature):
     conn = connect()
 
@@ -139,7 +142,9 @@ def import_features(name, features, overwrite=False):
     echo(f"Imported {i+1} features for dataset "+style(name, bold=True)+f" in {elapsed:.2f} seconds")
 
     sql = get_sql('cache-feature-dataset')
+    trans = conn.begin()
     conn.execute(sql, dataset_id=name)
+    trans.commit()
 
     elapsed = perf_counter()-step1
     echo(f"  cached transformed features in {elapsed:.2f} seconds")
