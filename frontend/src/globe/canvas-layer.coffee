@@ -15,11 +15,17 @@ class CanvasLayer extends Component
   constructor: ->
     super arguments...
     @canvas = createRef()
+    @state = {
+      # The canvas rendering context
+      context: null
+      isLoaded: false
+    }
 
   render: ->
     # https://medium.com/dev-shack/clicking-and-dragging-svg-with-react-and-d3-js-5639cd0c3c3b
     {width, height} = @context
     {children, style} = @props
+    {isLoaded} = @state
 
     context = null
     {current: el} = @canvas
@@ -38,8 +44,8 @@ class CanvasLayer extends Component
       context.strokeStyle = stroke
       context.fillStyle = fill
       context.setTransform(dpr, 0, 0, dpr, 0, 0)
-      context.beginPath()
-
+      context.lineJoin = "round"
+      context.lineCap = "round"
     style = {width, height}
 
     # hack for safari to display div
@@ -57,14 +63,11 @@ class CanvasLayer extends Component
       ]
     )
 
+
   componentDidMount: ->
-    {projection} = @context
-    {feature, fill, stroke} = @props
-    dpr = window.devicePixelRatio or 1
-    el = @canvas.current
-    ctx = el.getContext("2d")
-    ctx.lineJoin = "round"
-    ctx.lineCap = "round"
+    @componentDidUpdate()
+    # Hack to force initial redraw
+    @setState {isLoaded: true}
 
   componentDidUpdate: =>
     {current: el} = @canvas

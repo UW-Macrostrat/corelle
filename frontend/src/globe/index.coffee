@@ -119,9 +119,7 @@ class Globe extends StatefulComponent
 
   componentDidMount: =>
     @componentDidUpdate.call(@,arguments)
-    # This is a despicable hack.
-    @updateProjection @state.projection
-    
+
   render: ->
     {width, height, children, keepNorthUp, allowDragging, projection, rest...} = @props
     initialScale = projection.scale() or 500
