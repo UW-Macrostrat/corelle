@@ -63,6 +63,13 @@ class CanvasLayer extends Component
       ]
     )
 
+  componentWillUpdate: ->
+    {height, width} = @context
+    {current: el} = @canvas
+    return if not el?
+    ctx = el.getContext("2d")
+    ctx.clearRect(0, 0, width, height)
+    ctx.beginPath()
 
   componentDidMount: ->
     @componentDidUpdate()
