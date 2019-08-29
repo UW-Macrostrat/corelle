@@ -75,6 +75,7 @@ class Globe extends StatefulComponent
 
     @state = {
       projection
+      zoom: 1
       canvasContexts: new Set([])
     }
 
@@ -97,9 +98,10 @@ class Globe extends StatefulComponent
     @updateState {projection: {$set: newProj}}
 
   componentWillUpdate: =>
-    {canvasContexts} = @state
     {width, height} = @props
-    canvasContexts.forEach (ctx)->
+    el = findDOMNode(@)
+    for c in el.querySelectorAll("canvas")
+      ctx = c.getContext('2d')
       ctx.clearRect(0, 0, width, height)
       ctx.beginPath()
 
@@ -115,25 +117,18 @@ class Globe extends StatefulComponent
     el.dispatchEvent(e1)
     el.dispatchEvent(e2)
 
-  registerCanvasContext: (ctx)=>
-    console.log "Registering canvas context"
-    ctx.beginPath()
-    @updateState {canvasContexts: {$add: [ctx]}}
-  deregisterCanvasContext: =>
-    @updateState {canvasContexts: {$remove: [ctx]}}
-
   componentDidMount: =>
     @componentDidUpdate.call(@,arguments)
 
   render: ->
-    {width, height, children, keepNorthUp, allowDragging, rest...} = @props
+    {width, height, children, keepNorthUp, allowDragging, projection, rest...} = @props
+    initialScale = projection.scale() or 500
 
     {projection} = @state
     actions = do => {
+      updateState,
       updateProjection,
-      dispatchEvent,
-      registerCanvasContext,
-      deregisterCanvasContext
+      dispatchEvent
       } = @
     renderPath = geoPath(projection)
     value = {projection, renderPath, width, height, actions...}
@@ -147,7 +142,7 @@ class Globe extends StatefulComponent
           h Graticule
           children
         ]
-        h.if(allowDragging) DraggableOverlay, {keepNorthUp}
+        h.if(allowDragging) DraggableOverlay, {keepNorthUp, initialScale}
       ]
     ]
 

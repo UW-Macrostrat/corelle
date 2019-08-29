@@ -24,10 +24,15 @@ class CanvasLayer extends Component
     # https://medium.com/dev-shack/clicking-and-dragging-svg-with-react-and-d3-js-5639cd0c3c3b
     {width, height} = @context
     {children, style} = @props
-    {context} = @state
+
+    context = null
+    {current: el} = @canvas
+    if el?
+      context = el.getContext("2d")
+
     value = {context, inCanvas: true}
 
-
+    dpr = window.devicePixelRatio or 1
     if context?
       style ?= {}
       {fill, stroke, strokeWidth} = style
@@ -36,8 +41,8 @@ class CanvasLayer extends Component
       context.lineWidth = strokeWidth or 1
       context.strokeStyle = stroke
       context.fillStyle = fill
+      context.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-    dpr = window.devicePixelRatio or 1
     style = {width, height}
 
     # hack for safari to display div
@@ -56,26 +61,19 @@ class CanvasLayer extends Component
     )
 
   componentDidMount: ->
-    {projection, registerCanvasContext} = @context
+    {projection} = @context
     {feature, fill, stroke} = @props
     dpr = window.devicePixelRatio or 1
     el = @canvas.current
     ctx = el.getContext("2d")
-    ctx.scale(dpr, dpr)
     ctx.lineJoin = "round"
     ctx.lineCap = "round"
-    registerCanvasContext(ctx)
-    @setState {context: ctx}
 
   componentDidUpdate: =>
-    {context} = @state
-    return null if not context?
+    {current: el} = @canvas
+    return if not el?
+    context = el.getContext("2d")
     context.fill()
     context.stroke()
-
-  componentWillUnmount: =>
-    {deregisterCanvasContext} = @context
-    {context} = @state
-    deregisterCanvasContext(context)
 
 export {CanvasLayer, MapCanvasContext}

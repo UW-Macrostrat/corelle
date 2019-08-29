@@ -4,6 +4,7 @@ import T from 'prop-types'
 import h from './hyper'
 import {MapContext} from './context'
 import {drag} from 'd3-drag'
+import {zoom} from 'd3-zoom'
 import {select, event as currentEvent, mouse} from 'd3-selection'
 import {sph2cart, quat2euler, euler2quat, quatMultiply, quaternion} from './math'
 
@@ -12,14 +13,18 @@ class DraggableOverlay extends Component
   @propTypes: {
     showMousePosition: T.bool
     keepNorthUp: T.bool
+    enableZoom: T.bool
+    initialScale: T.number
   }
   @defaultProps: {
     showMousePosition: true
+    enableZoom: true
     pinNorthUp: false
   }
   constructor: ->
     super arguments...
     @state = {mousePosition: null}
+    @zoom = null
   render: ->
     # https://medium.com/dev-shack/clicking-and-dragging-svg-with-react-and-d3-js-5639cd0c3c3b
     {width, height, renderPath} = @context
@@ -54,6 +59,12 @@ class DraggableOverlay extends Component
   dragEnded: (pos)=>
     @setState {mousePosition: null}
 
+  zoomed: =>
+    scale = currentEvent.transform.k
+    console.log scale
+    {projection, updateProjection} = @context
+    updateProjection(projection.scale(scale))
+
   componentDidMount: ->
     {width, height, projection, dispatchEvent} = @context
     mousePos = (func)-> ->
@@ -69,5 +80,34 @@ class DraggableOverlay extends Component
     @drag(el)
     el.on 'click', ->
       dispatchEvent currentEvent
+
+    if @props.enableZoom
+      @setupZoom()
+
+  setupZoom: ->
+    el = select(findDOMNode(@))
+    # Zoom over one order of magnitude by default
+
+    @zoom = zoom().on("zoom", @zoomed)
+    @zoom(el)
+    @updateZoom()
+
+  updateZoom: (scale)=>
+    el = select(findDOMNode(@))
+    scale ?= @props.initialScale
+    @zoom.scaleExtent(@getScaleExtent())
+        .scaleTo(el, scale)
+
+  getScaleExtent: =>
+    {initialScale, scaleExtent} = @props
+    if scaleExtent?
+      return scaleExtent
+    [initialScale*0.5, initialScale*3]
+
+  componentDidUpdate: (prevProps)->
+    el = select(findDOMNode(@))
+    {initialScale} = @props
+    return if initialScale == prevProps.initialScale
+    @updateZoom() if @zoom?
 
 export {DraggableOverlay}

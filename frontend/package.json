@@ -28,6 +28,7 @@
     "d3-drag": "^1.2.4",
     "d3-geo": "^1.11.6",
     "d3-selection": "^1.4.0",
+    "d3-zoom": "^1.8.3",
     "postcss-modules": "^1.4.1",
     "quaternion": "^1.1.0",
     "react": "^16.9.0",
