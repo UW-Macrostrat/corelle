@@ -3,6 +3,7 @@ import {WorldMap} from './world-map'
 import ControlPanel from './control-panel'
 import h from '@macrostrat/hyper'
 import {RotationsProvider} from './rotations'
+import {MapSettingsProvider} from './map-settings'
 import T from 'prop-types'
 import {APIProvider, APIContext} from '@macrostrat/ui-components'
 
@@ -49,7 +50,9 @@ class App extends Component
 
 WrappedApp = (props)->
   h APIProvider, {baseURL}, (
-    h App, props
+    h MapSettingsProvider, null, (
+      h App, props
+    )
   )
 
 export default WrappedApp

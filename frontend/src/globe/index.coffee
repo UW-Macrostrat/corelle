@@ -1,11 +1,11 @@
-import React, {Component, createContext, useContext, createRef} from 'react'
+import React, {Component, createContext, useContext, createRef, createElement} from 'react'
 import {findDOMNode} from 'react-dom'
 import {StatefulComponent} from '@macrostrat/ui-components'
 import T from 'prop-types'
 import h from './hyper'
 import {MapContext} from './context'
 import {DraggableOverlay} from './drag-interaction'
-import {max} from 'd3-array'
+import {min, max} from 'd3-array'
 import {geoStereographic, geoOrthographic, geoGraticule, geoPath} from 'd3-geo'
 import styles from './module.styl'
 
@@ -39,64 +39,110 @@ Graticule = (props)->
     props...
   }
 
-
-
 class Globe extends StatefulComponent
   @propTypes: {
-    #projection: T.func.isRequired,
-    width: T.number,
-    height: T.number
+    projection: T.func.isRequired,
+    width: T.number.isRequired,
+    height: T.number.isRequired,
+    keepNorthUp: T.bool,
+    allowDragging: T.bool
+    setupProjection: T.func
+    scale: T.number
+    translate: T.arrayOf(T.number)
+  }
+  @defaultProps: {
+    keepNorthUp: false
+    allowDragging: true
+    projection: geoOrthographic()
+      .clipAngle(90)
+      .precision(0.5)
+    setupProjection: (projection, {width, height, scale, translate})->
+      if not scale?
+        maxSize = min [width, height]
+        scale = maxSize/2
+      translate ?= [width/2, height/2]
+      projection.scale(scale)
+        .translate(translate)
   }
 
   constructor: (props)->
     super(props)
 
     @mapElement = createRef()
-    maxSize = max [@props.width, @props.height]
 
-    projection = geoOrthographic()
-      .center([0,0])
-      .scale(maxSize/2)
-      .clipAngle(90)
-      .translate([@props.width/2, @props.height/2])
-      .precision(0.5)
+    {projection} = @props
+    projection.center([0,0])
 
     @state = {
       projection
+      zoom: 1
+      canvasContexts: new Set([])
     }
+
+  componentDidUpdate: (prevProps)=>
+    {width, height, scale, translate, setupProjection} = @props
+    sameDimensions = prevProps.width == width and prevProps.height == height
+    sameProjection = prevProps.projection == @props.projection
+    sameScale = prevProps.scale == scale and prevProps.translate == translate
+    return if sameDimensions and sameProjection and sameScale
+    if sameProjection
+      {projection} = @state
+    else
+      {projection} = @props
+
+    newProj = setupProjection(projection, {width,height, scale, translate})
+
+    @updateProjection newProj
 
   updateProjection: (newProj)=>
     @updateState {projection: {$set: newProj}}
+
+  componentWillUpdate: =>
+    {width, height} = @props
+    el = findDOMNode(@)
+    for c in el.querySelectorAll("canvas")
+      ctx = c.getContext('2d')
+      ctx.clearRect(0, 0, width, height)
+      ctx.beginPath()
 
   dispatchEvent: (evt)=>
     v = findDOMNode(@)
     el = v.getElementsByClassName(styles.map)[0]
     # Simulate an event directly on the map's DOM element
     {clientX, clientY} = evt
-    console.log evt
+
     e1 = new Event "mousedown", {clientX, clientY}
     e2 = new Event "mouseup", {clientX, clientY}
-    console.log e1, e2
+
     el.dispatchEvent(e1)
     el.dispatchEvent(e2)
 
-  contextValue: ->
-    {width, height} = @props
-    {projection} = @state
-    actions = do => {updateProjection, dispatchEvent} = @
-    renderPath = geoPath(projection)
-    {projection, renderPath, width, height, actions...}
+  componentDidMount: =>
+    @componentDidUpdate.call(@,arguments)
 
   render: ->
-    {width, height, children} = @props
-    h MapContext.Provider, {value: @contextValue()}, [
-      h 'svg.globe', {width, height}, [
+    {width, height, children, keepNorthUp, allowDragging, projection, rest...} = @props
+    initialScale = projection.scale() or 500
+
+    {projection} = @state
+    actions = do => {
+      updateState,
+      updateProjection,
+      dispatchEvent
+      } = @
+    renderPath = geoPath(projection)
+    value = {projection, renderPath, width, height, actions...}
+
+    xmlns = "http://www.w3.org/2000/svg"
+
+    h MapContext.Provider, {value}, [
+      createElement 'svg', {className: 'globe', xmlns, width, height, rest...}, [
         h 'g.map', {ref: @mapElement}, [
           h Background, {fill: 'dodgerblue'}
           h Graticule
           children
         ]
-        h DraggableOverlay
+        h.if(allowDragging) DraggableOverlay, {keepNorthUp, initialScale}
       ]
     ]
 

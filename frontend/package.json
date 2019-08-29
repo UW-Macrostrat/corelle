@@ -23,14 +23,17 @@
     "@blueprintjs/core": "^3.18.0",
     "@macrostrat/hyper": "^1.1.1",
     "@macrostrat/ui-components": "^0.1.1",
+    "chroma-js": "^2.0.6",
     "d3-array": "^2.2.0",
     "d3-drag": "^1.2.4",
     "d3-geo": "^1.11.6",
     "d3-selection": "^1.4.0",
+    "d3-zoom": "^1.8.3",
     "postcss-modules": "^1.4.1",
     "quaternion": "^1.1.0",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
+    "react-fps-stats": "^0.1.2",
     "react-router": "^5.0.1",
     "react-router-dom": "^5.0.1"
   }

@@ -1,19 +1,30 @@
 import hyper from '@macrostrat/hyper'
 import React, {Component, useContext, createElement} from 'react'
 import {APIResultView} from '@macrostrat/ui-components'
-import {min} from 'd3-array'
+import {min, max} from 'd3-array'
 import {select} from 'd3-selection'
 import {geoStereographic, geoTransform} from 'd3-geo'
 import {ResizeSensor, Popover, Spinner} from '@blueprintjs/core'
 import {RotationsContext} from './rotations'
 import {Globe, MapContext} from './globe'
 import {geoPath} from 'd3-geo'
+import {MapCanvasContext, CanvasLayer} from './globe/canvas-layer'
+import {MapSettingsContext} from './map-settings'
+import chroma from 'chroma-js'
 
 import styles from './main.styl'
 
 h = hyper.styled(styles)
 
+FeatureLayer = (props)->
+  {useCanvas, rest...} = props
+  useCanvas ?= true
+  if useCanvas
+    return h CanvasLayer, rest
+  return h 'g', rest
+
 class WorldMap extends Component
+  @contextType: MapSettingsContext
   constructor: ->
     super arguments...
     @state = {
@@ -27,9 +38,10 @@ class WorldMap extends Component
 
   render: ->
     {width, height} = @state
+    {keepNorthUp, projection} = @context
     h ResizeSensor, {onResize: @onResize}, (
       h 'div.world-map', null, (
-        h WorldMapInner, {width, height}
+        h WorldMapInner, {width, height, margin: 10, keepNorthUp, projection}
       )
     )
 
@@ -56,6 +68,14 @@ PlateFeature = (props)->
     # https://stackoverflow.com/questions/27557724/what-is-the-proper-way-to-use-d3s-projection-stream
     trans.stream(projection.stream(s))
 
+  # Make it work in canvas
+  {inCanvas, context} = useContext(MapCanvasContext)
+  if inCanvas
+    if context?
+      proj = geoPath({stream}, context)
+      proj feature
+    return null
+
   # Combined projection
   proj = geoPath({stream})
   d = proj feature
@@ -67,19 +87,30 @@ PlatePolygon = (props)->
   {feature, rest...} = props
   {id, properties} = feature
   {old_lim, young_lim} = properties
-  h Popover, {content: h("span","Plate #{id}"), targetTagName: 'g', wrapperTagName: 'g'}, [
-    h PlateFeature, {feature, oldLim: old_lim, youngLim: young_lim, plateId: id, rest...}
-  ]
+  h PlateFeature, {feature, oldLim: old_lim, youngLim: young_lim, plateId: id, rest...}
 
 PlatePolygons = (props)->
   {model} = useContext(RotationsContext)
+  {inCanvas, clearCanvas} = useContext(MapCanvasContext)
+
   h APIResultView, {
     route: "/plates",
     params: {model},
     placeholder: null
   }, (data)=>
     return null unless data?
-    h 'g.plates', null, data.map (feature, i)->
+
+    style = {
+      fill: 'rgba(200,200,200, 0.3)'
+      stroke: 'rgba(200,200,200, 0.8)'
+      strokeWidth: 1
+    }
+
+    h FeatureLayer, {
+      useCanvas: true,
+      className: 'plates',
+      style
+    }, data.map (feature, i)->
       h PlatePolygon, {key: i, feature}
 
 PlateFeatureDataset = (props)->
@@ -91,7 +122,14 @@ PlateFeatureDataset = (props)->
     placeholder: null
   }, (data)=>
     return null unless data?
-    h 'g', {className: name}, data.map (feature, i)->
+
+    style = {
+      fill: '#E9FCEA'
+      stroke: chroma('#E9FCEA').darken().hex()
+      strokeWidth: 1
+    }
+
+    h FeatureLayer, {className: name, useCanvas: true, style}, data.map (feature, i)->
       {id, properties} = feature
       {plate_id, old_lim, young_lim} = properties
       h PlateFeature, {
@@ -104,19 +142,15 @@ PlateFeatureDataset = (props)->
 
 class WorldMapInner extends Component
   @contextType: RotationsContext
-  projection: (width, height, config)->
-    return geoStereographic()
-      .center([0,0])
-      .scale(config.scale)
-      #.clipExtent(config.clipExtent)
-
   render: ->
-    {width, height} = @props
+    {width, height, margin, marginRight, keepNorthUp, projection} = @props
     {model} = @context
     h Globe, {
-      projection: this.projection,
-      width,
+      keepNorthUp: keepNorthUp
+      projection: projection.func,
+      width
       height
+      scale: max([width,height])/2-20
     }, [
       h PlatePolygons
       h PlateFeatureDataset, {name: 'ne_110m_land'}
