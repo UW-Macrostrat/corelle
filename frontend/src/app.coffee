@@ -19,11 +19,14 @@ class App extends Component
       rotations: null
       model: "Seton2012"
       models: ["Seton2012"]
+      featureDataset: "ne_110m_land"
+      featureDatasets: ["ne_110m_land"]
     }
 
   componentDidMount: ->
     try
       @getModelData()
+      @getFeatureDatasets()
     catch
       console.log "Could not get model data"
 
@@ -33,6 +36,11 @@ class App extends Component
     models = data.map (d)->d.name
     @setState {models}
 
+  getFeatureDatasets: ->
+    {get} = @context
+    data = await get "/feature"
+    @setState {featureDatasets: data}
+
   setTime: (value)=>
     @setState {time: value}
 
@@ -40,11 +48,18 @@ class App extends Component
     @setState {model: value}
 
   render: ->
-    {time, model, models} = @state
+    {time, model, models, featureDataset, featureDatasets} = @state
     h 'div', [
       h RotationsProvider, {model, time}, [
-        h WorldMap
-        h ControlPanel, {setTime: @setTime, setModel: @setModel, models}
+        h WorldMap, {featureDataset}
+        h ControlPanel, {
+          setTime: @setTime,
+          setModel: @setModel,
+          featureDataset,
+          featureDatasets,
+          setFeatureDataset: (v)=>@setState({featureDataset: v}),
+          models
+        }
       ]
     ]
 

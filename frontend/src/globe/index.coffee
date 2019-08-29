@@ -97,14 +97,6 @@ class Globe extends StatefulComponent
   updateProjection: (newProj)=>
     @updateState {projection: {$set: newProj}}
 
-  componentWillUpdate: =>
-    {width, height} = @props
-    el = findDOMNode(@)
-    for c in el.querySelectorAll("canvas")
-      ctx = c.getContext('2d')
-      ctx.clearRect(0, 0, width, height)
-      ctx.beginPath()
-
   dispatchEvent: (evt)=>
     v = findDOMNode(@)
     el = v.getElementsByClassName(styles.map)[0]
@@ -134,9 +126,10 @@ class Globe extends StatefulComponent
     value = {projection, renderPath, width, height, actions...}
 
     xmlns = "http://www.w3.org/2000/svg"
+    viewBox = "0 0 #{width} #{height}"
 
     h MapContext.Provider, {value}, [
-      createElement 'svg', {className: 'globe', xmlns, width, height, rest...}, [
+      createElement 'svg', {className: 'globe', xmlns, width, height, viewBox, rest...}, [
         h 'g.map', {ref: @mapElement}, [
           h Background, {fill: 'dodgerblue'}
           h Graticule

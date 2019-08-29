@@ -1,8 +1,15 @@
 #!/bin/sh
 
+if [ $1 == '--redo' ]; then
+  shift
+  psql "$@" -c "TRUNCATE feature CASCADE"
+fi
+
 cmd="SELECT count(*) FROM (SELECT DISTINCT dataset_id FROM feature) AS a"
-n_datasets=$(psql $@ -t0 -c "$cmd")
-[ $n_datasets -gt 0 ] && exit 0
+n_datasets=$(psql "$@" -t0 -c "$cmd")
+[ $n_datasets -gt 0 ] \
+&& echo "Some features are already imported, pass option '--redo' to re-import everything" \
+&& exit 0
 
 # Make a temp dir
 tempdir=$(mktemp -d)
@@ -24,5 +31,7 @@ fn="$ds.json"
 
 
 curl "https://macrostrat.org/api/v2/columns?all&format=geojson" \
-| python -m jq .success.data > $fn
+| python -c "import sys, json;json.dump(json.load(sys.stdin)['success']['data'],sys.stdout)" \
+> $fn
+
 corelle import-features --overwrite $ds $fn

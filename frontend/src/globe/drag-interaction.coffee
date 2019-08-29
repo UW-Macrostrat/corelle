@@ -102,7 +102,7 @@ class DraggableOverlay extends Component
     {initialScale, scaleExtent} = @props
     if scaleExtent?
       return scaleExtent
-    [initialScale*0.5, initialScale*3]
+    [initialScale*0.8, initialScale*2]
 
   componentDidUpdate: (prevProps)->
     el = select(findDOMNode(@))

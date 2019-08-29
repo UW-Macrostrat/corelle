@@ -23,28 +23,6 @@ FeatureLayer = (props)->
     return h CanvasLayer, rest
   return h 'g', rest
 
-class WorldMap extends Component
-  @contextType: MapSettingsContext
-  constructor: ->
-    super arguments...
-    @state = {
-      width: 1100,
-      height: 800
-    }
-
-  onResize: (entries)=>
-    {width, height} = entries[0].contentRect
-    @setState {width, height}
-
-  render: ->
-    {width, height} = @state
-    {keepNorthUp, projection} = @context
-    h ResizeSensor, {onResize: @onResize}, (
-      h 'div.world-map', null, (
-        h WorldMapInner, {width, height, margin: 10, keepNorthUp, projection}
-      )
-    )
-
 PlateFeature = (props)->
   # An arbitrary feature tied to a plate
   {feature, youngLim, oldLim, plateId, rest...} = props
@@ -143,7 +121,7 @@ PlateFeatureDataset = (props)->
 class WorldMapInner extends Component
   @contextType: RotationsContext
   render: ->
-    {width, height, margin, marginRight, keepNorthUp, projection} = @props
+    {width, height, margin, marginRight, keepNorthUp, projection, children} = @props
     {model} = @context
     h Globe, {
       keepNorthUp: keepNorthUp
@@ -151,10 +129,33 @@ class WorldMapInner extends Component
       width
       height
       scale: max([width,height])/2-20
-    }, [
-      h PlatePolygons
-      h PlateFeatureDataset, {name: 'ne_110m_land'}
-    ]
+    }, children
 
+
+class WorldMap extends Component
+  @contextType: MapSettingsContext
+  constructor: ->
+    super arguments...
+    @state = {
+      width: 1100,
+      height: 800
+    }
+
+  onResize: (entries)=>
+    {width, height} = entries[0].contentRect
+    @setState {width, height}
+
+  render: ->
+    {width, height} = @state
+    {featureDataset} = @props
+    {keepNorthUp, projection} = @context
+    h ResizeSensor, {onResize: @onResize}, (
+      h 'div.world-map', null, (
+        h WorldMapInner, {width, height, margin: 10, keepNorthUp, projection}, [
+          h PlatePolygons
+          h.if(featureDataset?) PlateFeatureDataset, {name: featureDataset}
+        ]
+      )
+    )
 
 export {WorldMap}

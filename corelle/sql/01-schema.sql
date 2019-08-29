@@ -46,3 +46,11 @@ CREATE TABLE IF NOT EXISTS feature (
   geometry geometry(Geometry, 4326),
   properties jsonb
 );
+
+CREATE TABLE IF NOT EXISTS cache.feature (
+  model_id integer NOT NULL REFERENCES model(id),
+  model_name text NOT NULL REFERENCES model(name),
+  dataset_id text NOT NULL,
+  geojson json NOT NULL,
+  PRIMARY KEY (model_id, dataset_id)
+);

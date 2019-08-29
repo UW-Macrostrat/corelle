@@ -16,10 +16,10 @@ RUN pip install -e .
 ENV CORELLE_DB=postgresql://postgres@database:5432/corelle
 
 # For importing data
-RUN apk add --no-cache jq curl
+RUN apk add --no-cache curl bash
 
 WORKDIR /run
-COPY ./bin/load-features .
+COPY ./bin/load-features ./
 COPY ./run-docker .
 
 CMD ./run-docker
