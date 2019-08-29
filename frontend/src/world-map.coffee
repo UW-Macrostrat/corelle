@@ -1,7 +1,7 @@
 import hyper from '@macrostrat/hyper'
 import React, {Component, useContext, createElement} from 'react'
 import {APIResultView} from '@macrostrat/ui-components'
-import {min} from 'd3-array'
+import {min, max} from 'd3-array'
 import {select} from 'd3-selection'
 import {geoStereographic, geoTransform} from 'd3-geo'
 import {ResizeSensor, Popover, Spinner} from '@blueprintjs/core'
@@ -150,6 +150,7 @@ class WorldMapInner extends Component
       projection: projection.func,
       width
       height
+      scale: max([width,height])/2-20
     }, [
       h PlatePolygons
       h PlateFeatureDataset, {name: 'ne_110m_land'}

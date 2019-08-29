@@ -42,10 +42,13 @@ Graticule = (props)->
 class Globe extends StatefulComponent
   @propTypes: {
     projection: T.func.isRequired,
-    width: T.number,
-    height: T.number,
+    width: T.number.isRequired,
+    height: T.number.isRequired,
     keepNorthUp: T.bool,
     allowDragging: T.bool
+    setupProjection: T.func
+    scale: T.number
+    translate: T.arrayOf(T.number)
   }
   @defaultProps: {
     keepNorthUp: false
@@ -53,6 +56,13 @@ class Globe extends StatefulComponent
     projection: geoOrthographic()
       .clipAngle(90)
       .precision(0.5)
+    setupProjection: (projection, {width, height, scale, translate})->
+      if not scale?
+        maxSize = min [width, height]
+        scale = maxSize/2
+      translate ?= [width/2, height/2]
+      projection.scale(scale)
+        .translate(translate)
   }
 
   constructor: (props)->
@@ -69,17 +79,18 @@ class Globe extends StatefulComponent
     }
 
   componentDidUpdate: (prevProps)=>
-    {width, height} = @props
+    {width, height, scale, translate, setupProjection} = @props
     sameDimensions = prevProps.width == width and prevProps.height == height
     sameProjection = prevProps.projection == @props.projection
-    return if sameDimensions and sameProjection
+    sameScale = prevProps.scale == scale and prevProps.translate == translate
+    return if sameDimensions and sameProjection and sameScale
     if sameProjection
       {projection} = @state
     else
       {projection} = @props
-    maxSize = min [width, height]
-    newProj = projection.scale(maxSize/2)
-      .translate([width/2, height/2])
+
+    newProj = setupProjection(projection, {width,height, scale, translate})
+
     @updateProjection newProj
 
   updateProjection: (newProj)=>
