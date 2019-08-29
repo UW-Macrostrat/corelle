@@ -148,9 +148,8 @@ class WorldMapInner extends Component
     h Globe, {
       keepNorthUp: keepNorthUp
       projection: projection.func,
-      width: width-2*margin,
-      height: height-2*margin
-      style: {margin: margin}
+      width
+      height
     }, [
       h PlatePolygons
       h PlateFeatureDataset, {name: 'ne_110m_land'}
