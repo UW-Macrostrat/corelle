@@ -37,11 +37,20 @@ class CanvasLayer extends Component
       context.strokeStyle = stroke
       context.fillStyle = fill
 
+    dpr = window.devicePixelRatio or 1
+    style = {width, height}
+
     # hack for safari to display div
     xmlns = "http://www.w3.org/1999/xhtml"
     h MapCanvasContext.Provider, {value}, (
       createElement 'foreignObject', {width, height}, [
-        createElement 'canvas', {xmlns, width, height, ref: @canvas}
+        createElement 'canvas', {
+          xmlns,
+          width: width*dpr,
+          height: height*dpr,
+          style,
+          ref: @canvas
+        }
         children
       ]
     )
@@ -49,8 +58,10 @@ class CanvasLayer extends Component
   componentDidMount: ->
     {projection, registerCanvasContext} = @context
     {feature, fill, stroke} = @props
+    dpr = window.devicePixelRatio or 1
     el = @canvas.current
     ctx = el.getContext("2d")
+    ctx.scale(dpr, dpr)
     ctx.lineJoin = "round"
     ctx.lineCap = "round"
     registerCanvasContext(ctx)
