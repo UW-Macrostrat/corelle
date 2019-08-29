@@ -15,10 +15,6 @@ class CanvasLayer extends Component
   constructor: ->
     super arguments...
     @canvas = createRef()
-    @state = {
-      # The canvas rendering context
-      context: null
-    }
 
   render: ->
     # https://medium.com/dev-shack/clicking-and-dragging-svg-with-react-and-d3-js-5639cd0c3c3b
@@ -42,6 +38,7 @@ class CanvasLayer extends Component
       context.strokeStyle = stroke
       context.fillStyle = fill
       context.setTransform(dpr, 0, 0, dpr, 0, 0)
+      context.beginPath()
 
     style = {width, height}
 
