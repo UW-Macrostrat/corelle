@@ -1,6 +1,6 @@
 all: install
 
-.PHONY: install init update_functions test dev
+.PHONY: install init update_functions test dev features
 
 install:
 	pip install -r requirements.txt
@@ -31,8 +31,8 @@ update_functions:
 
 baseurl := https://raw.githubusercontent.com/martynafford/natural-earth-geojson/master
 
-load_features: bin/load-features
-	./$^
+features: bin/load-features
+	bin/load-features --redo plate-rotations
 
 test:
 	bin/run-tests

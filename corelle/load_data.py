@@ -8,6 +8,7 @@ import fiona
 from click import echo, style
 
 from .database import db, create_session
+from .query import get_sql
 
 __conn = None
 def connect():
@@ -120,20 +121,28 @@ def import_feature(dataset, feature):
 
 def import_features(name, features, overwrite=False):
     session = create_session()
-
+    start = perf_counter()
+    conn = connect()
     with fiona.open(features, 'r') as src:
-        conn = connect()
         trans = conn.begin()
 
         if overwrite:
             conn.execute(__feature
                 .delete()
-                .where(__feature.c.dataset_id == dataset))
+                .where(__feature.c.dataset_id == name))
 
         for i, feature in enumerate(src):
             import_feature(name, feature)
         trans.commit()
-    echo(f"Imported {i+1} features for dataset "+style(name, bold=True))
+    step1 = perf_counter()
+    elapsed = step1-start
+    echo(f"Imported {i+1} features for dataset "+style(name, bold=True)+f" in {elapsed:.2f} seconds")
+
+    sql = get_sql('cache-feature-dataset')
+    conn.execute(sql, dataset_id=name)
+
+    elapsed = perf_counter()-step1
+    echo(f"  cached transformed features in {elapsed:.2f} seconds")
 
 def import_rotation_row(model_id, line):
     """
