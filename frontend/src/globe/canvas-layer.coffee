@@ -46,7 +46,7 @@ class CanvasLayer extends Component
       context.setTransform(dpr, 0, 0, dpr, 0, 0)
       context.lineJoin = "round"
       context.lineCap = "round"
-    style = {width, height}
+    style = {width, height, pointerEvents: 'none'}
 
     # hack for safari to display div
     xmlns = "http://www.w3.org/1999/xhtml"
