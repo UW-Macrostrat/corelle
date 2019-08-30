@@ -4,7 +4,6 @@ import {Slider, HTMLSelect, FormGroup, Switch, Alignment, NumericInput} from '@b
 import {RotationsContext} from './rotations'
 import styles from './main.styl'
 import T from 'prop-types'
-#import FPSStats from "react-fps-stats"
 import {MapSettingsContext} from './map-settings'
 
 h = hyper.styled(styles)
@@ -62,7 +61,12 @@ ControlPanel = (props)->
   {keepNorthUp} =
   max = 1200
   h 'div.control-panel', [
-    h 'h1', "Corelle"
+    h 'div.header', [
+      h 'h1', null, (
+        h 'a', {href: "https://github/UW-Macrostrat/Corelle"}, "Corelle"
+      )
+      h 'p', "Simple plate rotations."
+    ]
     h SelectModel, {setModel, models}
     h SelectFeatureDataset, {setFeatureDataset, featureDataset, featureDatasets}
     h FormGroup, {
@@ -85,6 +89,10 @@ ControlPanel = (props)->
     h MapSettingsPanel
     #h FPSStats
     props.children
+    h 'p.credits', [
+      h 'a', {href: 'https://github.com/davenquinn'}, "Daven Quinn"
+      ", 2019"
+    ]
   ]
 
 ControlPanel.propTypes = {
