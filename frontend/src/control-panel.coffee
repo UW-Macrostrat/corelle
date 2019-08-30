@@ -66,7 +66,7 @@ ControlPanel = (props)->
   h 'div.control-panel', [
     h 'div.header', [
       h 'h1', null, (
-        h 'a', {href: "https://github/UW-Macrostrat/Corelle"}, "Corelle"
+        h 'a', {href: "https://github.com/UW-Macrostrat/Corelle"}, "Corelle"
       )
       h 'p', "Simple plate rotations."
     ]
