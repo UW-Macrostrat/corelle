@@ -8,43 +8,47 @@ import {MapSettingsContext} from './map-settings'
 
 h = hyper.styled(styles)
 
-SelectModel = (props)->
-  {model} = useContext(RotationsContext)
-  {setModel, models} = props
-  onChange = (e)->
-    setModel(e.currentTarget.value)
-  h FormGroup, {label: 'Model', inline: true}, [
-    h HTMLSelect, {onChange}, models.map (d)->
-      selected = d == model
-      h 'option', {value: d, selected}, d
+Select = (props)->
+  {label, value, options, onChange} = props
+  onChange ?= ->
+  h FormGroup, {label, inline: true}, [
+    h HTMLSelect, {
+      onChange: (e)->onChange(e.currentTarget.value)
+    }, options.map (d)->
+      h 'option', {
+        value: d
+        selected: d == value
+      }, d
   ]
+
+SelectModel = (props)->
+  {model: value} = useContext(RotationsContext)
+  {setModel: onChange, models: options} = props
+  h Select, {onChange, options, value, label: 'Model'}
 
 SelectFeatureDataset = (props)->
-  {setFeatureDataset, featureDataset, featureDatasets} = props
-  onChange = (e)->
-    setFeatureDataset(e.currentTarget.value)
-  h FormGroup, {label: 'Features', inline: true}, [
-    h HTMLSelect, {onChange}, featureDatasets.map (d)->
-      selected = d == featureDataset
-      h 'option', {value: d, selected}, d
-  ]
+  {
+    setFeatureDataset: onChange,
+    featureDataset: value,
+    featureDatasets: options
+  } = props
+  h Select, {onChange, options, value, label: 'Features'}
 
 SelectProjection = (props)->
-  {projection, projections, updateState} = useContext(MapSettingsContext)
-  {setModel, models} = props
-  onChange = (e)->
-    lbl = e.currentTarget.value
-    p = projections.find (d)->d.id == lbl
+  {
+    projection,
+    projections,
+    updateState
+  } = useContext(MapSettingsContext)
+  options = projections.map (d)->d.id
+  value = projection.id
+  onChange = (value)->
+    p = projections.find (d)->d.id == value
     updateState {projection: {$set: p}}
-  h FormGroup, {label: 'Projection', inline: true}, [
-    h HTMLSelect, {onChange}, projections.map (d)->
-      selected = d.func == projection
-      h 'option', {value: d.id, selected}, d.id
-  ]
+  h Select, {onChange, options, value, label: 'Projection'}
 
 MapSettingsPanel = (props)->
   {keepNorthUp, updateState} = useContext MapSettingsContext
-
   h 'div', [
     h SelectProjection
     h Switch, {
@@ -58,7 +62,6 @@ MapSettingsPanel = (props)->
 ControlPanel = (props)->
   {setTime, setModel, models, featureDatasets, featureDataset, setFeatureDataset} = props
   {time, model} = useContext RotationsContext
-  {keepNorthUp} =
   max = 1200
   h 'div.control-panel', [
     h 'div.header', [
@@ -90,7 +93,7 @@ ControlPanel = (props)->
     #h FPSStats
     props.children
     h 'p.credits', [
-      h 'a', {href: 'https://github.com/davenquinn'}, "Daven Quinn"
+      h 'a', {href: 'https://davenquinn.com'}, "Daven Quinn"
       ", 2019"
     ]
   ]
