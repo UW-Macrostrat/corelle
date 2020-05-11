@@ -30,8 +30,5 @@ ds="macrostrat_columns"
 fn="$ds.json"
 
 
-curl "https://macrostrat.org/api/v2/columns?all&format=geojson" \
-| python -c "import sys, json;json.dump(json.load(sys.stdin)['success']['data'],sys.stdout)" \
-> $fn
-
+curl -o "$fn" "https://macrostrat.org/api/v2/columns?all&format=geojson_bare"
 corelle import-features --overwrite $ds $fn
