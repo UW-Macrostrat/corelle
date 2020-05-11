@@ -47,6 +47,7 @@ class Globe extends StatefulComponent
     keepNorthUp: T.bool,
     allowDragging: T.bool
     setupProjection: T.func
+    modifyProjection: T.func
     scale: T.number
     translate: T.arrayOf(T.number)
   }
@@ -63,6 +64,7 @@ class Globe extends StatefulComponent
       translate ?= [width/2, height/2]
       projection.scale(scale)
         .translate(translate)
+    modifyProjection: (d)->d
   }
 
   constructor: (props)->
@@ -71,7 +73,7 @@ class Globe extends StatefulComponent
     @mapElement = createRef()
 
     {projection} = @props
-    projection.center([0,0])
+    projection.center(center)
 
     @state = {
       projection

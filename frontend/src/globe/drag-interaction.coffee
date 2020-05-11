@@ -41,20 +41,24 @@ class DraggableOverlay extends Component
     {projection} = @context
     pos = projection.invert(mousePos)
     @setState {mousePosition: {type: "Point", coordinates: pos}}
+    @r0 = projection.rotate()
     @p0 = sph2cart(pos)
+    @qa = euler2quat(projection.rotate())
     @q0 = euler2quat(projection.rotate())
 
   dragged: (mousePos)=>
     {keepNorthUp} = @props
     {projection, updateProjection} = @context
     @q0 = euler2quat(projection.rotate())
-    p1 = sph2cart(projection.invert(mousePos))
-    q1 = quaternion(@p0, p1)
+    pos = projection.invert(mousePos)
+    q1 = quaternion(@p0, sph2cart(pos))
     res = quatMultiply( @q0, q1 )
     r1 = quat2euler(res)
     return unless r1?
+    # keeping north up basically doesn't workq
     if keepNorthUp
-      r1 = [r1[0], r1[1], 0]
+      #console.log(@r0)
+      r1 = [r1[0], r1[1], r1[2]]
     updateProjection(projection.rotate(r1))
 
   dragEnded: =>
