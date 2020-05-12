@@ -1,13 +1,17 @@
 from flask import Flask
 from flask_restful import Resource, Api
 from flask_restful.reqparse import RequestParser
-from pg_viewtils import relative_path
 from sqlalchemy import text
 from simplejson import loads, JSONEncoder
 
 from .database import db
 from .query import get_sql
-from .rotate import get_rotation, get_all_rotations, get_plate_rotations, plates_for_model, rotate_point
+from .rotate import (
+    get_rotation,
+    get_all_rotations,
+    get_plate_rotations,
+    rotate_point
+)
 
 app = Flask(__name__)
 app.config['RESTFUL_JSON'] = dict(cls=JSONEncoder)
