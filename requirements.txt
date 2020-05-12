@@ -2,7 +2,7 @@ click
 https://github.com/davenquinn/pg-viewtils/archive/master.zip
 numpy
 numpy-quaternion
-psycopg2-binary
+psycopg2
 pyyaml
 IPython
 Flask

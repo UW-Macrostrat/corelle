@@ -36,7 +36,7 @@ __plate_polygon = reflect_table(db, 'plate_polygon')
 def pg_geometry(feature):
     geom = dumps(feature['geometry'])
     _ = func.ST_GeomFromGeoJSON(geom)
-    return func.ST_SetSRID(func.ST_Multi(_), 4326)
+    return func.ST_SetSRID(func.ST_MakeValid(func.ST_Multi(_)), 4326)
 
 def insert_plate(**vals):
     connect().execute(
@@ -118,9 +118,7 @@ def import_feature(dataset, feature):
         properties=(feature['properties'] or None),
         geometry=pg_geometry(feature))
 
-    conn.execute(__feature
-            .insert()
-            .values(vals))
+    conn.execute(__feature.insert().values(vals))
 
 def import_features(name, features, overwrite=False):
     session = create_session()
