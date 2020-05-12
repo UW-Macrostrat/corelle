@@ -73,7 +73,7 @@ class Globe extends StatefulComponent
     @mapElement = createRef()
 
     {projection} = @props
-    projection.center(center)
+    #projection.center(center)
 
     @state = {
       projection
