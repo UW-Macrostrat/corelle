@@ -12,12 +12,12 @@
   "devDependencies": {
     "@babel/core": "^7.5.5",
     "@babel/preset-react": "^7.0.0",
-    "coffeescript": "^2.4.1",
     "esm": "^3.2.25",
     "express": "^4.17.1",
     "http-proxy-middleware": "^0.19.1",
     "parcel-bundler": "^1.12.3",
-    "stylus": "^0.54.5"
+    "stylus": "^0.54.5",
+    "typescript": "^3.9.3"
   },
   "dependencies": {
     "@blueprintjs/core": "^3.18.0",
