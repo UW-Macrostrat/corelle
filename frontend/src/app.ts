@@ -21,17 +21,11 @@ class App extends Component {
   static initClass() {
     this.contextType = APIContext;
   }
-  constructor() {
-    {
-      // Hack: trick Babel/TypeScript into allowing this before super.
-      if (false) { super(); }
-      let thisFn = (() => { return this; }).toString();
-      let thisName = thisFn.match(/return (?:_assertThisInitialized\()*(\w+)\)*;/)[1];
-      eval(`${thisName} = this;`);
-    }
+  constructor(props) {
+    super(props);
+
     this.setTime = this.setTime.bind(this);
     this.setModel = this.setModel.bind(this);
-    super(...arguments);
     this.state = {
       time: 0,
       rotations: null,
@@ -40,6 +34,7 @@ class App extends Component {
       featureDataset: "ne_110m_land",
       featureDatasets: ["ne_110m_land"]
     };
+
   }
 
   componentDidMount() {

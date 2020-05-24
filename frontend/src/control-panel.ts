@@ -108,7 +108,7 @@ const ControlPanel = function(props){
     props.children,
     h('p.credits', [
       h('a', {href: 'https://davenquinn.com'}, "Daven Quinn"),
-      ", 2019"
+      ", 2019–2020"
     ])
   ]);
 };

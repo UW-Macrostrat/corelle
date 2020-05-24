@@ -39,7 +39,7 @@ html, body
   flex-direction: row
   h1
     margin-right 1em
-    a 
+    a
       color black
   p
     color #aaa
@@ -77,3 +77,12 @@ g.ne_110m_land
   a
     color inherit
     text-decoration: underline
+
+:global(.drag-overlay) rect
+  fill transparent
+
+:global(.graticule)
+  fill none
+  stroke #aaa
+  stroke-width 1px
+  stroke-dasharray 2,2

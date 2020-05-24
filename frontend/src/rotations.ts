@@ -1,17 +1,8 @@
-/*
- * decaffeinate suggestions:
- * DS001: Remove Babel/TypeScript constructor workaround
- * DS102: Remove unnecessary code created because of implicit returns
- * DS206: Consider reworking classes to avoid initClass
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import {Component, createContext} from 'react';
-import h from 'react-hyperscript';
+import h from '@macrostrat/hyper';
 import {APIResultView} from '@macrostrat/ui-components';
 import T from 'prop-types';
 import Quaternion from 'quaternion';
-import {geoRotation} from 'd3-geo';
 import {quat2euler, sph2cart, cart2sph} from './math';
 
 // Drag to rotate globe
@@ -22,27 +13,19 @@ import {quat2euler, sph2cart, cart2sph} from './math';
 const RotationsContext = createContext({rotations: null});
 
 class __RotationsProvider extends Component {
-  constructor(...args) {
-    {
-      // Hack: trick Babel/TypeScript into allowing this before super.
-      if (false) { super(); }
-      let thisFn = (() => { return this; }).toString();
-      let thisName = thisFn.match(/return (?:_assertThisInitialized\()*(\w+)\)*;/)[1];
-      eval(`${thisName} = this;`);
-    }
+  constructor(props, ctx) {
+    super(props, ctx);
     this.plateRotation = this.plateRotation.bind(this);
     this.geographyRotator = this.geographyRotator.bind(this);
     this.rotatedProjection = this.rotatedProjection.bind(this);
-    super(...args);
   }
 
-  static initClass() {
-    this.propTypes = {
-      time: T.number.isRequired,
-      model: T.string.isRequired,
-      rotations: T.arrayOf(T.object)
-    };
+  static propTypes = {
+    time: T.number.isRequired,
+    model: T.string.isRequired,
+    rotations: T.arrayOf(T.object)
   }
+
   render() {
     const {rotations, time, model, models} = this.props;
     const value = {
@@ -104,7 +87,6 @@ class __RotationsProvider extends Component {
     };
   }
 }
-__RotationsProvider.initClass();
 
 const RotationsProvider = function(props){
   const {time, children, model} = props;
@@ -113,7 +95,7 @@ const RotationsProvider = function(props){
     params: {time, model, quaternion: true},
     placeholder: null,
     debounce: 1000
-  }, data=> {
+  }, (data)=> {
     return h(__RotationsProvider, {time, model, rotations: data}, children);
   });
 };

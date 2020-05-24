@@ -1,22 +1,18 @@
-/*
- * decaffeinate suggestions:
- * DS001: Remove Babel/TypeScript constructor workaround
- * DS102: Remove unnecessary code created because of implicit returns
- * DS206: Consider reworking classes to avoid initClass
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import hyper from '@macrostrat/hyper';
-import React, {Component, useContext, createElement} from 'react';
+import {Component, useContext} from 'react';
 import {APIResultView} from '@macrostrat/ui-components';
-import {min, max} from 'd3-array';
-import {select} from 'd3-selection';
-import {geoStereographic, geoTransform} from 'd3-geo';
-import {ResizeSensor, Popover, Spinner} from '@blueprintjs/core';
+import {max} from 'd3-array';
+import {geoTransform} from 'd3-geo';
+import {ResizeSensor} from '@blueprintjs/core';
 import {RotationsContext} from './rotations';
-import {Globe, MapContext} from './globe';
+
+import {
+  Globe,
+  MapContext,
+  MapCanvasContext,
+  CanvasLayer
+} from '@macrostrat/map-components';
 import {geoPath} from 'd3-geo';
-import {MapCanvasContext, CanvasLayer} from './globe/canvas-layer';
 import {MapSettingsContext} from './map-settings';
 import chroma from 'chroma-js';
 
@@ -137,11 +133,9 @@ const PlateFeatureDataset = function(props){
 };
 
 class WorldMapInner extends Component {
-  static initClass() {
-    this.contextType = RotationsContext;
-  }
+  static contextType = RotationsContext;
   render() {
-    const {width, height, margin, marginRight, keepNorthUp, projection, children} = this.props;
+    const {width, height, keepNorthUp, projection, children} = this.props;
     const {model} = this.context;
     return h(Globe, {
       keepNorthUp,
@@ -152,23 +146,21 @@ class WorldMapInner extends Component {
     }, children);
   }
 }
-WorldMapInner.initClass();
+
+const Background = (props)=>{
+  const {renderPath} = useContext(MapContext);
+  return h('path.background', {
+    d: renderPath({type: 'Sphere'}),
+    ...props
+  });
+}
 
 
 class WorldMap extends Component {
-  static initClass() {
-    this.contextType = MapSettingsContext;
-  }
-  constructor() {
-    {
-      // Hack: trick Babel/TypeScript into allowing this before super.
-      if (false) { super(); }
-      let thisFn = (() => { return this; }).toString();
-      let thisName = thisFn.match(/return (?:_assertThisInitialized\()*(\w+)\)*;/)[1];
-      eval(`${thisName} = this;`);
-    }
+  static contextType = MapSettingsContext;
+  constructor(props) {
+    super(props);
     this.onResize = this.onResize.bind(this);
-    super(...arguments);
     this.state = {
       width: 1100,
       height: 800
@@ -195,6 +187,5 @@ class WorldMap extends Component {
     );
   }
 }
-WorldMap.initClass();
 
 export {WorldMap};

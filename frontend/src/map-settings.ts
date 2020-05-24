@@ -1,9 +1,4 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
-import {Component, createContext} from 'react';
+import {createContext} from 'react';
 import {StatefulComponent} from '@macrostrat/ui-components';
 import h from '@macrostrat/hyper';
 import {geoOrthographic, geoStereographic, geoGnomonic, geoNaturalEarth1} from 'd3-geo';
@@ -33,8 +28,8 @@ const projections = [
 const MapSettingsContext = createContext({projections});
 
 class MapSettingsProvider extends StatefulComponent {
-  constructor() {
-    super(...arguments);
+  constructor(props) {
+    super(props);
     this.state = {
       keepNorthUp: true,
       projection: projections[0]
