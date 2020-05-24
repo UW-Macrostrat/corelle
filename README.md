@@ -14,7 +14,7 @@ to use the `postgresql:///plate-rotations` database by default, but this can be
 easily changed using the `CORELLE_DB` environment variable.
 
 To install the backend, run `make install` in this repository. The `corelle`
-executable should become available on your path. `make init` imports models and
+executable should be installed on your path. `make init` imports models and
 feature datasets. Then `corelle serve` starts the testing API server.
 
 To build (and continuously watch) the frontend, run `make dev`.
@@ -25,6 +25,11 @@ A backend API server will be started and proxied, so you don't have to run
 
 Simply install Docker and run `docker-compose up --build` in the root directory.
 This will build the application, install test data, and spin up the development server.
+
+You can run a development version by creating a `.env` file containing
+`COMPOSE_FILE=docker-compose.yaml:docker-compose.development.yaml` in the root
+directory. This will tell Docker to spin up the frontend container using settings
+for auto-rebuilding.
 
 ## Todo
 
