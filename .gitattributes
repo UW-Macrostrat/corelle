@@ -1,0 +1,4 @@
+# Ensure build scripts use LF line endings, even on windows
+# https://github.com/dhoer/docker-on-windows-gotchas
+Dockerfile     eol=lf
+build-deps.sh  eol=lf
