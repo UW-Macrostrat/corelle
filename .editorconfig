@@ -1,0 +1,2 @@
+# Ensures all scripts have lf line endings (for cross platform compatibility)
+end_of_line = lf

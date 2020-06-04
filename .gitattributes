@@ -1,3 +1,4 @@
 # Ensure build scripts use LF line endings, even on windows
 # https://github.com/dhoer/docker-on-windows-gotchas
-* text=auto
+# converts every file to lf ending when cloned
+* text eol= lf
