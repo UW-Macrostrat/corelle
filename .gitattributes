@@ -2,5 +2,5 @@
 # https://github.com/dhoer/docker-on-windows-gotchas
 # converts every file to lf ending when cloned
 * text eol= lf
-*.sh eol= lf
+*.sh text eol= lf
 Dockerfile eol= lf
