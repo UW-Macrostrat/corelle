@@ -32,3 +32,7 @@ app.use(bundler.middleware());
 app.listen(mainPort, ()=>{
   console.log(`Corelle test app listening on port ${mainPort}`);
 });
+
+bundler.on('buildEnd', () => {
+  console.log(`Frontend is built and available on port ${mainPort}`)
+});

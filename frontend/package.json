@@ -12,16 +12,17 @@
   "devDependencies": {
     "@babel/core": "^7.5.5",
     "@babel/preset-react": "^7.0.0",
-    "coffeescript": "^2.4.1",
     "esm": "^3.2.25",
     "express": "^4.17.1",
     "http-proxy-middleware": "^0.19.1",
     "parcel-bundler": "^1.12.3",
-    "stylus": "^0.54.5"
+    "stylus": "^0.54.5",
+    "typescript": "^3.9.3"
   },
   "dependencies": {
     "@blueprintjs/core": "^3.18.0",
     "@macrostrat/hyper": "^1.1.1",
+    "@macrostrat/map-components": "^0.1.0",
     "@macrostrat/ui-components": "^0.1.1",
     "chroma-js": "^2.0.6",
     "d3-array": "^2.2.0",
@@ -31,8 +32,8 @@
     "d3-zoom": "^1.8.3",
     "postcss-modules": "^1.4.1",
     "quaternion": "^1.1.0",
-    "react": "^16.9.0",
-    "react-dom": "^16.9.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
     "react-fps-stats": "^0.1.2",
     "react-router": "^5.0.1",
     "react-router-dom": "^5.0.1"
