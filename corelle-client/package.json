@@ -1,0 +1,20 @@
+{
+  "name": "@macrostrat/corelle-client",
+  "version": "0.1.0",
+  "description": "A client library for the Corelle plate-rotation API",
+  "scripts": {
+    "build": "parcel build src/index.ts",
+    "dev": "parcel src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Daven Quinn",
+  "license": "MIT",
+  "type": "module",
+  "module": "dist/index.js",
+  "main": "dist/index.cjs.js",
+  "types": "dist/index.d.ts",
+  "devDependencies": {
+    "parcel": "^2.0.0-beta.1",
+    "typescript": "^3.9.7"
+  }
+}
