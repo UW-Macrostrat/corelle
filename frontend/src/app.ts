@@ -2,7 +2,7 @@ import { Component } from "react";
 import { WorldMap } from "./world-map";
 import ControlPanel from "./control-panel";
 import h from "@macrostrat/hyper";
-import { RotationsProvider } from "./rotations";
+import { RotationsProvider } from "@macrostrat/corelle-client";
 import { MapSettingsProvider } from "./map-settings";
 import { APIProvider, APIContext } from "@macrostrat/ui-components";
 
