@@ -12,6 +12,7 @@
   "module": "dist",
   "types": "dist/types",
   "devDependencies": {
+    "@babel/core": "^7.11.1",
     "@babel/preset-env": "^7.11.0",
     "@babel/preset-typescript": "^7.10.4",
     "@rollup/plugin-typescript": "^5.0.2",
@@ -23,8 +24,9 @@
   },
   "dependencies": {
     "@macrostrat/hyper": "^1.2.7",
-    "@macrostrat/map-components": "^0.1.0",
+    "@macrostrat/map-components": "file:../../map-components",
     "@macrostrat/ui-components": "^0.2.1",
+    "@types/d3-geo": "^1.11.1",
     "d3-geo": "^1.12.1",
     "quaternion": "^1.1.0",
     "react-router-dom": "^5.2.0",

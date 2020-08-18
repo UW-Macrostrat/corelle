@@ -9,6 +9,11 @@
     "dev": "node -r esm dev-server.js"
   },
   "author": "Daven Quinn",
+  "alias": {
+    "react": "./node_modules/react",
+    "react-dom": "./node_modules/react-dom",
+    "@macrostrat/corelle-client": "./corelle-client"
+  },
   "license": "ISC",
   "devDependencies": {
     "@babel/core": "^7.5.5",
@@ -25,7 +30,7 @@
   "dependencies": {
     "@blueprintjs/core": "^3.18.0",
     "@macrostrat/hyper": "^1.2.7",
-    "@macrostrat/corelle-client": "file:../corelle-client",
+    "@macrostrat/corelle-client": "file:./corelle-client",
     "@macrostrat/map-components": "^0.1.0",
     "@macrostrat/ui-components": "^0.1.1",
     "chroma-js": "^2.0.6",

@@ -1,7 +1,7 @@
 import h from "@macrostrat/hyper";
 import { useContext } from "react";
 import { geoTransform, geoPath } from "d3-geo";
-import { RotationsContext, useRotationsAPI } from "../rotations";
+import { RotationsContext, useRotationsAPI } from "./provider";
 
 import {
   MapContext,
@@ -63,11 +63,12 @@ interface FeatureDatasetProps {
   style: any;
 }
 
-const PlateFeatureDataset = function (props: FeatureDatasetProps) {
+// @ts-ignore
+const PlateFeatureLayer = function (props: FeatureDatasetProps) {
   const { name, style } = props;
   const { model } = useContext<any>(RotationsContext);
 
-  const data: any[] = useRotationsAPI(`/feature/${name}`, { model });
+  const data: any[] = useRotationsAPI(`/feature/${name}`, { model }) ?? [];
 
   return h(
     FeatureLayer,
@@ -86,4 +87,4 @@ const PlateFeatureDataset = function (props: FeatureDatasetProps) {
   );
 };
 
-export { PlateFeature };
+export { PlateFeature, PlateFeatureLayer };

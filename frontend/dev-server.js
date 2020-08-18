@@ -16,11 +16,6 @@ const backend = spawn("corelle", ["serve", "--debug", "-p", port], {
   stdio: ["ignore", "inherit", "inherit"],
 });
 
-spawn("npm", ["run", "dev"], {
-  stdio: ["ignore", "inherit", "inherit"],
-  cwd: path.resolve(__dirname, "..", "corelle-client"),
-});
-
 let app = express();
 
 let bundler = new Bundler("./index.html", {

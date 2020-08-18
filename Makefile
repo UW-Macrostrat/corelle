@@ -38,4 +38,4 @@ test:
 	bin/run-tests
 
 dev:
-	cd frontend && npm install && npm run dev
+	cd frontend && npm run dev

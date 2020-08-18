@@ -1,27 +1,10 @@
-import { createContext, useContext, PropsWithChildren } from "react";
-import h from "@macrostrat/hyper";
-import { useAPIResult } from "@macrostrat/ui-components";
 import Quaternion from "quaternion";
 import { sph2cart, cart2sph } from "./math";
-import join from "url-join";
 
 // Drag to rotate globe
 // http://bl.ocks.org/ivyywang/7c94cb5a3accd9913263
 // https://stackoverflow.com/questions/16964993/compose-two-rotations-in-d3-geo-projection
 // https://www.jasondavies.com/maps/rotate/
-
-const defaultEndpoint = "https://birdnest.geology.wisc.edu/corelle/api";
-
-const RotationsAPIContext = createContext({
-  endpoint: defaultEndpoint,
-});
-
-const useRotationsAPI = (route, ...args): any[] => {
-  const { endpoint } = useContext(RotationsAPIContext);
-  return useAPIResult(join(endpoint, route), ...args);
-};
-
-const RotationsContext = createContext({ rotations: null });
 
 type RotationOptions = {
   time: number;
@@ -77,34 +60,4 @@ class RotationData {
   }
 }
 
-type P = {
-  endpoint: string;
-  debounce: number;
-} & RotationOptions;
-
-function RotationsProvider(props: PropsWithChildren<P>) {
-  const { time, children, model, endpoint, debounce } = props;
-  const rotations: any[] = useAPIResult(
-    join(endpoint, "/rotate"),
-    { time: `${time}`, model, quaternion: "true" },
-    { debounce }
-  );
-
-  const value = new RotationData({ rotations, model, time });
-
-  return h(
-    RotationsAPIContext.Provider,
-    { value: { endpoint } },
-    h(RotationsContext.Provider, {
-      value,
-      children,
-    })
-  );
-}
-
-RotationsProvider.defaultProps = {
-  endpoint: defaultEndpoint,
-  debounce: 1000,
-};
-
-export { RotationsProvider, RotationsContext, useRotationsAPI };
+export { RotationData, RotationOptions };

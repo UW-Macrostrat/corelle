@@ -3,8 +3,11 @@ import { Component, useContext } from "react";
 import { APIResultView } from "@macrostrat/ui-components";
 import { max } from "d3-array";
 import { ResizeSensor } from "@blueprintjs/core";
-import { RotationsContext } from "./rotations";
-import { PlateFeature, PlateFeatureDataset } from "@macrostrat/corelle-client";
+import {
+  PlateFeature,
+  PlateFeatureLayer,
+  RotationsContext,
+} from "@macrostrat/corelle-client";
 
 import {
   Globe,
@@ -13,13 +16,12 @@ import {
   FeatureLayer,
 } from "@macrostrat/map-components";
 import { MapSettingsContext } from "./map-settings";
-import chroma from "chroma-js";
 
 import styles from "./main.styl";
 
 const h = hyper.styled(styles);
 
-const PlatePolygon = function (props) {
+function PlatePolygon(props) {
   // An arbitrary feature tied to a plate
   const { feature, ...rest } = props;
   const { id, properties } = feature;
@@ -31,11 +33,11 @@ const PlatePolygon = function (props) {
     plateId: id,
     ...rest,
   });
-};
+}
 
-const PlatePolygons = function (props) {
-  const { model } = useContext(RotationsContext);
-  const { inCanvas, clearCanvas } = useContext(MapCanvasContext);
+function PlatePolygons(props) {
+  const { model } = useContext<any>(RotationsContext);
+  const { inCanvas, clearCanvas } = useContext<any>(MapCanvasContext);
 
   return h(
     APIResultView,
@@ -66,9 +68,9 @@ const PlatePolygons = function (props) {
       );
     }
   );
-};
+}
 
-class WorldMapInner extends Component {
+class WorldMapInner extends Component<any, any> {
   static contextType = RotationsContext;
   render() {
     const { width, height, keepNorthUp, projection, children } = this.props;
@@ -87,15 +89,15 @@ class WorldMapInner extends Component {
   }
 }
 
-const Background = (props) => {
+function Background(props) {
   const { renderPath } = useContext(MapContext);
   return h("path.background", {
     d: renderPath({ type: "Sphere" }),
     ...props,
   });
-};
+}
 
-class WorldMap extends Component {
+class WorldMap extends Component<any, any> {
   static contextType = MapSettingsContext;
   constructor(props) {
     super(props);
@@ -126,7 +128,7 @@ class WorldMap extends Component {
           { width, height, margin: 10, keepNorthUp, projection },
           [
             h(PlatePolygons),
-            h.if(featureDataset != null)(PlateFeatureDataset, {
+            h.if(featureDataset != null)(PlateFeatureLayer, {
               name: featureDataset,
             }),
           ]
