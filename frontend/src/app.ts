@@ -40,7 +40,7 @@ function App(props) {
         setModel,
         featureDataset,
         featureDatasets,
-        setFeatureDataset: (v) => this.setState({ featureDataset: v }),
+        setFeatureDataset: (v) => setState({ ...state, featureDataset: v }),
         models,
       }),
     ]),
