@@ -4,17 +4,16 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-import { Component, useContext } from "react";
+import { useContext } from "react";
 import hyper from "@macrostrat/hyper";
 import {
-  Slider,
   HTMLSelect,
   FormGroup,
   Switch,
   Alignment,
   NumericInput,
 } from "@blueprintjs/core";
-import { RotationsContext } from "./rotations";
+import { RotationsContext } from "@macrostrat/corelle-client";
 import styles from "./main.styl";
 import T from "prop-types";
 import { MapSettingsContext } from "./map-settings";
