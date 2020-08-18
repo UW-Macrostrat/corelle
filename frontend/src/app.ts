@@ -1,83 +1,53 @@
-import { Component } from "react";
+import { useState, useContext } from "react";
 import { WorldMap } from "./world-map";
 import ControlPanel from "./control-panel";
 import h from "@macrostrat/hyper";
 import { RotationsProvider } from "@macrostrat/corelle-client";
 import { MapSettingsProvider } from "./map-settings";
-import { APIProvider, APIContext } from "@macrostrat/ui-components";
+import { Spinner } from "@blueprintjs/core";
+import {
+  APIProvider,
+  APIContext,
+  useAPIResult,
+} from "@macrostrat/ui-components";
 
-let baseURL = process.env.PUBLIC_URL || "";
-baseURL += "/api";
+function App(props) {
+  const [state, setState] = useState({
+    time: 0,
+    model: "Seton2012",
+    featureDataset: "ne_110m_land",
+  });
 
-class App extends Component {
-  static initClass() {
-    this.contextType = APIContext;
-  }
-  constructor(props) {
-    super(props);
+  const { baseURL } = useContext(APIContext);
+  const models = useAPIResult<string[]>("/model", null, (data: any) =>
+    data.map((d) => d.name)
+  );
+  const featureDatasets = useAPIResult<string[]>("/feature");
 
-    this.setTime = this.setTime.bind(this);
-    this.setModel = this.setModel.bind(this);
-    this.state = {
-      time: 0,
-      rotations: null,
-      model: "Seton2012",
-      models: ["Seton2012"],
-      featureDataset: "ne_110m_land",
-      featureDatasets: ["ne_110m_land"],
-    };
-  }
-
-  componentDidMount() {
-    try {
-      this.getModelData();
-      return this.getFeatureDatasets();
-    } catch (error) {
-      return console.log("Could not get model data");
-    }
+  if (models == null || featureDatasets == null) {
+    return h(Spinner);
   }
 
-  async getModelData() {
-    const { get } = this.context;
-    const data = await get("/model");
-    const models = data.map((d) => d.name);
-    return this.setState({ models });
-  }
+  const setTime = (time) => setState({ ...state, time });
+  const setModel = (model) => setState({ ...state, model });
 
-  async getFeatureDatasets() {
-    const { get } = this.context;
-    const data = await get("/feature");
-    return this.setState({ featureDatasets: data });
-  }
-
-  setTime(value) {
-    return this.setState({ time: value });
-  }
-
-  setModel(value) {
-    return this.setState({ model: value });
-  }
-
-  render() {
-    const { time, model, models, featureDataset, featureDatasets } = this.state;
-    return h("div", [
-      h(RotationsProvider, { model, time }, [
-        h(WorldMap, { featureDataset }),
-        h(ControlPanel, {
-          setTime: this.setTime,
-          setModel: this.setModel,
-          featureDataset,
-          featureDatasets,
-          setFeatureDataset: (v) => this.setState({ featureDataset: v }),
-          models,
-        }),
-      ]),
-    ]);
-  }
+  const { time, model, featureDataset } = state;
+  return h("div", [
+    h(RotationsProvider, { model, time, endpoint: baseURL, debounce: 1000 }, [
+      h(WorldMap, { featureDataset }),
+      h(ControlPanel, {
+        setTime,
+        setModel,
+        featureDataset,
+        featureDatasets,
+        setFeatureDataset: (v) => this.setState({ featureDataset: v }),
+        models,
+      }),
+    ]),
+  ]);
 }
-App.initClass();
 
-const WrappedApp = (props) =>
+const WrappedApp = ({ baseURL, ...props }) =>
   h(APIProvider, { baseURL }, h(MapSettingsProvider, null, h(App, props)));
 
 export default WrappedApp;

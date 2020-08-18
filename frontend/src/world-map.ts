@@ -1,6 +1,6 @@
 import hyper from "@macrostrat/hyper";
 import { Component, useContext } from "react";
-import { APIResultView } from "@macrostrat/ui-components";
+import { useAPIResult } from "@macrostrat/ui-components";
 import { max } from "d3-array";
 import { ResizeSensor } from "@blueprintjs/core";
 import {
@@ -39,34 +39,26 @@ function PlatePolygons(props) {
   const { model } = useContext<any>(RotationsContext);
   const { inCanvas, clearCanvas } = useContext<any>(MapCanvasContext);
 
+  const data: any[] = useAPIResult("/plates", { model });
+
+  if (data == null) {
+    return null;
+  }
+
+  const style = {
+    fill: "rgba(200,200,200, 0.3)",
+    stroke: "rgba(200,200,200, 0.8)",
+    strokeWidth: 1,
+  };
+
   return h(
-    APIResultView,
+    FeatureLayer,
     {
-      route: "/plates",
-      params: { model },
-      placeholder: null,
+      useCanvas: true,
+      className: "plates",
+      style,
     },
-    (data) => {
-      if (data == null) {
-        return null;
-      }
-
-      const style = {
-        fill: "rgba(200,200,200, 0.3)",
-        stroke: "rgba(200,200,200, 0.8)",
-        strokeWidth: 1,
-      };
-
-      return h(
-        FeatureLayer,
-        {
-          useCanvas: true,
-          className: "plates",
-          style,
-        },
-        data.map((feature, i) => h(PlatePolygon, { key: i, feature }))
-      );
-    }
+    data.map((feature, i) => h(PlatePolygon, { key: i, feature }))
   );
 }
 
@@ -130,6 +122,7 @@ class WorldMap extends Component<any, any> {
             h(PlatePolygons),
             h.if(featureDataset != null)(PlateFeatureLayer, {
               name: featureDataset,
+              style: { backgroundColor: "lightgreen" },
             }),
           ]
         )

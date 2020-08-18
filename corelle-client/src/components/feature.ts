@@ -35,9 +35,8 @@ function PlateFeature(props) {
     },
   });
 
-  const stream = (
-    s // This ordering makes no sense but whatever
-  ) =>
+  // This ordering makes no sense but whatever
+  const stream = (s) =>
     // https://stackoverflow.com/questions/27557724/what-is-the-proper-way-to-use-d3s-projection-stream
     trans.stream(projection.stream(s));
 
@@ -60,7 +59,7 @@ function PlateFeature(props) {
 
 interface FeatureDatasetProps {
   name: string;
-  style: any;
+  style?: { [k: string]: any };
 }
 
 // @ts-ignore
