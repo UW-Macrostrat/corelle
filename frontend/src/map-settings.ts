@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { StatefulComponent } from "@macrostrat/ui-components";
+import { useImmutableState } from "@macrostrat/ui-components";
 import h from "@macrostrat/hyper";
 import {
   geoOrthographic,
@@ -32,18 +32,14 @@ const projections = [
 
 const MapSettingsContext = createContext({ projections });
 
-class MapSettingsProvider extends StatefulComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      keepNorthUp: true,
-      projection: projections[0],
-    };
-  }
-  render() {
-    const value = { ...this.state, projections, updateState: this.updateState };
-    return h(MapSettingsContext.Provider, { value }, this.props.children);
-  }
+function MapSettingsProvider({ children }) {
+  const [state, updateState] = useImmutableState({
+    keepNorthUp: true,
+    projection: projections[0],
+  });
+
+  const value = { ...state, projections, updateState };
+  return h(MapSettingsContext.Provider, { value }, children);
 }
 
 export { MapSettingsProvider, MapSettingsContext };

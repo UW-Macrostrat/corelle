@@ -1,0 +1,35 @@
+{
+  "name": "@macrostrat/corelle-client",
+  "version": "0.1.0",
+  "description": "A client library for the Corelle plate-rotation API",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Daven Quinn",
+  "license": "MIT",
+  "module": "dist",
+  "types": "dist/types",
+  "devDependencies": {
+    "@babel/core": "^7.11.1",
+    "@babel/preset-env": "^7.11.0",
+    "@babel/preset-typescript": "^7.10.4",
+    "@rollup/plugin-typescript": "^5.0.2",
+    "@wessberg/rollup-plugin-ts": "^1.3.2",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "rollup": "^2.26.0",
+    "typescript": "^3.9.7"
+  },
+  "dependencies": {
+    "@macrostrat/hyper": "^1.2.7",
+    "@macrostrat/map-components": "file:../../map-components",
+    "@macrostrat/ui-components": "^0.2.1",
+    "@types/d3-geo": "^1.11.1",
+    "d3-geo": "^1.12.1",
+    "quaternion": "^1.1.0",
+    "react-router-dom": "^5.2.0",
+    "url-join": "^4.0.1"
+  }
+}
