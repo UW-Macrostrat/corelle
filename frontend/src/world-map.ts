@@ -18,6 +18,7 @@ import {
 import { MapSettingsContext } from "./map-settings";
 import chroma from "chroma-js";
 
+import "@macrostrat/map-components/dist/esm/index.css";
 import styles from "./main.styl";
 
 const h = hyper.styled(styles);

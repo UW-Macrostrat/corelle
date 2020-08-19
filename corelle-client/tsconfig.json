@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": ".",
+    "rootDir": "src",
     "moduleResolution": "node",
     "declaration": true,
     "esModuleInterop": true,

@@ -1,8 +1,8 @@
 import pkg from "./package.json";
-import typescript from "rollup-plugin-typescript2";
 import resolve from "@rollup/plugin-node-resolve";
+import babel from "@rollup/plugin-babel";
 const deps = { ...pkg.dependencies, ...pkg.peerDependencies };
-
+const extensions = [".ts"];
 //https://2ality.com/2017/02/babel-preset-env.html
 
 export default {
@@ -22,7 +22,11 @@ export default {
   ],
   external: Object.keys(deps),
   plugins: [
-    resolve({ extensions: ".ts" }),
-    typescript({ useTsconfigDeclarationDir: true }),
+    resolve({ extensions, module: true }),
+    babel({
+      extensions,
+      exclude: "node_modules/**",
+      babelHelpers: "bundled",
+    }),
   ],
 };

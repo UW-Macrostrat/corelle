@@ -5,7 +5,7 @@ parcel should be run directly.
 */
 import Bundler from "parcel-bundler";
 import express from "express";
-import proxy from "http-proxy-middleware";
+import { createProxyMiddleware } from "http-proxy-middleware";
 import path from "path";
 import { spawn } from "child_process";
 
@@ -23,7 +23,7 @@ let bundler = new Bundler("./index.html", {
   //scopeHoist: true,
   detailedReport: true,
 });
-const apiProxy = proxy({ target: `http://127.0.0.1:${port}` });
+const apiProxy = createProxyMiddleware({ target: `http://127.0.0.1:${port}` });
 
 app.use("/api", apiProxy);
 app.use(bundler.middleware());
