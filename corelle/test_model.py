@@ -6,6 +6,7 @@ import numpy as N
 from .rotate import get_rotation, get_all_rotations, RotationError
 from .rotate.math import euler_equal, quaternion_to_euler, euler_to_quaternion
 
+
 def test_seton_recursion():
     """
     There is a self-referential loop in the Seton2012 plate model
@@ -15,14 +16,17 @@ def test_seton_recursion():
     q = get_rotation("Seton2012", 502, 130)
     assert q is not None
 
-times = [0,2,4,10,30,60,120, 130, 240,480, 550, 620]
 
-@pytest.mark.parametrize('time', times)
+times = [0, 2, 4, 10, 30, 60, 120, 130, 240, 480, 550, 620]
+
+
+@pytest.mark.parametrize("time", times)
 def test_seton_rotations(time):
     for (plate_id, q) in get_all_rotations("Seton2012", time):
         if plate_id == 225:
             print(quaternion_to_euler(q))
         assert q is not None
+
 
 # In the Seton, 2012 plate model, the parts of the South American plate
 # should remain together until at least the Cretaceous
@@ -32,13 +36,17 @@ def test_south_america_cretaceous():
     for r in rotations[1:]:
         assert N.allclose(r, rotations[0])
 
+
 def test_south_america_jurassic():
     rotate = lambda x: get_rotation("Seton2012", x, 152)
     assert not N.allclose(rotate(291), rotate(201))
     assert N.allclose(rotate(291), rotate(280))
 
-times = [2,5,9.8,10]
-@pytest.mark.parametrize('time', times)
+
+times = [2, 5, 9.8, 10]
+
+
+@pytest.mark.parametrize("time", times)
 def test_plate_disappearance(time):
     """
     Plates should not have a valid rotation after their `old_lim`...
@@ -47,19 +55,21 @@ def test_plate_disappearance(time):
     defined rotations outside the time range for which rotations are explicitly defined.
     """
     rotations = get_all_rotations("Seton2012", time, active_only=False)
-    plate_ids = [p for p,q in rotations]
+    plate_ids = [p for p, q in rotations]
     if time <= 9.8:
         assert 922 in plate_ids
     else:
         assert not (922 in plate_ids)
+
 
 # Test identity
 def test_identity():
     time = 10
     plate_id = 1
     q = get_rotation("Seton2012", plate_id, 10)
-    q1 = N.quaternion(1,0,0,0)
-    assert N.allclose(q,q1)
+    q1 = N.quaternion(1, 0, 0, 0)
+    assert N.allclose(q, q1)
+
 
 # Make sure simple rotation is right
 def test_simple_rotation():
@@ -73,7 +83,8 @@ def test_simple_rotation():
     assert N.allclose(q, q1)
 
     q2 = get_rotation("Seton2012", 702, 10)
-    assert N.allclose(q1,q2)
+    assert N.allclose(q1, q2)
+
 
 def test_undefined_model():
     """
@@ -85,6 +96,7 @@ def test_undefined_model():
     except RotationError as err:
         did_throw = True
     assert did_throw
+
 
 def test_mongol_okhotsk():
     """

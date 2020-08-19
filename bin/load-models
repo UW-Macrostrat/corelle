@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+corelle init --drop
+corelle import "PalaeoPlates" \
+  --fields data/eglington-fields.yaml \
+  data/eglington/PlatePolygons2016All.json \
+  data/eglington/T_Rot_Model_PalaeoPlates_2019_20190302_experiment.rot
+corelle import "Seton2012" \
+  --fields data/seton-fields.yaml \
+  --min-age 0 \
+  --max-age 200 \
+  data/seton_2012.geojson \
+  data/Seton_etal_ESR2012_2012.1.rot
+corelle import "Wright2013" \
+  --fields data/wright-fields.yaml \
+  --min-age 0 \
+  --max-age 550 \
+  data/wright_plates.geojson \
+  data/wright_2013.rot
+corelle import "Scotese" \
+  --fields data/scotese-fields.yaml \
+  --min-age 0 \
+  --max-age 550 \
+  data/scotese.geojson \
+  data/scotese.rot

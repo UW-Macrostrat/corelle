@@ -15,7 +15,6 @@ import {
 } from "@blueprintjs/core";
 import { RotationsContext } from "@macrostrat/corelle-client";
 import styles from "./main.styl";
-import T from "prop-types";
 import { MapSettingsContext } from "./map-settings";
 
 const h = hyper.styled(styles);
@@ -90,7 +89,13 @@ const MapSettingsPanel = function (props) {
   ]);
 };
 
-const ControlPanel = function (props) {
+type ControlPanelProps = {
+  setTime(n: number): void;
+  setModel(n: number): void;
+  [k: string]: any;
+};
+
+const ControlPanel = function (props: ControlPanelProps) {
   const {
     setTime,
     setModel,
@@ -147,11 +152,6 @@ const ControlPanel = function (props) {
       ", 2019–2020",
     ]),
   ]);
-};
-
-ControlPanel.propTypes = {
-  setTime: T.func,
-  setModel: T.func,
 };
 
 export default ControlPanel;

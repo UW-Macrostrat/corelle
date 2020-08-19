@@ -23,7 +23,6 @@ ENV CORELLE_DB=postgresql://postgres@database:5432/corelle
 RUN apk add --no-cache curl bash
 
 WORKDIR /run
-COPY ./bin/load-features ./
-COPY ./run-docker .
+COPY ./bin/* ./
 
 CMD ./run-docker
