@@ -20,11 +20,15 @@ def connect():
     return __conn
 
 
-def get_model(name):
+def create_model(name, **kwargs):
     model = reflect_table(db, "model")
     conn = connect()
     try:
-        conn.execute(model.insert().values(name=name))
+        conn.execute(
+            insert(model)
+            .values(name=name, **kwargs)
+            .on_conflict_do_update(index_elements=(model.c.id,), set_=kwargs)
+        )
     except IntegrityError:
         pass
     return conn.execute(model.select().where(model.c.name == name)).first()[0]
@@ -215,7 +219,9 @@ def cache_rotations(model_id):
         print(row.plate)
 
 
-def import_model(name, plates, rotations, fields=None, overwrite=False):
+def import_model(
+    name, plates, rotations, fields=None, overwrite=False, min_age=None, max_age=None
+):
     conn = connect()
     q = text("SELECT count(*) FROM model WHERE name=:name")
     res = conn.execute(q, name=name).scalar()
@@ -223,7 +229,7 @@ def import_model(name, plates, rotations, fields=None, overwrite=False):
         print("Model has already been imported.")
         return
 
-    model_id = get_model(name)
+    model_id = create_model(name, min_age=min_age, max_age=max_age)
     import_plates(model_id, plates, fields=fields)
     import_rotations(model_id, rotations)
     cache_rotations(model_id)

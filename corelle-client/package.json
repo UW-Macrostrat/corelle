@@ -21,7 +21,7 @@
     "typescript": "^3.9.7"
   },
   "dependencies": {
-    "@macrostrat/hyper": "^1.2.7",
+    "@macrostrat/hyper": "^1.2.10",
     "@macrostrat/map-components": "file:../../map-components",
     "@macrostrat/ui-components": "^0.3.0",
     "@types/d3-geo": "^1.11.1",

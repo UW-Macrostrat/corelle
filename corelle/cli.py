@@ -44,14 +44,32 @@ def load_fields(fn):
 @argument("rotations", type=file)
 @option("--fields", type=file)
 @option("--overwrite", is_flag=True, default=False)
-def _import(model_name, plates, rotations, fields=None, overwrite=False):
+@option("--min-age", type=float, default=None)
+@option("--max-age", type=float, default=None)
+def _import(
+    model_name,
+    plates,
+    rotations,
+    fields=None,
+    overwrite=False,
+    min_age=None,
+    max_age=None,
+):
     """
     Import a plate-rotation model
     """
     from .load_data import import_model
 
     fields = load_fields(fields)
-    import_model(model_name, plates, rotations, fields=fields, overwrite=False)
+    import_model(
+        model_name,
+        plates,
+        rotations,
+        fields=fields,
+        overwrite=False,
+        min_age=min_age,
+        max_age=max_age,
+    )
 
 
 @cli.command(name="import-features")

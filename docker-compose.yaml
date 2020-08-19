@@ -32,6 +32,9 @@ services:
     build: frontend
     volumes:
       - frontend_dist:/app/dist
+      # This links the source files for the `corelle-client` lib,
+      # so they don't have to be compiled.
+      - ./corelle-client/src:/app/corelle-client
 volumes:
   db_cluster:
   frontend_dist:

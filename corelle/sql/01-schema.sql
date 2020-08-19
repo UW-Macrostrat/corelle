@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS model (
   id serial PRIMARY KEY,
   name text UNIQUE NOT NULL,
-  young_lim numeric DEFAULT 0,
-  old_lim numeric
+  min_age numeric DEFAULT 0,
+  max_age numeric
 );
 
 CREATE TABLE IF NOT EXISTS plate (

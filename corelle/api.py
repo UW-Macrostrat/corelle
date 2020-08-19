@@ -138,7 +138,7 @@ class Pole(ModelResource):
 
 class Model(Resource):
     def get(self):
-        results = conn.execute("SELECT id, name FROM model")
+        results = conn.execute("SELECT id, name, min_age, max_age FROM model")
         return [dict(r) for r in results]
 
 
