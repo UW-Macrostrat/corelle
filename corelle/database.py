@@ -14,15 +14,17 @@ model, plate, plate_polygon, rotation
 CASCADE
 """
 
+
 def initialize(drop=False):
     # Run all SQL in the `sql` directory
-    dn = relative_path(__file__,'sql')
+    dn = relative_path(__file__, "sql")
     if drop:
         db.execute(__drop_tables)
 
     session = create_session()
 
     for file in sorted(listdir(dn)):
-        if not file.endswith(".sql"): continue
+        if not file.endswith(".sql"):
+            continue
         fn = path.join(dn, file)
         run_sql_file(session, fn)

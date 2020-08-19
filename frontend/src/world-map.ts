@@ -16,7 +16,9 @@ import {
   FeatureLayer,
 } from "@macrostrat/map-components";
 import { MapSettingsContext } from "./map-settings";
+import chroma from "chroma-js";
 
+import "@macrostrat/map-components/dist/esm/index.css";
 import styles from "./main.styl";
 
 const h = hyper.styled(styles);
@@ -122,7 +124,10 @@ class WorldMap extends Component<any, any> {
             h(PlatePolygons),
             h.if(featureDataset != null)(PlateFeatureLayer, {
               name: featureDataset,
-              style: { backgroundColor: "lightgreen" },
+              style: {
+                fill: "#E9FCEA",
+                stroke: chroma("#E9FCEA").darken(0.3),
+              },
             }),
           ]
         )

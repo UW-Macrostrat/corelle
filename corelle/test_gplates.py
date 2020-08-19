@@ -8,20 +8,25 @@ from .rotate.math import quaternion_to_euler, euler_equal
 
 # Test against gplates web service data
 def fixture(filename):
-    fn = relative_path(__file__, '..', 'test-data', filename)
-    return open(fn,'r')
+    fn = relative_path(__file__, "..", "test-data", filename)
+    return open(fn, "r")
+
 
 def get_geojson(key):
-    with fixture(key+".geojson") as f:
+    with fixture(key + ".geojson") as f:
         return json.load(f)
+
 
 def get_coordinates(fc):
     """
     Get the coordinates from a feature collection
     """
-    return fc['features'][0]['geometry']['coordinates'][0]
+    return fc["features"][0]["geometry"]["coordinates"][0]
 
-times = [0,1,10,120,140,200]
+
+times = [0, 1, 10, 120, 140, 200]
+
+
 @pytest.mark.parametrize("time", times)
 def test_against_gplates_web_service(time):
     req = get_geojson("seton2012-gws-request")
@@ -31,9 +36,10 @@ def test_against_gplates_web_service(time):
     prev = get_coordinates(res)
     assert len(now) == len(prev)
 
-    for c0,ct in zip(now, prev):
+    for c0, ct in zip(now, prev):
         p1 = rotate_point(c0, "Seton2012", time)
-        assert N.allclose(p1,ct, atol=0.01)
+        assert N.allclose(p1, ct, atol=0.01)
+
 
 def test_against_gplates_web_service_africa():
     time = 140
@@ -44,9 +50,9 @@ def test_against_gplates_web_service_africa():
     prev = get_coordinates(res)
     assert len(now) == len(prev)
 
-    for c0,ct in zip(now, prev):
+    for c0, ct in zip(now, prev):
         p1 = rotate_point(c0, "Seton2012", time)
-        assert N.allclose(p1,ct, atol=0.01)
+        assert N.allclose(p1, ct, atol=0.01)
 
 
 def check_seton2012_rotation(time, *row):
@@ -62,9 +68,10 @@ def check_seton2012_rotation(time, *row):
         return
     rot = get_rotation("Seton2012", plate_id, time)
     v = quaternion_to_euler(rot)
-    assert euler_equal(v, (lat,lon,angle))
+    assert euler_equal(v, (lat, lon, angle))
 
-times = [10,100]
+
+times = [10, 100]
 ### Test against all GPlates rotations ###
 @pytest.mark.parametrize("time", times)
 def test_all_gplates(time):
