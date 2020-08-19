@@ -1,13 +1,12 @@
 import pkg from "./package.json";
-import typescript from "@rollup/plugin-typescript";
+import typescript from "rollup-plugin-typescript2";
+import resolve from "@rollup/plugin-node-resolve";
 const deps = { ...pkg.dependencies, ...pkg.peerDependencies };
 
 //https://2ality.com/2017/02/babel-preset-env.html
 
-const extensions = [".js", ".ts", ".tsx", ".d.ts"];
-
 export default {
-  input: "index.ts", // our source file
+  input: "src/index.ts", // our source file
   preserveModules: true,
   output: [
     {
@@ -15,7 +14,15 @@ export default {
       format: "esm",
       sourcemap: true,
     },
+    {
+      dir: pkg.main,
+      format: "cjs",
+      sourcemap: true,
+    },
   ],
   external: Object.keys(deps),
-  plugins: [typescript()],
+  plugins: [
+    resolve({ extensions: ".ts" }),
+    typescript({ useTsconfigDeclarationDir: true }),
+  ],
 };
