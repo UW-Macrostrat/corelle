@@ -20,7 +20,9 @@ const useRotationsAPI = (route, ...args): any[] => {
   return useAPIResult(join(endpoint, route), ...args);
 };
 
-const RotationsContext = createContext({ rotations: null });
+const defaultRotations = new RotationData({ time: 0, rotations: [] });
+
+const RotationsContext = createContext<RotationData>(defaultRotations);
 
 type P = {
   endpoint: string;
@@ -29,11 +31,12 @@ type P = {
 
 function RotationsProvider(props: PropsWithChildren<P>) {
   const { time, children, model, endpoint, debounce } = props;
-  const rotations: any[] = useAPIResult(
-    join(endpoint, "/rotate"),
-    { time: `${time}`, model, quaternion: "true" },
-    { debounce }
-  );
+  const rotations: any[] =
+    useAPIResult(
+      join(endpoint, "/rotate"),
+      { time: `${time}`, model, quaternion: "true" },
+      { debounce }
+    ) ?? [];
 
   const value = new RotationData({ rotations, model, time });
 

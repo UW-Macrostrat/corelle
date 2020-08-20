@@ -7,7 +7,7 @@ import {
   PlateFeature,
   PlateFeatureLayer,
   RotationsContext,
-} from "@macrostrat/corelle-client";
+} from "@macrostrat/corelle";
 
 import {
   Globe,

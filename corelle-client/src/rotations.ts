@@ -8,7 +8,7 @@ import { sph2cart, cart2sph } from "./math";
 
 type RotationOptions = {
   time: number;
-  model: string;
+  model?: string;
 };
 
 class RotationData {

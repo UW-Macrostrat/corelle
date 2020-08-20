@@ -14,7 +14,7 @@ function PlateFeature(props) {
   let proj;
   const { feature, youngLim, oldLim, plateId, ...rest } = props;
   // Filter out features that are too young
-  const { geographyRotator, time } = useContext<any>(RotationsContext) || {};
+  const { geographyRotator, time } = useContext(RotationsContext);
   if (geographyRotator == null) {
     return null;
   }
@@ -25,7 +25,9 @@ function PlateFeature(props) {
   if (youngLim > time) {
     return null;
   }
-  const { projection } = useContext<any>(MapContext);
+  const { projection } = useContext(MapContext);
+  if (projection == null) return null;
+
   const rotate = geographyRotator(plateId);
 
   const trans = geoTransform({

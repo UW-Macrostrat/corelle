@@ -13,7 +13,7 @@ import {
   Alignment,
   NumericInput,
 } from "@blueprintjs/core";
-import { RotationsContext } from "@macrostrat/corelle-client";
+import { RotationsContext } from "@macrostrat/corelle";
 import styles from "./main.styl";
 import { MapSettingsContext } from "./map-settings";
 
@@ -31,13 +31,13 @@ const Select = function (props) {
         onChange(e) {
           return onChange(e.currentTarget.value);
         },
+        value,
       },
       options.map((d) =>
         h(
           "option",
           {
             value: d,
-            selected: d === value,
           },
           d
         )
