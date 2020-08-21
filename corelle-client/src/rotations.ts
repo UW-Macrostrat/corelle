@@ -12,7 +12,7 @@ type RotationOptions = {
 };
 
 class RotationData {
-  rotations: any = [];
+  rotations?: any = [];
   model: any;
   time: number;
   constructor(options: RotationOptions & { rotations: any[] }) {
@@ -26,7 +26,7 @@ class RotationData {
   }
 
   plateRotation(id) {
-    const rot = this.rotations.find((d) => d.plate_id === id);
+    const rot = this.rotations?.find((d) => d.plate_id === id);
     if (rot == null) return null;
     const q = Quaternion(rot.quaternion);
     return q;

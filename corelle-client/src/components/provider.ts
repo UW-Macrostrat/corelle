@@ -25,7 +25,7 @@ const defaultRotations = new RotationData({ time: 0, rotations: [] });
 const RotationsContext = createContext<RotationData>(defaultRotations);
 
 type P = {
-  endpoint: string;
+  endpoint?: string;
   debounce: number;
 } & RotationOptions;
 
