@@ -1,13 +1,14 @@
 import warnings
 
-warnings.filterwarnings("ignore")
-
-import json, yaml
+import json
+import yaml
 import numpy as N
 from IPython import embed
 
-from click import group, argument, option, echo, style, Path
+from click import group, argument, option, echo, Path
 from os.path import splitext
+
+warnings.filterwarnings("ignore")
 
 
 @group()
