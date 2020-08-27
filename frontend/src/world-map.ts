@@ -1,68 +1,21 @@
 import hyper from "@macrostrat/hyper";
 import { Component, useContext } from "react";
-import { useAPIResult } from "@macrostrat/ui-components";
 import { max } from "d3-array";
 import { ResizeSensor } from "@blueprintjs/core";
 import {
-  PlateFeature,
   PlateFeatureLayer,
   RotationsContext,
+  PlatePolygons,
 } from "@macrostrat/corelle";
+import { Globe, MapContext } from "@macrostrat/map-components";
+import "@macrostrat/map-components/dist/esm/index.css";
 
-import {
-  Globe,
-  MapContext,
-  MapCanvasContext,
-  FeatureLayer,
-} from "@macrostrat/map-components";
 import { MapSettingsContext } from "./map-settings";
 import chroma from "chroma-js";
 
-import "@macrostrat/map-components/dist/esm/index.css";
 import styles from "./main.styl";
 
 const h = hyper.styled(styles);
-
-function PlatePolygon(props) {
-  // An arbitrary feature tied to a plate
-  const { feature, ...rest } = props;
-  const { id, properties } = feature;
-  const { old_lim, young_lim } = properties;
-  return h(PlateFeature, {
-    feature,
-    oldLim: old_lim,
-    youngLim: young_lim,
-    plateId: id,
-    ...rest,
-  });
-}
-
-function PlatePolygons(props) {
-  const { model } = useContext<any>(RotationsContext);
-  const { inCanvas, clearCanvas } = useContext<any>(MapCanvasContext);
-
-  const data: any[] = useAPIResult("/plates", { model });
-
-  if (data == null) {
-    return null;
-  }
-
-  const style = {
-    fill: "rgba(200,200,200, 0.3)",
-    stroke: "rgba(200,200,200, 0.8)",
-    strokeWidth: 1,
-  };
-
-  return h(
-    FeatureLayer,
-    {
-      useCanvas: true,
-      className: "plates",
-      style,
-    },
-    data.map((feature, i) => h(PlatePolygon, { key: i, feature }))
-  );
-}
 
 class WorldMapInner extends Component<any, any> {
   static contextType = RotationsContext;
