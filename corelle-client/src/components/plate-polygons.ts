@@ -1,9 +1,8 @@
 import h from "@macrostrat/hyper";
 import { useContext } from "react";
-import { useAPIResult } from "@macrostrat/ui-components";
 import { FeatureLayer } from "@macrostrat/map-components";
 import { PlateFeature } from "./feature";
-import { RotationsContext } from "./provider";
+import { RotationsContext, useRotationsAPI } from "./provider";
 
 function PlatePolygon(props) {
   // An arbitrary feature tied to a plate
@@ -22,7 +21,7 @@ function PlatePolygon(props) {
 function PlatePolygons(props: { style: any }) {
   const { model } = useContext<any>(RotationsContext);
 
-  const data: any[] = useAPIResult("/plates", { model });
+  const data: any[] = useRotationsAPI("/plates", { model });
 
   if (data == null) {
     return null;

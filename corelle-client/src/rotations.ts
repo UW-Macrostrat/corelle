@@ -40,7 +40,7 @@ class RotationData {
     }
     const q = this.plateRotation(id);
     if (q == null) {
-      return identity;
+      return null;
     }
     //angles = quat2euler(q)
     return function (point) {

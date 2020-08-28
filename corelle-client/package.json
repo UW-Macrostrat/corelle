@@ -1,6 +1,6 @@
 {
   "name": "@macrostrat/corelle",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A client library for the Corelle plate-rotation API",
   "scripts": {
     "dev": "rollup -c -w & tsc --emitDeclarationOnly -w",
@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@macrostrat/hyper": "^1.2.10",
-    "@macrostrat/map-components": "^0.2.0",
+    "@macrostrat/map-components": "^0.2.1",
     "@macrostrat/ui-components": "^0.3.3",
     "@types/d3-geo": "^1.11.1",
     "d3-geo": "^1.12.1",

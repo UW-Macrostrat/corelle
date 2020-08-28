@@ -55,4 +55,6 @@ RotationsProvider.defaultProps = {
   debounce: 1000,
 };
 
-export { RotationsProvider, RotationsContext, useRotationsAPI };
+const useRotations = () => useContext(RotationsContext);
+
+export { RotationsProvider, RotationsContext, useRotationsAPI, useRotations };
