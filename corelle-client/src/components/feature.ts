@@ -18,8 +18,6 @@ function PlateFeature(props) {
   const { projection } = useContext(MapContext);
   const { inCanvas, context } = useContext(MapCanvasContext);
 
-  console.log(projection, geographyRotator);
-
   if (oldLim < time) return null;
   // Filter out features that are too old (unlikely given current models)
   if (youngLim > time) return null;
@@ -27,7 +25,6 @@ function PlateFeature(props) {
 
   const rotate = geographyRotator(plateId);
   if (rotate == null) return null;
-  console.log(rotate);
 
   const trans = geoTransform({
     point(lon, lat) {
