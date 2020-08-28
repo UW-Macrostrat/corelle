@@ -4,6 +4,11 @@ import { FeatureLayer } from "@macrostrat/map-components";
 import { PlateFeature } from "./feature";
 import { RotationsContext, useRotationsAPI } from "./provider";
 
+function usePlatePolygons(modelOverride: string | null = null) {
+  const { model } = useContext<any>(RotationsContext);
+  return useRotationsAPI("/plates", { model: modelOverride ?? model });
+}
+
 function PlatePolygon(props) {
   // An arbitrary feature tied to a plate
   const { feature, ...rest } = props;
@@ -19,10 +24,7 @@ function PlatePolygon(props) {
 }
 
 function PlatePolygons(props: { style: any }) {
-  const { model } = useContext<any>(RotationsContext);
-
-  const data: any[] = useRotationsAPI("/plates", { model });
-
+  const data: any[] = usePlatePolygons();
   if (data == null) {
     return null;
   }
@@ -45,4 +47,4 @@ function PlatePolygons(props: { style: any }) {
   );
 }
 
-export { PlatePolygons };
+export { PlatePolygons, usePlatePolygons };

@@ -1,26 +1,17 @@
 import h from "@macrostrat/hyper";
-import { useContext, useEffect, useRef } from "react";
+import { useContext } from "react";
 import { geoTransform, geoPath } from "d3-geo";
-import { RotationsContext, useRotationsAPI } from "./provider";
-
+import { RotationsContext, useRotationsAPI, useRotations } from "./provider";
 import {
   MapContext,
   MapCanvasContext,
   FeatureLayer,
 } from "@macrostrat/map-components";
 
-function PlateFeature(props) {
-  /** An arbitrary feature tied to a plate */
-  let proj;
-  const { feature, youngLim, oldLim, plateId, ...rest } = props;
+function usePathGenerator(plateId, context = null) {
   // Filter out features that are too young
-  const { geographyRotator, time } = useContext(RotationsContext);
+  const { geographyRotator } = useRotations();
   const { projection } = useContext(MapContext);
-  const { inCanvas, context } = useContext(MapCanvasContext);
-
-  if (oldLim < time) return null;
-  // Filter out features that are too old (unlikely given current models)
-  if (youngLim > time) return null;
   if (projection == null || geographyRotator == null) return null;
 
   const rotate = geographyRotator(plateId);
@@ -39,19 +30,29 @@ function PlateFeature(props) {
     trans.stream(projection.stream(s));
 
   // Make it work in canvas
-  if (inCanvas) {
-    if (context != null) {
-      proj = geoPath({ stream }, context);
-      proj(feature);
-    }
-    return null;
-  }
+  return geoPath({ stream }, context);
+}
 
-  // Combined projection
-  proj = geoPath({ stream });
+function PlateFeature(props) {
+  /** An arbitrary feature tied to a plate */
+  const { feature, youngLim, oldLim, plateId, ...rest } = props;
+  // Filter out features that are too young
+  const { time } = useRotations();
+  const { inCanvas, context } = useContext(MapCanvasContext);
+  const proj = usePathGenerator(plateId, context);
+
+  if (oldLim < time) return null;
+  // Filter out features that are too old (unlikely given current models)
+  if (youngLim > time) return null;
+  if (proj == null) return null;
+
   const d = proj(feature);
-
-  return h("path", { d, ...rest });
+  // Make it work in canvas
+  if (inCanvas) {
+    return null;
+  } else {
+    return h("path", { d, ...rest });
+  }
 }
 
 interface FeatureDatasetProps {
@@ -84,4 +85,4 @@ const PlateFeatureLayer = function (props: FeatureDatasetProps) {
   );
 };
 
-export { PlateFeature, PlateFeatureLayer };
+export { PlateFeature, PlateFeatureLayer, usePathGenerator };
