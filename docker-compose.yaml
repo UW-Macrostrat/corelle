@@ -17,7 +17,7 @@ services:
     depends_on:
       - database
     volumes:
-      - ./data:/data:ro
+      - ./data:/run/data:ro
   database:
     image: mdillon/postgis
     expose:
