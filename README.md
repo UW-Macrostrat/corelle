@@ -1,8 +1,19 @@
 # Corelle
 
-No-nonsense plate rotations, compatible with **GPlates**. This repository contains
-an API server that can rotate points using multiple plate models, and a testing
-web application that implements client-side rotations based on this platform.
+**Corelle** is a simple system for reconstructing the location of tectonic
+plates back in geologic time. The software is compatible with **GPlates**, but it
+is designed specifically to support interactive web visualizations. It is named
+for the venerable dinnerware owned by everyone's grandma.
+
+This repository contains several related components:
+
+- An API server that can rotate geometries using arbitrary plate models loaded
+  from GPlates `.rot` files and associated plate polygons.
+- A testing suite that validates conformance to GPlates results.
+- The `@macrostrat/corelle` Javascript library, which implements quaternion rotations
+  to display rotations.
+- An example web application that implements basic plate motions atop
+  several common plate models.
 
 ## Installation
 
@@ -14,7 +25,7 @@ to use the `postgresql:///plate-rotations` database by default, but this can be
 easily changed using the `CORELLE_DB` environment variable.
 
 To install the backend, run `make install` in this repository. The `corelle`
-executable should become available on your path. `make init` imports models and
+executable should be installed on your path. `make init` imports models and
 feature datasets. Then `corelle serve` starts the testing API server.
 
 To build (and continuously watch) the frontend, run `make dev`.
@@ -26,6 +37,11 @@ A backend API server will be started and proxied, so you don't have to run
 Simply install Docker and run `docker-compose up --build` in the root directory.
 This will build the application, install test data, and spin up the development server.
 
+You can run a development version by creating a `.env` file containing
+`COMPOSE_FILE=docker-compose.yaml:docker-compose.development.yaml` in the root
+directory. This will tell Docker to spin up the frontend container using settings
+for auto-rebuilding.
+
 ## Todo
 
 - [x] Fix subtle math bugs!
@@ -34,13 +50,14 @@ This will build the application, install test data, and spin up the development 
 - [ ] Materialized view for split feature datasets
 - [ ] Allow feature datasets to be listed
 - [x] Create a dockerized version
-- [ ] Polish the frontend demo
+- [x] Polish the frontend demo
 
 ## API Reference
 
 ### Get valid models
 
 Returns a list of available models
+
 ```
 /api/model
 ```
@@ -49,6 +66,7 @@ Returns a list of available models
 
 Pass points as a URLEncoded, space-separated list of comma-separated lon-lat pairs.
 E.g. `20,-20 10,10` to rotate two points becomes
+
 ```
 /api/point?model=Seton2012&data=20,-20%2010,10&time=40
 ```
@@ -76,11 +94,7 @@ at the specified time, for client-side rotation of points.
 
 ```json
 {
-  "axis": [
-      0.027206502237792123,
-      0.013804853692062557,
-      -0.03262231893894808
-  ],
+  "axis": [0.027206502237792123, 0.013804853692062557, -0.03262231893894808],
   "angle": 0.08936020386653408,
   "plate_id": 311
 }
@@ -91,10 +105,10 @@ at the specified time, for client-side rotation of points.
 ```json
 {
   "quaternion": [
-      0.9990020102870522,
-      0.027206502237792123,
-      0.013804853692062557,
-      -0.03262231893894808
+    0.9990020102870522,
+    0.027206502237792123,
+    0.013804853692062557,
+    -0.03262231893894808
   ],
   "plate_id": 311
 }
@@ -109,7 +123,7 @@ be added to the API. Instead, features are returned as-is, with
 #### A named feature dataset
 
 Arbitrary feature datasets (imported in advance on the backend).
-The datasets are returned split on plate boundaries and  so they can be
+The datasets are returned split on plate boundaries and so they can be
 rotated on the client side.
 The example below fetches the `ne_110m_land` dataset.
 
@@ -126,3 +140,10 @@ This route returns the plate polygons features themselves.
 ```
 /api/plates?model=Seton2012
 ```
+
+## Changelog
+
+### August 2020
+
+- Created the `@macrostrat/corelle` client-side library.
+- Improved Typescript definitions throughout the app.

@@ -1,0 +1,3 @@
+# Ensure build scripts use LF line endings, even on windows
+# https://github.com/dhoer/docker-on-windows-gotchas
+* text=auto

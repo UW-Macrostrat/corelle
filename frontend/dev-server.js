@@ -3,32 +3,35 @@ This dev server supports local development.
 For development in a Docker containerized setting,
 parcel should be run directly.
 */
-import Bundler from 'parcel-bundler';
-import express from 'express';
-import proxy from 'http-proxy-middleware';
-import { spawn } from 'child_process';
+import Bundler from "parcel-bundler";
+import express from "express";
+import { createProxyMiddleware } from "http-proxy-middleware";
+import path from "path";
+import { spawn } from "child_process";
 
 const port = 3432;
 const mainPort = 5000;
 // Run the backend dev server (quits on exiting this script)
-const backend = spawn(
-  'corelle',
-  ['serve', '--debug', '-p', port], {
-  stdio: ['ignore', 'inherit', 'inherit']
+const backend = spawn("corelle", ["serve", "--debug", "-p", port], {
+  stdio: ["ignore", "inherit", "inherit"],
 });
 
 let app = express();
 
-let bundler = new Bundler('./index.html', {
+let bundler = new Bundler("./index.html", {
   // Scope hoisting interferes with CSS bundling apparently
   //scopeHoist: true,
-  detailedReport: true
+  detailedReport: true,
 });
-const apiProxy = proxy({target: `http://127.0.0.1:${port}`});
+const apiProxy = createProxyMiddleware({ target: `http://127.0.0.1:${port}` });
 
-app.use('/api', apiProxy);
+app.use("/api", apiProxy);
 app.use(bundler.middleware());
 
-app.listen(mainPort, ()=>{
+app.listen(mainPort, () => {
   console.log(`Corelle test app listening on port ${mainPort}`);
+});
+
+bundler.on("buildEnd", () => {
+  console.log(`Frontend is built and available on port ${mainPort}`);
 });

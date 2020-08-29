@@ -6,7 +6,11 @@ COPY ./build-deps.sh .
 RUN sh ./build-deps.sh
 
 COPY ./requirements.txt .
-RUN pip install -r requirements.txt
+
+# psycopg2-binary doesn't work under alpine linux but is needed
+# for local installation
+RUN sed -i 's/psycopg2-binary/psycopg2/g' requirements.txt \
+ && pip install -r requirements.txt
 
 WORKDIR /module
 COPY ./setup.py /module/
@@ -19,7 +23,6 @@ ENV CORELLE_DB=postgresql://postgres@database:5432/corelle
 RUN apk add --no-cache curl bash
 
 WORKDIR /run
-COPY ./bin/load-features ./
-COPY ./run-docker .
+COPY ./bin/* ./
 
 CMD ./run-docker

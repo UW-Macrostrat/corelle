@@ -4,37 +4,50 @@
   "description": "A frontend for the Corelle plate-rotation application",
   "main": "index.html",
   "scripts": {
+    "preinstall": "npm install -D npm-run-all linklocal && linklocal",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "npm install && node -r esm dev-server.js"
+    "dev": "node -r esm dev-server.js"
   },
   "author": "Daven Quinn",
+  "alias": {
+    "react": "./node_modules/react",
+    "react-dom": "./node_modules/react-dom",
+    "@macrostrat/corelle": "./corelle-client"
+  },
   "license": "ISC",
   "devDependencies": {
     "@babel/core": "^7.5.5",
+    "@babel/plugin-transform-typescript": "^7.11.0",
     "@babel/preset-react": "^7.0.0",
-    "coffeescript": "^2.4.1",
     "esm": "^3.2.25",
     "express": "^4.17.1",
-    "http-proxy-middleware": "^0.19.1",
+    "http-proxy-middleware": "^1.0.5",
+    "linklocal": "^2.8.2",
+    "npm-run-all": "^4.1.5",
     "parcel-bundler": "^1.12.3",
-    "stylus": "^0.54.5"
+    "stylus": "^0.54.5",
+    "typescript": "^3.9.3"
   },
   "dependencies": {
     "@blueprintjs/core": "^3.18.0",
-    "@macrostrat/hyper": "^1.1.1",
-    "@macrostrat/ui-components": "^0.1.1",
+    "@macrostrat/corelle": "file:../corelle-client",
+    "@macrostrat/hyper": "^1.2.10",
+    "@macrostrat/map-components": "^0.2.0",
+    "@macrostrat/ui-components": "^0.3.3",
     "chroma-js": "^2.0.6",
     "d3-array": "^2.2.0",
     "d3-drag": "^1.2.4",
     "d3-geo": "^1.11.6",
     "d3-selection": "^1.4.0",
     "d3-zoom": "^1.8.3",
-    "postcss-modules": "^1.4.1",
+    "postcss-modules": "^3.2.0",
+    "prop-types": "^15.7.2",
     "quaternion": "^1.1.0",
-    "react": "^16.9.0",
-    "react-dom": "^16.9.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
     "react-fps-stats": "^0.1.2",
     "react-router": "^5.0.1",
-    "react-router-dom": "^5.0.1"
+    "react-router-dom": "^5.0.1",
+    "url-join": "^4.0.1"
   }
 }
