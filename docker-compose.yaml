@@ -22,14 +22,14 @@ services:
     image: mdillon/postgis
     expose:
       - 5432
-    ports:
-      - "${CORELLE_DB_PORT:-54321}:5432"
     environment:
       - POSTGRES_DB=corelle
     volumes:
       - db_cluster:/var/lib/postgresql/data
   frontend:
     build: frontend
+    environment:
+      - PUBLIC_URL
     volumes:
       - frontend_dist:/app/dist
 volumes:
