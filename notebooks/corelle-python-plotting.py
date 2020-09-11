@@ -18,6 +18,7 @@ ax.coastlines()
 
 
 def points_on_sphere(n_points):
+    """A nearly-uniform distribution of points on a sphere"""
     # https://scicomp.stackexchange.com/questions/29959/uniform-dots-distribution-in-a-sphere
     alpha = 4.0 * N.pi / n_points
     d = N.sqrt(alpha)
