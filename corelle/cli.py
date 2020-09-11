@@ -67,7 +67,7 @@ def _import(
         plates,
         rotations,
         fields=fields,
-        overwrite=False,
+        overwrite=overwrite,
         min_age=min_age,
         max_age=max_age,
     )
