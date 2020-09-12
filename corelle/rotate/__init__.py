@@ -59,6 +59,8 @@ def model_id(name):
 
 # Cache this expensive, recursive function.
 def get_rotation(model_name, plate_id, time, verbose=False, depth=0):
+    """Core function to rotate a plate to a time by accumulating quaternion
+    rotations"""
     time = float(time)
     cache_args = (model_name, plate_id, time)
     if cache_args in cache:

@@ -147,3 +147,8 @@ This route returns the plate polygons features themselves.
 
 - Created the `@macrostrat/corelle` client-side library.
 - Improved Typescript definitions throughout the app.
+
+### September 2020
+
+- `old_lim` and `young_lim` for plate polygons are now defaulted to the model
+  `min_age` and `max_age`.
