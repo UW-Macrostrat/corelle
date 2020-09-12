@@ -62,7 +62,9 @@ def import_plate(model_id, feature, fields=None):
             field_id = fields[field_id]
         return feature["properties"].get(field_id, None)
 
-    plate_id = field("id")
+    plate_id = field("id") or feature.get("id", None)
+    if plate_id is None:
+        raise Exception(f"Invalid plate ID: {feature}")
 
     insert_plate(
         id=plate_id,
@@ -90,13 +92,13 @@ def import_plate(model_id, feature, fields=None):
 
 def import_plates(model_id, plates, fields={}):
     session = create_session()
+    if fields is None:
+        fields = {}
     with fiona.open(plates, "r") as src:
         conn = connect()
         trans = conn.begin()
 
-        mrf = None
-        if fields:
-            mrf = fields.get("mantle_reference_frame", None)
+        mrf = fields.get("mantle_reference_frame", None)
         if mrf is not None:
             insert_plate(id=mrf, model_id=model_id, name="Mantle reference frame")
 
