@@ -62,7 +62,9 @@ def import_plate(model_id, feature, fields=None):
             field_id = fields[field_id]
         return feature["properties"].get(field_id, None)
 
-    plate_id = field("id")
+    plate_id = field("id") or feature.get("id", None)
+    if plate_id is None:
+        raise Exception(f"Invalid plate ID: {feature}")
 
     insert_plate(
         id=plate_id,
