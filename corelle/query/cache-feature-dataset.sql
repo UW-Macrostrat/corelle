@@ -5,15 +5,23 @@ SELECT
   'id', f.id,
   'properties', properties || jsonb_build_object(
 		'plate_id', plate_id,
-		'young_lim', coalesce(young_lim, 0),
-		'old_lim', old_lim),
-  'geometry', ST_AsGeoJSON(ST_Intersection(ST_Buffer(p.geometry,0), ST_Buffer(f.geometry, 0)))::jsonb,
+		'young_lim', coalesce(young_lim, m.min_age),
+		'old_lim', coalesce(old_lim, m.max_age)
+  ),
+  'geometry', ST_AsGeoJSON(
+    ST_Intersection(
+      ST_Buffer(p.geometry,0),
+      ST_Buffer(f.geometry, 0)
+    )
+  )::jsonb,
   'type', 'Feature'
   )) geojson
 FROM feature f
 JOIN plate_polygon p
   ON p.geometry && f.geometry
  AND ST_Intersects(p.geometry, f.geometry)
+JOIN model m
+  ON m.id = p.model_id
 WHERE dataset_id = :dataset_id
 GROUP BY model_id
 )

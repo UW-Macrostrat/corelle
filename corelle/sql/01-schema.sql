@@ -13,7 +13,9 @@ CREATE TABLE IF NOT EXISTS plate (
   cotid text,
   coid text,
   PRIMARY KEY (id, model_id),
-  FOREIGN KEY (parent_id, model_id) REFERENCES plate (id, model_id)
+  FOREIGN KEY (parent_id, model_id)
+    REFERENCES plate (id, model_id)
+    ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS plate_polygon (
@@ -23,7 +25,9 @@ CREATE TABLE IF NOT EXISTS plate_polygon (
   young_lim numeric,
   old_lim numeric,
   geometry geometry(MultiPolygon, 4326),
-  FOREIGN KEY (plate_id, model_id) REFERENCES plate (id, model_id)
+  FOREIGN KEY (plate_id, model_id)
+    REFERENCES plate (id, model_id)
+    ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS rotation (
@@ -31,14 +35,18 @@ CREATE TABLE IF NOT EXISTS rotation (
   plate_id integer NOT NULL,
   model_id integer NOT NULL,
   t_step numeric NOT NULL,
-  latitude numeric,
-  longitude numeric,
-  angle numeric,
-  ref_plate_id integer,
+  latitude numeric NOT NULL,
+  longitude numeric NOT NULL,
+  angle numeric NOT NULL,
+  ref_plate_id integer NOT NULL,
   metadata text,
   UNIQUE (plate_id, model_id, t_step, ref_plate_id),
-  FOREIGN KEY (plate_id, model_id) REFERENCES plate (id, model_id),
-  FOREIGN KEY (ref_plate_id, model_id) REFERENCES plate (id, model_id)
+  FOREIGN KEY (plate_id, model_id)
+    REFERENCES plate (id, model_id)
+    ON DELETE CASCADE,
+  FOREIGN KEY (ref_plate_id, model_id)
+    REFERENCES plate (id, model_id)
+    ON DELETE CASCADE
 );
 
 -- Features that can be clipped by plate IDs and returned

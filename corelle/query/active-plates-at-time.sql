@@ -7,5 +7,5 @@ JOIN plate_polygon pp
 JOIN model m
   ON p.model_id = m.id
 WHERE m.name = :model_name
-  AND pp.old_lim > :time
-  AND coalesce(pp.young_lim, 0) < :time
+  AND coalesce(pp.old_lim, m.max_age) > :time
+  AND coalesce(pp.young_lim, m.min_age) < :time
