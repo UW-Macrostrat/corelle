@@ -3,6 +3,7 @@ from flask_restful import Resource, Api
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import text
 from simplejson import loads, JSONEncoder
+import numpy as N
 
 from .database import db
 from .query import get_sql
@@ -117,6 +118,38 @@ class Rotation(RotationsResource):
         return self.reducer(q, args, plate_id)
 
 
+class RotationSeries(RotationsResource):
+    """An API resource that rotates a series of points to a time"""
+
+    def __init__(self):
+        super().__init__()
+        self.parser.add_argument("time_start", required=True)
+        self.parser.add_argument("time_end", required=True)
+        self.parser.add_argument("interval", required=True)
+
+    def reducer(self, q, args, plate_id):
+        res = super().reducer(q, args)
+        res["plate_id"] = plate_id
+        return res
+
+    def get(self):
+        args = self.parser.parse_args()
+        return list(self.get_all(args))
+
+    def all_rotations_for_time(self, args, time):
+        for (plate_id, q) in get_all_rotations(args["model"], time):
+            yield self.reducer(q, args, plate_id)
+
+    def get_all(self, args):
+        ages = N.arange(
+            float(args["time_start"]), float(args["time_end"]), -float(args["interval"])
+        )
+        for age in ages:
+            yield dict(
+                time=age, rotations=list(self.all_rotations_for_time(args, age)),
+            )
+
+
 class Pole(ModelResource):
     """
     Get poles for plate(s)
@@ -174,6 +207,7 @@ class Point(ModelResource):
 api.add_resource(Help, "/api")
 api.add_resource(ModernPlates, "/api/plates")
 api.add_resource(Rotation, "/api/rotate")
+api.add_resource(RotationSeries, "/api/rotate-series")
 api.add_resource(AllFeatures, "/api/feature")
 api.add_resource(Features, "/api/feature/<string:dataset>")
 api.add_resource(Pole, "/api/pole")
