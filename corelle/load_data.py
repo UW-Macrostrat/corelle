@@ -8,7 +8,7 @@ import fiona
 from click import echo, style
 
 from .database import db, create_session
-from .rotate import get_rotation
+from .rotate.engine import get_rotation
 from .query import get_sql
 
 __conn = None

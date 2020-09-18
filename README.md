@@ -5,6 +5,39 @@ plates back in geologic time. The software is compatible with **GPlates**, but i
 is designed specifically to support interactive web visualizations. It is named
 for the venerable dinnerware owned by everyone's grandma.
 
+## Useful links
+
+- [CHANGELOG](changelog.md)
+- [Demo: pre-split coastline features](https://birdnest.geology.wisc.edu/corelle)
+- [Demo: externally-provided features](https://davenquinn.com/viz/corelle-demo-pbdb)
+- [Demo: regional rotation model](https://davenquinn.com/viz/corelle-demo-neogene-north-america)
+
+## Why does it exist?
+
+**GPlates** is a capable and complete system for creating and rendering plate rotations, and its
+PyGPlates library enables access through the Python programming language.
+However, the sophistication and "batteries-included" nature of GPlates comes at a cost of complexity
+that inhibits installation, usage, and integration with other systems.
+
+Running and displaying plate rotation models is far simpler than creating them, though,
+so Corelle provides a simpler plate-rotation engine built on accumulating quaternions.
+Server components already used in Macrostrat's ecosystem (e.g. the PostgreSQL database engine)
+provide key parts of GPlates' functionality (e.g. the plate dependency tree and support for
+geospatial operations), simplifying the overall system and providing integration points with
+other infrastructure.
+
+Corelle is also designed to support quick and efficient use in web applications and other
+client-server code. Instead of sending pre-rotated features over the network,
+Corelle sends quaternions to be applied at the point of visualization. This approach
+dramatically decreases network traffic, allowing high-fidelity rotation models to be
+explored without repeatedly transferring map data.
+
+Corelle's public-facing API is
+in beta but will eventually be integrated with [Macrostrat](https://macrostrat.org)'s core services,
+which power [PBDB](https://paleobiodb.org) and other projects.
+
+## Structure of the project
+
 This repository contains several related components:
 
 - An API server that can rotate geometries using arbitrary plate models loaded
@@ -47,8 +80,8 @@ for auto-rebuilding.
 - [x] Fix subtle math bugs!
 - [ ] On-database cache of rotations (say, at 1 Ma increments?)
 - [ ] Return pre-rotated feature datasets (rather than just modern versions)
-- [ ] Materialized view for split feature datasets
-- [ ] Allow feature datasets to be listed
+- [x] Materialized view for split feature datasets
+- [x] Allow feature datasets to be listed
 - [x] Create a dockerized version
 - [x] Polish the frontend demo
 
@@ -140,15 +173,3 @@ This route returns the plate polygons features themselves.
 ```
 /api/plates?model=Seton2012
 ```
-
-## Changelog
-
-### August 2020
-
-- Created the `@macrostrat/corelle` client-side library.
-- Improved Typescript definitions throughout the app.
-
-### September 2020
-
-- `old_lim` and `young_lim` for plate polygons are now defaulted to the model
-  `min_age` and `max_age`.

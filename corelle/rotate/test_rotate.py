@@ -9,7 +9,7 @@ from .math import (
     quaternion_to_euler,
     euler_equal,
 )
-from . import rotate_point
+from .engine import rotate_point
 
 equal = N.allclose
 

@@ -3,7 +3,7 @@ import json
 from pg_viewtils import relative_path
 from os import path
 import numpy as N
-from .rotate import get_rotation, get_all_rotations, rotate_point
+from .rotate.engine import get_rotation, get_all_rotations, rotate_point
 from .rotate.math import quaternion_to_euler, euler_equal
 
 # Test against gplates web service data
