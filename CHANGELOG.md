@@ -2,7 +2,8 @@
 
 ## [Unreleased]
 
-- New IPython notebook showing API usage and paleolatitude tracers
+- New [IPython notebook](notebooks/Corelle-Paleolatitude.ipynb) showing API usage
+  in Python; working towards paleolatitude tracers.
 
 ## [1.0.4] - 2020-09-14
 
@@ -16,7 +17,7 @@
 - First demo of a [client-side application](https://davenquinn.com/viz/corelle-demo-pbdb/)
   using external features.
 
-## [Unreleased] - May 2019 - August 2020
+## [Preliminary] - May 2019 - August 2020
 
 - Initial version of the app
 - Conversion to Docker development strategy
