@@ -3,7 +3,7 @@ import json
 from pg_viewtils import relative_path
 from os import path
 import numpy as N
-from .rotate import get_rotation, get_all_rotations, RotationError
+from .rotate.engine import get_rotation, get_all_rotations, RotationError
 from .rotate.math import euler_equal, quaternion_to_euler, euler_to_quaternion
 
 

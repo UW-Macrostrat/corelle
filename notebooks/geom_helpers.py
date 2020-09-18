@@ -1,20 +1,12 @@
 import numpy as N
-import cartopy
 
 
-def cart2sph(x, y, z):
+def cart2euler(x, y, z):
+    """This is a different spherical coordinate convention than Corelle uses"""
     hxy = N.hypot(x, y)
     el = N.arctan2(z, hxy)
     az = N.arctan2(y, x)
     return N.degrees(az), N.degrees(el)
-
-
-# %%matplotlib inline
-import matplotlib.pyplot as plt
-
-ortho = cartopy.crs.Orthographic()
-ax = plt.axes(projection=ortho)
-ax.coastlines()
 
 
 def points_on_sphere(n_points):
@@ -34,12 +26,5 @@ def points_on_sphere(n_points):
             xp = N.sin(nu) * N.cos(phi)
             yp = N.sin(nu) * N.sin(phi)
             zp = N.cos(nu)
-            points.append(cart2sph(xp, yp, zp))
+            points.append(cart2euler(xp, yp, zp))
     return N.array(points)
-
-
-# % (Nearly) uniform distrbuion of points on a sphere
-
-pt = points_on_sphere(50000)
-ax.plot(pt[:, 0], pt[:, 1], "o", markersize=0.2, transform=cartopy.crs.Geodetic())
-ax.show()
