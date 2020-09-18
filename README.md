@@ -7,10 +7,11 @@ for the venerable dinnerware owned by everyone's grandma.
 
 ## Useful links
 
-- [CHANGELOG](changelog.md)
+- [CHANGELOG](CHANGELOG.md)
 - [Demo: pre-split coastline features](https://birdnest.geology.wisc.edu/corelle)
 - [Demo: externally-provided features](https://davenquinn.com/viz/corelle-demo-pbdb)
 - [Demo: regional rotation model](https://davenquinn.com/viz/corelle-demo-neogene-north-america)
+- [IPython notebook: usage from Python](notebooks/Corelle-Paleolatitude.ipynb)
 
 ## Why does it exist?
 
