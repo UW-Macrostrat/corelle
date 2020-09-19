@@ -124,7 +124,7 @@ class RotationSeries(RotationsResource):
     def __init__(self):
         super().__init__()
         self.parser.add_argument("time_start", required=True)
-        self.parser.add_argument("time_end", required=True)
+        self.parser.add_argument("time_end", required=True, default=0)
         self.parser.add_argument("interval", required=True)
 
     def reducer(self, q, args, plate_id):

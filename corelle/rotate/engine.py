@@ -59,8 +59,7 @@ def model_id(name):
 
 # Cache this expensive, recursive function.
 def get_rotation(model_name, plate_id, time, verbose=False, depth=0):
-    """Core function to rotate a plate to a time by accumulating quaternion
-    rotations"""
+    """Core function to rotate a plate to a time by accumulating quaternions"""
     time = float(time)
     cache_args = (model_name, plate_id, time)
     if cache_args in cache:
@@ -152,6 +151,12 @@ def get_all_rotations(model, time, verbose=False, active_only=True):
         if N.isnan(q.w):
             continue
         yield plate_id, q
+
+
+def get_rotation_series(model, *times, **kwargs):
+    for t in times:
+        r = get_all_rotations(model, float(t), **kwargs)
+        yield dict(rotations=list(r), time=float(t))
 
 
 def get_plate_rotations(model, plate_id, verbose=False):

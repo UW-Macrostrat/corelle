@@ -1,5 +1,5 @@
 """
-This tiny library is essentially the equivalent of the Javascript `@macrostrat/corelle`
+This tiny module is essentially the equivalent of the Javascript `@macrostrat/corelle`
 library, for rotating plates provided by the Corelle API.
 """
 import sys
@@ -26,13 +26,9 @@ def rotate_point(q, point):
     return cart2sph(v1)
 
 
-def rotator(q):
-    return lambda x, y: rotate_point(q, (x, y))
-
-
 def rotate_geometry(q, geometry):
     """Rotate a geometry by a quaternion"""
-    return transform(rotator(q), geometry)
+    return transform(lambda x, y: rotate_point(q, (x, y)), geometry)
 
 
 def rotate_features(
