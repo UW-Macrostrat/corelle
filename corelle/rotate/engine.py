@@ -2,6 +2,7 @@ import numpy as N
 import quaternion as Q
 from pg_viewtils import reflect_table
 from click import secho
+from decimal import Decimal
 
 from .math import cart2sph, sph2cart, euler_to_quaternion, quaternion_to_euler
 from ..query import get_sql
@@ -23,16 +24,6 @@ class UndefinedRotationError(RotationError):
         super().__init__(self, f"No rotation found for plate {plate_id} at time {time}")
         self.plate_id = plate_id
         self.time = time
-
-
-def get_rotation(*args, **kwargs):
-    loops = []
-    for i in range(100):
-        # Try 100 times
-        try:
-            return __get_rotation([], loops, *args, **kwargs)
-        except LoopError as err:
-            loops.append(err.plate_id)
 
 
 cache = {}
@@ -61,7 +52,7 @@ def model_id(name):
 def get_rotation(model_name, plate_id, time, verbose=False, depth=0):
     """Core function to rotate a plate to a time by accumulating quaternions"""
     time = float(time)
-    cache_args = (model_name, plate_id, time)
+    cache_args = (model_name, plate_id, Decimal(time))
     if cache_args in cache:
         return cache[cache_args]
 
@@ -87,11 +78,30 @@ def get_rotation(model_name, plate_id, time, verbose=False, depth=0):
         return None
     if verbose:
         for i, pair in enumerate(pairs):
-            color = "green" if i == 0 else "gray"
+            color = "green" if i == 0 else "white"
             secho(prefix + f"{pair.plate_id} → {pair.ref_plate_id}", fg=color)
     row = pairs[0]
 
     q1 = euler_to_quaternion(row.r1_rotation)
+
+    # r1_step = float(row.r1_step)
+
+    r1_base = get_rotation(
+        model_name, row.ref_plate_id, row.r1_step, verbose=verbose, depth=depth + 1
+    )
+    r1_rot = None
+    if r1_base is not None:
+        r1_rot = r1_base * q1
+    build_cache(r1_rot, (model_name, plate_id, Decimal(row.r1_step)))
+
+    if not row.interpolated:
+        # We have an exact match!
+        # Just a precautionary guard, this should be assured by our SQL
+        assert N.allclose(float(row.r1_step), time)
+        # We have already cached this timestep
+        return r1_rot
+
+    ## Interpolated rotations
 
     base = get_rotation(
         model_name, row.ref_plate_id, time, verbose=verbose, depth=depth + 1
@@ -99,19 +109,20 @@ def get_rotation(model_name, plate_id, time, verbose=False, depth=0):
     if base is None:
         return __cache(None)
 
-    r1_step = float(row.r1_step)
-
-    if not row.interpolated:
-        # We have an exact match!
-        # Just a precautionary guard, this should be assured by our SQL
-        assert N.allclose(r1_step, time)
-        return __cache(base * q1)
-
-    r2_step = float(row.r2_step)
-
-    ## Interpolated rotations
     q2 = euler_to_quaternion(row.r2_rotation)
-    res = Q.slerp(q1, q2, r1_step, r2_step, time)
+
+    # Cache rotations for r2_step, which will likely be used by other rotations.
+    # We do this because SQL queries are much more expensive than vector math.
+    # r2_base = get_rotation(
+    #     model_name, row.ref_plate_id, r2_step, verbose, depth=depth + 1
+    # )
+    # r2_rot = None
+    # if r2_rot is not None:
+    #     r2_rot = r2_base * q2
+    # build_cache(r2_rot, (model_name, plate_id, r2_step))
+
+    # Calculate interpolated rotation between the two timesteps
+    res = Q.slerp(q1, q2, float(row.r1_step), float(row.r2_step), time)
     return __cache(base * res)
 
 
@@ -136,15 +147,36 @@ def rotate_point(point, model, time):
     return cart2sph(v1)
 
 
-def get_all_rotations(model, time, verbose=False, active_only=True):
-    if active_only:
-        sql = get_sql("active-plates-at-time")
-        results = conn.execute(sql, time=time, model_name=model)
-    else:
-        sql = get_sql("plates-for-model")
-        results = conn.execute(sql, model_name=model)
-    for res in results:
-        plate_id = res[0]
+__active_plates_sql = get_sql("active-plates-at-time")
+__model_plates_sql = get_sql("plates-for-model")
+
+
+def plates_for_model(model):
+    """Returns a list of plate IDs for a given model"""
+    return [k[0] for k in conn.execute(__model_plates_sql, model_name=model)]
+
+
+def get_all_rotations(model, time, verbose=False, active_only=True, plates=None):
+    """Get all rotations for a model and a timestep
+
+    Parameters
+    ----------
+    model : str
+            The rotation model to use
+    time : float
+           The time to rotate to, in Myr before present.
+
+    Yields
+    ------
+    dict
+    """
+    if plates is None:
+        if active_only:
+            res = conn.execute(__active_plates_sql, time=time, model_name=model)
+            plates = [p[0] for p in res]
+        else:
+            plates = plates_for_model(model)
+    for plate_id in plates:
         q = get_rotation(model, plate_id, time, verbose=verbose)
         if q is None:
             continue
@@ -154,6 +186,9 @@ def get_all_rotations(model, time, verbose=False, active_only=True):
 
 
 def get_rotation_series(model, *times, **kwargs):
+    # Pre-compute plates for speed...
+    # LOL this actually makes things slower
+    #  kwargs["plates"] = plates_for_model(model)
     for t in times:
         r = get_all_rotations(model, float(t), **kwargs)
         yield dict(rotations=list(r), time=float(t))
