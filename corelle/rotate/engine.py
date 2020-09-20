@@ -156,6 +156,7 @@ def rotate_point(point, model, time):
 
 
 __tstep_rotation_pairs = get_sql("rotation-pairs-for-time")
+__model_rotation_pairs = get_sql("rotation-pairs-for-model")
 __active_plates_sql = get_sql("active-plates-at-time")
 __model_plates_sql = get_sql("plates-for-model")
 
@@ -166,7 +167,7 @@ def plates_for_model(model):
 
 
 def get_all_rotations(
-    model, time, verbose=False, active_only=True, plates=None, safe=True
+    model, time, verbose=False, active_only=True, plates=None, safe=True, rowset=None
 ):
     """Get all rotations for a model and a timestep
 
@@ -188,15 +189,23 @@ def get_all_rotations(
         else:
             plates = plates_for_model(model)
 
-    rowset = conn.execute(
-        __tstep_rotation_pairs, time=time, model_name=model
-    ).fetchall()
+    if rowset is None:
+        _rowset = conn.execute(
+            __tstep_rotation_pairs, time=time, model_name=model
+        ).fetchall()
+    else:
+        _rowset = [
+            r
+            for r in rowset
+            if (r.r1_step == time and r.r2_step is None)
+            or (r.r1_step < time and (r.r2_step or -1) > time)
+        ]
 
     if safe:
         check_model_id(model)
     for plate_id in plates:
         q = get_rotation(
-            model, plate_id, time, verbose=verbose, rowset=rowset, safe=False
+            model, plate_id, time, verbose=verbose, rowset=_rowset, safe=False
         )
         if q is None:
             continue
@@ -210,8 +219,9 @@ def get_rotation_series(model, *times, **kwargs):
     # LOL this actually makes things slower
     #  kwargs["plates"] = plates_for_model(model)
     check_model_id(model)
+    rowset = conn.execute(__model_rotation_pairs, model_name=model).fetchall()
     for t in times:
-        r = get_all_rotations(model, float(t), safe=False, **kwargs)
+        r = get_all_rotations(model, float(t), safe=False, rowset=rowset, **kwargs)
         yield dict(rotations=list(r), time=float(t))
 
 
