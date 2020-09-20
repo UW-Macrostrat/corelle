@@ -48,8 +48,10 @@ def model_id(name):
     return conn.execute(stmt).scalar()
 
 
+__sql = get_sql("rotation-pairs")
+
 # Cache this expensive, recursive function.
-def get_rotation(model_name, plate_id, time, verbose=False, depth=0):
+def get_rotation(model_name, plate_id, time, verbose=False, depth=0, rowset=None):
     """Core function to rotate a plate to a time by accumulating quaternions"""
     time = float(time)
     cache_args = (model_name, plate_id, Decimal(time))
@@ -70,7 +72,6 @@ def get_rotation(model_name, plate_id, time, verbose=False, depth=0):
     if plate_id is None or plate_id == 0:
         return __cache(N.quaternion(1, 0, 0, 0))
 
-    __sql = get_sql("rotation-pairs")
     params = dict(plate_id=plate_id, model_name=model_name, time=time)
 
     pairs = db.execute(__sql, **params).fetchall()
@@ -145,6 +146,7 @@ def rotate_point(point, model, time):
     return cart2sph(v1)
 
 
+__tstep_rotation_pairs = get_sql("rotation-pairs-for-time")
 __active_plates_sql = get_sql("active-plates-at-time")
 __model_plates_sql = get_sql("plates-for-model")
 
@@ -174,8 +176,11 @@ def get_all_rotations(model, time, verbose=False, active_only=True, plates=None)
             plates = [p[0] for p in res]
         else:
             plates = plates_for_model(model)
+
+    # rowset = conn.execute(__tstep_rotation_pairs, time=time, model_name=model).fetchall()
+
     for plate_id in plates:
-        q = get_rotation(model, plate_id, time, verbose=verbose)
+        q = get_rotation(model, plate_id, time, verbose=verbose, rowset=None)
         if q is None:
             continue
         if N.isnan(q.w):
