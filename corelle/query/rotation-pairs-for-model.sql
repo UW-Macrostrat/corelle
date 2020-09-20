@@ -52,9 +52,13 @@ SELECT
 	null r2_metadata,
 	false interpolated
 FROM plate_steps
+WHERE t_step <= :early_age
+  AND t_step >= :late_age
 UNION ALL
 -- Get rotations that are after `time`
 SELECT
   *,
   true interpolated
 FROM step_pairs
+WHERE r1_step <= :early_age
+  AND r2_step > :late_age

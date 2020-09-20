@@ -219,7 +219,12 @@ def get_rotation_series(model, *times, **kwargs):
     # LOL this actually makes things slower
     #  kwargs["plates"] = plates_for_model(model)
     check_model_id(model)
-    rowset = conn.execute(__model_rotation_pairs, model_name=model).fetchall()
+    rowset = conn.execute(
+        __model_rotation_pairs,
+        model_name=model,
+        early_age=float(max(times)),
+        late_age=float(min(times)),
+    ).fetchall()
     for t in times:
         r = get_all_rotations(model, float(t), safe=False, rowset=rowset, **kwargs)
         yield dict(rotations=list(r), time=float(t))
