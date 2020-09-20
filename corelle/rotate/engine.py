@@ -85,7 +85,7 @@ def get_rotation(
     pairs = []
     if rowset:
         pairs = [p for p in rowset if p.plate_id == plate_id and p.r1_step <= time]
-    if len(pairs) == 0:
+    else:
         # Fall back to fetching the data ourselves
         pairs = db.execute(__sql, **params).fetchall()
     if len(pairs) == 0:
