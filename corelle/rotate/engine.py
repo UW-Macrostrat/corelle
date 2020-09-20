@@ -84,14 +84,9 @@ def get_rotation(
 
     pairs = []
     if rowset:
-        _pairs = [p for p in rowset if p.plate_id == plate_id]
-        pairs = [
-            p
-            for p in _pairs
-            if N.allclose(float(p.r1_step), time) and not p.interpolated
-        ] + [p for p in _pairs if p.r1_step < time and (p.r2_step or -1) > time]
-        # pairs.sort(key=lambda x: -x.r1_step)
+        pairs = [p for p in rowset if p.plate_id == plate_id and p.r1_step <= time]
     if len(pairs) == 0:
+        # Fall back to fetching the data ourselves
         pairs = db.execute(__sql, **params).fetchall()
     if len(pairs) == 0:
         return None
@@ -101,32 +96,26 @@ def get_rotation(
             secho(prefix + f"{pair.plate_id} → {pair.ref_plate_id}", fg=color)
 
     row = pairs[0]
-    r1_step = float(row.r1_step)
-    __close_pairs = [p for p in pairs if not p.interpolated]
-    if len(__close_pairs) > 0:
-        row = __close_pairs[0]
 
     q1 = euler_to_quaternion(row.r1_rotation)
 
-    r1_base = get_rotation(
-        model_name,
-        row.ref_plate_id,
-        row.r1_step,
-        verbose=verbose,
-        depth=depth + 1,
-        rowset=rowset,
-        safe=False,
-    )
-    if r1_base is None:
-        return __cache(None)
-
     if not row.interpolated:
+        base = get_rotation(
+            model_name,
+            row.ref_plate_id,
+            row.r1_step,
+            verbose=verbose,
+            depth=depth + 1,
+            rowset=rowset,
+            safe=False,
+        )
+        if base is None:
+            return __cache(None)
         # We have an exact match!
         # Just a precautionary guard, this should be assured by our SQL
-        return __cache(r1_base * q1)
+        return __cache(base * q1)
 
-    ## Interpolated rotations
-
+    # Interpolated rotations
     base = get_rotation(
         model_name,
         row.ref_plate_id,
@@ -140,17 +129,6 @@ def get_rotation(
         return __cache(None)
 
     q2 = euler_to_quaternion(row.r2_rotation)
-
-    # Cache rotations for r2_step, which will likely be used by other rotations.
-    # We do this because SQL queries are much more expensive than vector math.
-    # r2_base = get_rotation(
-    #     model_name, row.ref_plate_id, r2_step, verbose, depth=depth + 1
-    # )
-    # r2_rot = None
-    # if r2_rot is not None:
-    #     r2_rot = r2_base * q2
-    # build_cache(r2_rot, (model_name, plate_id, r2_step))
-
     # Calculate interpolated rotation between the two timesteps
     res = Q.slerp(q1, q2, float(row.r1_step), float(row.r2_step), time)
     return __cache(base * res)
