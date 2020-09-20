@@ -89,17 +89,15 @@ def get_rotation(model_name, plate_id, time, verbose=False, depth=0):
     r1_base = get_rotation(
         model_name, row.ref_plate_id, row.r1_step, verbose=verbose, depth=depth + 1
     )
-    r1_rot = None
-    if r1_base is not None:
-        r1_rot = r1_base * q1
-    build_cache(r1_rot, (model_name, plate_id, Decimal(row.r1_step)))
+    if r1_base is None:
+        return __cache(None)
 
+    # build_cache(r1_rot, (model_name, plate_id, Decimal(row.r1_step)))
     if not row.interpolated:
         # We have an exact match!
         # Just a precautionary guard, this should be assured by our SQL
         assert N.allclose(float(row.r1_step), time)
-        # We have already cached this timestep
-        return r1_rot
+        return __cache(r1_base * q1)
 
     ## Interpolated rotations
 

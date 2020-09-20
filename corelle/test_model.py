@@ -131,7 +131,7 @@ def test_rotation_series():
         )
 
 
-# @pytest.mark.skip(reason="It's super slow!")
+@pytest.mark.skip(reason="It's super slow!")
 def test_rotation_series_speed():
     """Getting a series of rotation vectors should not take millenia"""
     times = N.arange(350, 0, -1)
