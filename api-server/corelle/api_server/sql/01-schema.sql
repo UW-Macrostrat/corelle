@@ -65,3 +65,14 @@ CREATE TABLE IF NOT EXISTS corelle.feature_cache (
   geojson json NOT NULL,
   PRIMARY KEY (model_id, dataset_id)
 );
+
+CREATE TABLE IF NOT EXISTS cache.rotation (
+  model_id integer NOT NULL REFERENCES model(id),
+  plate_id integer NOT NULL,
+  t_step numeric NOT NULL,
+  rotation numeric[],
+  PRIMARY KEY (model_id, plate_id, t_step),
+  FOREIGN KEY (plate_id, model_id)
+    REFERENCES plate (id, model_id)
+    ON DELETE CASCADE
+);

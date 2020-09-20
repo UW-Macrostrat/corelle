@@ -3,6 +3,8 @@ import quaternion as Q
 from pg_viewtils import reflect_table
 from click import secho
 from decimal import Decimal
+from sqlalchemy.sql import select
+from sqlalchemy.dialects.postgresql import array, insert
 
 from .math import cart2sph, sph2cart, euler_to_quaternion, quaternion_to_euler
 from ..query import get_sql
@@ -11,6 +13,7 @@ from ..database import db
 __model = reflect_table(db, "model")
 __plate = reflect_table(db, "plate")
 __rotation = reflect_table(db, "rotation")
+__rotation_cache = reflect_table(db, "rotation", schema="cache")
 
 conn = db.connect()
 
@@ -30,17 +33,40 @@ cache = {}
 cache_list = []
 
 
-def build_cache(q, cache_args):
+def add_to_cache(cache_args, q):
     # Fetches a sequence of rotations per unit time
-    cache[cache_args] = q
-    cache_list.append(cache_args)
-    if len(cache_list) > 50000:
-        id = cache_list.pop(0)
-        try:
-            del cache[id]
-        except KeyError:
-            pass
+    (model_name, plate_id, time) = cache_args
+
+    rval = None
+    if q is not None:
+        rval = array([q.w, q.x, q.y, q.z])
+    stmt = select([__model.c.id, plate_id, time, rval]).where(
+        __model.c.name == model_name
+    )
+    conn.execute(
+        insert(__rotation_cache)
+        .from_select(["model_id", "plate_id", "t_step", "rotation"], stmt)
+        .on_conflict_do_update(
+            constraint=__rotation_cache.primary_key, set_=dict(rotation=rval)
+        )
+    )
     return q
+
+
+def get_from_cache(cache_args):
+    (model_name, plate_id, time) = cache_args
+
+    tbl = __rotation_cache.join(__model, __model.c.id == __rotation_cache.c.model_id)
+    res = conn.execute(
+        select([__rotation_cache.c.rotation])
+        .select_from(tbl)
+        .where(__model.c.name == model_name)
+        .where(__rotation_cache.c.plate_id == plate_id)
+        .where(__rotation_cache.c.t_step == time)
+    ).scalar()
+    if res is not None:
+        return N.quaternion(*res)
+    return None
 
 
 def model_id(name):
@@ -60,18 +86,22 @@ def check_model_id(model_name):
 
 # Cache this expensive, recursive function.
 def get_rotation(
-    model_name, plate_id, time, verbose=False, depth=0, rowset=None, safe=True,
+    model_name,
+    plate_id,
+    time,
+    verbose=False,
+    depth=0,
+    rowset=None,
+    safe=True,
 ):
     """Core function to rotate a plate to a time by accumulating quaternions"""
     time = float(time)
-    cache_args = (model_name, plate_id, Decimal(time))
-    if cache_args in cache:
-        return cache[cache_args]
+    cache_args = (model_name, plate_id, time)
+    cached_val = get_from_cache(cache_args)
+    if cached_val is not None:
+        return cached_val
 
-    if safe:
-        check_model_id(model_name)
-
-    __cache = lambda q: build_cache(q, cache_args)
+    __cache = lambda q: add_to_cache(cache_args, q)
 
     prefix = " " * depth
     if verbose:
@@ -105,23 +135,6 @@ def get_rotation(
 
     q1 = euler_to_quaternion(row.r1_rotation)
 
-    if not row.interpolated:
-        base = get_rotation(
-            model_name,
-            row.ref_plate_id,
-            row.r1_step,
-            verbose=verbose,
-            depth=depth + 1,
-            rowset=rowset,
-            safe=False,
-        )
-        if base is None:
-            return __cache(None)
-        # We have an exact match!
-        # Just a precautionary guard, this should be assured by our SQL
-        return __cache(base * q1)
-
-    # Interpolated rotations
     base = get_rotation(
         model_name,
         row.ref_plate_id,
@@ -134,7 +147,17 @@ def get_rotation(
     if base is None:
         return __cache(None)
 
+    if not row.interpolated:
+        # We have an exact match!
+        # Just a precautionary guard, this should be assured by our SQL
+        assert N.allclose(float(row.r1_step), time)
+        return __cache(base * q1)
+
+    ## Interpolated rotations
+
+    # Rotation for Q2 timestep
     q2 = euler_to_quaternion(row.r2_rotation)
+
     # Calculate interpolated rotation between the two timesteps
     res = Q.slerp(q1, q2, float(row.r1_step), float(row.r2_step), time)
     return __cache(base * res)
@@ -226,7 +249,10 @@ def get_rotation_series(model, *times, **kwargs):
     # LOL this actually makes things slower
     check_model_id(model)
 
-    plate_ages = conn.execute(__plate_time_ranges, model_name=model,).fetchall()
+    plate_ages = conn.execute(
+        __plate_time_ranges,
+        model_name=model,
+    ).fetchall()
 
     rowset = conn.execute(
         __model_rotation_pairs,
