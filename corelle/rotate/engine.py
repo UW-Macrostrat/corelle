@@ -82,18 +82,31 @@ def get_rotation(
 
     params = dict(plate_id=plate_id, model_name=model_name, time=time)
 
-    pairs = db.execute(__sql, **params).fetchall()
+    pairs = []
+    if rowset:
+        _pairs = [p for p in rowset if p.plate_id == plate_id]
+        pairs = [
+            p
+            for p in _pairs
+            if N.allclose(float(p.r1_step), time) and not p.interpolated
+        ] + [p for p in _pairs if p.r1_step < time and (p.r2_step or -1) > time]
+        # pairs.sort(key=lambda x: -x.r1_step)
+    if len(pairs) == 0:
+        pairs = db.execute(__sql, **params).fetchall()
     if len(pairs) == 0:
         return None
     if verbose:
         for i, pair in enumerate(pairs):
             color = "green" if i == 0 else "white"
             secho(prefix + f"{pair.plate_id} → {pair.ref_plate_id}", fg=color)
+
     row = pairs[0]
+    r1_step = float(row.r1_step)
+    __close_pairs = [p for p in pairs if not p.interpolated]
+    if len(__close_pairs) > 0:
+        row = __close_pairs[0]
 
     q1 = euler_to_quaternion(row.r1_rotation)
-
-    # r1_step = float(row.r1_step)
 
     r1_base = get_rotation(
         model_name,
@@ -110,7 +123,6 @@ def get_rotation(
     if not row.interpolated:
         # We have an exact match!
         # Just a precautionary guard, this should be assured by our SQL
-        assert N.allclose(float(row.r1_step), time)
         return __cache(r1_base * q1)
 
     ## Interpolated rotations
@@ -198,13 +210,15 @@ def get_all_rotations(
         else:
             plates = plates_for_model(model)
 
-    # rowset = conn.execute(__tstep_rotation_pairs, time=time, model_name=model).fetchall()
+    rowset = conn.execute(
+        __tstep_rotation_pairs, time=time, model_name=model
+    ).fetchall()
 
     if safe:
         check_model_id(model)
     for plate_id in plates:
         q = get_rotation(
-            model, plate_id, time, verbose=verbose, rowset=None, safe=False
+            model, plate_id, time, verbose=verbose, rowset=rowset, safe=False
         )
         if q is None:
             continue
