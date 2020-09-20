@@ -82,14 +82,13 @@ def get_rotation(
 
     params = dict(plate_id=plate_id, model_name=model_name, time=time)
 
-    pairs = []
     if rowset:
         pairs = [p for p in rowset if p.plate_id == plate_id and p.r1_step <= time]
     else:
         # Fall back to fetching the data ourselves
         pairs = db.execute(__sql, **params).fetchall()
     if len(pairs) == 0:
-        return None
+        return __cache(None)
     if verbose:
         for i, pair in enumerate(pairs):
             color = "green" if i == 0 else "white"
