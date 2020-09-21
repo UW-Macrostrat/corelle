@@ -158,6 +158,7 @@ __tstep_rotation_pairs = get_sql("rotation-pairs-for-time")
 __model_rotation_pairs = get_sql("rotation-pairs-for-model")
 __active_plates_sql = get_sql("active-plates-at-time")
 __model_plates_sql = get_sql("plates-for-model")
+__plate_time_ranges = get_sql("plate-time-ranges")
 
 
 def plates_for_model(model):
@@ -216,8 +217,10 @@ def get_all_rotations(
 def get_rotation_series(model, *times, **kwargs):
     # Pre-compute plates for speed...
     # LOL this actually makes things slower
-    #  kwargs["plates"] = plates_for_model(model)
     check_model_id(model)
+
+    plate_ages = conn.execute(__plate_time_ranges, model_name=model,).fetchall()
+
     rowset = conn.execute(
         __model_rotation_pairs,
         model_name=model,
@@ -225,8 +228,11 @@ def get_rotation_series(model, *times, **kwargs):
         late_age=float(min(times)),
     ).fetchall()
     for t in times:
-        r = get_all_rotations(model, float(t), safe=False, rowset=rowset, **kwargs)
-        yield dict(rotations=list(r), time=float(t))
+        t = float(t)
+        plates = [p.id for p in plate_ages if p.old_lim > t and p.young_lim < t]
+        kwargs["plates"] = plates
+        r = get_all_rotations(model, t, safe=False, rowset=rowset, **kwargs)
+        yield dict(rotations=list(r), time=t)
 
 
 def get_plate_rotations(model, plate_id, verbose=False):
