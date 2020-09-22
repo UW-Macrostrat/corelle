@@ -12,8 +12,7 @@ SELECT
     ORDER BY plate_id, ref_plate_id, t_step
   ) prev_step
 FROM rotation
-WHERE plate_id = :plate_id
-  AND model_id = (
+WHERE model_id = (
     SELECT id
     FROM model
     WHERE name = :model_name)
@@ -53,12 +52,13 @@ SELECT
 	null r2_metadata,
 	false interpolated
 FROM plate_steps
-WHERE t_step = :time
+WHERE t_step <= :early_age
+  AND t_step >= :late_age
 UNION ALL
 -- Get rotations that are after `time`
 SELECT
   *,
   true interpolated
 FROM step_pairs
-WHERE r1_step < :time
- AND r2_step > :time
+WHERE r1_step <= :early_age
+  AND r2_step > :late_age

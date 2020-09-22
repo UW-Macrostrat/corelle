@@ -10,6 +10,7 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       # Serve frontend directly (build happens locally)
       - frontend_dist:/frontend:ro
+      - api_cache:/var/cache/nginx/
   api:
     build: .
     expose:
@@ -38,3 +39,4 @@ services:
 volumes:
   db_cluster:
   frontend_dist:
+  api_cache:

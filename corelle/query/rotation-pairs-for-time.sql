@@ -12,8 +12,7 @@ SELECT
     ORDER BY plate_id, ref_plate_id, t_step
   ) prev_step
 FROM rotation
-WHERE plate_id = :plate_id
-  AND model_id = (
+WHERE model_id = (
     SELECT id
     FROM model
     WHERE name = :model_name)
