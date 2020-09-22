@@ -3,7 +3,12 @@ import json
 from pg_viewtils import relative_path
 from os import path
 import numpy as N
-from .rotate.engine import get_rotation, get_all_rotations, RotationError
+from .rotate.engine import (
+    get_rotation,
+    get_all_rotations,
+    get_rotation_series,
+    RotationError,
+)
 from .rotate.math import euler_equal, quaternion_to_euler, euler_to_quaternion
 
 
@@ -113,3 +118,29 @@ def test_mongol_okhotsk():
 
     q = get_rotation("Seton2012", 417, 322)
     assert q is None
+
+
+def test_rotation_series():
+    """Getting a series of rotation vectors should be as simple as possible"""
+    times = N.arange(350, 340, -1)
+    res = list(get_rotation_series("Seton2012", *times, verbose=True))
+    for time, rot in zip(times, res):
+        assert rot["time"] == time
+        assert len(rot["rotations"]) == len(
+            list(get_all_rotations("Seton2012", float(time)))
+        )
+
+
+def test_rotation_series_2():
+    """Getting a series of rotation vectors should not take millenia"""
+    times = N.arange(350, 340, -0.1)
+    res = list(get_rotation_series("Seton2012", *times))
+    assert res[0]["time"] == 350
+
+
+# @pytest.mark.skip(reason="It's super slow!")
+def test_rotation_series_speed():
+    """Getting a series of rotation vectors should not take millenia"""
+    times = N.arange(350, 0, -1)
+    res = list(get_rotation_series("Seton2012", *times))
+    assert res[0]["time"] == 350

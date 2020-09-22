@@ -9,7 +9,7 @@ SELECT
   t_step,
   ARRAY[latitude, longitude, angle] rotation,
   lag(t_step, 1) OVER (
-    ORDER BY ref_plate_id, t_step
+    ORDER BY plate_id, ref_plate_id, t_step
   ) prev_step
 FROM rotation
 WHERE plate_id = :plate_id
@@ -39,6 +39,7 @@ FROM plate_steps p1
 JOIN plate_steps p2
   ON p1.t_step = p2.prev_step
  AND p1.ref_plate_id = p2.ref_plate_id
+ AND p1.plate_id = p2.plate_id
 )
 -- Get rotation that are exactly at `time`, if they exist
 SELECT
@@ -60,4 +61,4 @@ SELECT
   true interpolated
 FROM step_pairs
 WHERE r1_step < :time
-  AND r2_step > :time
+ AND r2_step > :time
