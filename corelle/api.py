@@ -11,6 +11,7 @@ from .rotate.engine import (
     get_rotation,
     get_all_rotations,
     get_plate_rotations,
+    get_rotation_series,
     rotate_point,
 )
 
@@ -136,18 +137,15 @@ class RotationSeries(RotationsResource):
         args = self.parser.parse_args()
         return list(self.get_all(args))
 
-    def all_rotations_for_time(self, args, time):
-        for (plate_id, q) in get_all_rotations(args["model"], time):
-            yield self.reducer(q, args, plate_id)
-
     def get_all(self, args):
         ages = N.arange(
             float(args["time_start"]), float(args["time_end"]), -float(args["interval"])
         )
-        for age in ages:
-            yield dict(
-                time=age, rotations=list(self.all_rotations_for_time(args, age)),
-            )
+        for vals in get_rotation_series(args["model"], *ages):
+            vals["rotations"] = [
+                self.reducer(q, args, plate_id) for plate_id, q in vals["rotations"]
+            ]
+            yield vals
 
 
 class Pole(ModelResource):

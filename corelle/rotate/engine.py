@@ -82,8 +82,15 @@ def get_rotation(
 
     params = dict(plate_id=plate_id, model_name=model_name, time=time)
 
+    row = None
+    pairs = []
     if rowset:
-        pairs = [p for p in rowset if p.plate_id == plate_id and p.r1_step <= time]
+        for ix, p in enumerate(rowset):
+            if p.plate_id == plate_id and p.r1_step <= time:
+                pairs = [p]
+                # Remove this row from the rowset (prevents weird recursion errors)
+                rowset = rowset[:ix] + rowset[ix + 1 :]
+                break
     else:
         # Fall back to fetching the data ourselves
         pairs = db.execute(__sql, **params).fetchall()

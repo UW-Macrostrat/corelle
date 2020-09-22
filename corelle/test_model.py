@@ -22,6 +22,16 @@ def test_seton_recursion():
     assert q is not None
 
 
+def test_wright_recursion():
+    """
+    There is a self-referential loop in the Wright2013 plate model
+    that we need to make sure our code can handle without infinite
+    recursion (which affected our first, naive implementation).
+    """
+    q = get_rotation("Wright2013", 601, 160)
+    assert q is not None
+
+
 times = [0, 2, 4, 10, 30, 60, 120, 130, 240, 480, 550, 620]
 
 
