@@ -1,6 +1,6 @@
 """
-This tiny module is essentially the equivalent of the Javascript `@macrostrat/corelle`
-library, for rotating plates provided by the Corelle API.
+This mini-module is essentially the equivalent of the Javascript `@macrostrat/corelle`
+library, for rotating plates provided by the Corelle server.
 """
 import sys
 import os
@@ -9,6 +9,7 @@ import quaternion as Q
 from shapely.ops import transform
 from shapely.geometry import shape
 from collections.abc import Iterable
+from pandas import DataFrame, isna
 
 # Add corelle to our path
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
@@ -42,3 +43,19 @@ def rotate_features(
         if q is None:
             continue
         yield rotate_geometry(q, shape(f["geometry"]))
+
+
+def rotate_dataframe(df, rotations, time):
+    """Rotate a GeoPandas GeoDataFrame. This function expects a
+       quaternion and geometry column."""
+
+    def rotate_row(row):
+        # This bit actually does the rotation
+        return rotate_geometry(row.quaternion, row.geometry)
+
+    rot = DataFrame.from_dict(rotations)
+    rot["time"] = time
+    res = df.merge(rot, on="plate_id")
+    res["geometry"] = res.apply(rotate_row, axis=1)
+    res.drop(columns=["quaternion"], inplace=True)
+    return res
