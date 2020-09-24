@@ -45,7 +45,7 @@ def rotate_features(
         yield rotate_geometry(q, shape(f["geometry"]))
 
 
-def rotate_dataframe(df, rotations, time):
+def rotate_dataframe(df, rotations, time=None):
     """Rotate a GeoPandas GeoDataFrame. This function expects a
        quaternion and geometry column."""
 
@@ -54,7 +54,8 @@ def rotate_dataframe(df, rotations, time):
         return rotate_geometry(row.quaternion, row.geometry)
 
     rot = DataFrame.from_dict(rotations)
-    rot["time"] = time
+    if time is not None:
+        rot["time"] = time
     res = df.merge(rot, on="plate_id")
     res["geometry"] = res.apply(rotate_row, axis=1)
     res.drop(columns=["quaternion"], inplace=True)

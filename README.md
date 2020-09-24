@@ -11,38 +11,63 @@ for the venerable dinnerware owned by everyone's grandma.
 - [Demo: pre-split coastline features](https://birdnest.geology.wisc.edu/corelle)
 - [Demo: externally-provided features](https://davenquinn.com/viz/corelle-demo-pbdb)
 - [Demo: regional rotation model](https://davenquinn.com/viz/corelle-demo-neogene-north-america)
-- [IPython notebook: usage from Python](notebooks/Corelle-Paleolatitude.ipynb)
+- [Notebook: basic usage from Python](notebooks/Corelle-Basic-Usage.ipynb)
+- [Notebook: advanced usage – building a paleolatitude history curve](notebooks/Corelle-Paleolatitude.ipynb)
 
-## Why does it exist?
+## Corelle's goals
 
-**GPlates** is a capable and complete system for creating and rendering plate rotations, and its
-PyGPlates library enables access through the Python programming language.
-However, the sophistication and "batteries-included" nature of GPlates comes at a cost of complexity
+Corelle is designed for "simplicity", in two broad categories:
+
+### Focused and well-defined capabilities
+
+Corelle faithfully implements a subset of [**GPlates**](https://www.gplates.org/) functionality supporting the rotation of existing plate models.
+While GPlates is a capable and complete system for building and rendering plate models,
+its sophistication (and that of its [PyGPlates](https://www.gplates.org/docs/pygplates/) binding) comes at a cost of complexity
 that inhibits installation, usage, and integration with other systems.
 
-Running and displaying plate rotation models is far simpler than creating them, though,
-so Corelle provides a simpler plate-rotation engine built on accumulating quaternions.
-Server components already used in Macrostrat's ecosystem (e.g. the PostgreSQL database engine)
-provide key parts of GPlates' functionality (e.g. the plate dependency tree and support for
-geospatial operations), simplifying the overall system and providing integration points with
-other infrastructure.
+**Corelle** is primarily designed for use by geoscientists outside of the
+tectonics domain, and makes it simple to achieve basic rotations. Its
+client/server design allows use in "satellite" applications without the
+overhead of a full GPlates system. This allows the integration of dynamic plate
+reconstructions into a variety of apps and analytical processes.
 
-Corelle is also designed to support quick and efficient use in web applications and other
-client-server code. Instead of sending pre-rotated features over the network,
-Corelle sends quaternions to be applied at the point of visualization. This approach
-dramatically decreases network traffic, allowing high-fidelity rotation models to be
-explored without repeatedly transferring map data.
+### Efficiency for web visualization
 
-Corelle's public-facing API is
-in beta but will eventually be integrated with [Macrostrat](https://macrostrat.org)'s core services,
-which power [PBDB](https://paleobiodb.org) and other projects.
+Corelle's architecture balances simplicity and power — its key advance is to
+calculate rotations on the server but leave the last step (rotating
+paleogeographic features to their final positions) to be run separately by each
+application.
+
+The final step in plate reconstruction, applying a vector rotation to geographic
+features, is mathematically simple but highly dependent on the input data —
+leaving it for the client makes it _much_ quicker to rotate large amounts of
+data dynamically through time, since map data doesn't have to repeatedly traverse
+the network.
+
+Some examples from the [Seton et al., 2012](https://www.sciencedirect.com/science/article/abs/pii/S0012825212000311) rotation model:
+
+- [Global rotations at 20 Ma](https://birdnest.geology.wisc.edu/corelle/api/rotate?model=Seton2012&time=20) weigh in at 33 kB.
+- [Global rotations at 1 Myr intervals from 100 Ma to the present](https://birdnest.geology.wisc.edu/corelle/api/rotate-series?model=Seton2012&time_start=100&time_end=0&interval=1) take up 2.8 MB.
+
+Since features are rotated at the point of use, the Corelle server is only responsible for tracking the rotations themselves, allowing for much more modular and composable systems.
 
 ## Structure of the project
 
+Corelle's plate rotation engine is built on a PostgreSQL/PostGIS database (to track the plate dependency tree and
+run geospatial operations). quaternion rotation vectors are accumulated in Python.
+Modeled rotation vectors are sent to be applied by separate software on the client;
+simple client libraries for [Python](notebooks/corelle_helpers.py) and [Javascript](https://www.npmjs.com/package/@macrostrat/map-components)
+are provided here.
+
+Corelle's public-facing API is
+in beta but will eventually be integrated with [Macrostrat](https://macrostrat.org)'s core services,
+which already power plate rotations in [PBDB](https://paleobiodb.org) and other projects.
+Upcoming work will focus on integrating new plate models with these applications.
+
 This repository contains several related components:
 
-- An API server that can rotate geometries using arbitrary plate models loaded
-  from GPlates `.rot` files and associated plate polygons.
+- An API server that provides rotations from several
+  GPlates `.rot` files and associated plate polygons.
 - A testing suite that validates conformance to GPlates results.
 - The `@macrostrat/corelle` Javascript library, which implements quaternion rotations
   to display rotations.
