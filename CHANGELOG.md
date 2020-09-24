@@ -2,8 +2,9 @@
 
 ## [Unreleased]
 
-- New [IPython notebook](notebooks/Corelle-Paleolatitude.ipynb) showing API usage
-  in Python; working towards paleolatitude tracers.
+- New [notebooks](notebooks) showing
+  [usage in Python](notebooks/Corelle-Basic-Usage.ipynb) and building towards
+  [paleolatitude tracers](notebooks/Corelle-Paleolatitude.ipynb).
 
 ## [1.0.4] - 2020-09-14
 
