@@ -1,28 +1,61 @@
 # Dockerfile for the corelle API
-FROM python:3.7-alpine
+FROM python:3.8-alpine
 
-WORKDIR /install
-COPY ./build-deps.sh .
-RUN sh ./build-deps.sh
+# Script to build the dependencies needed
+# for the Corelle backend
+# Note: `apk` is the package-management equivalent of `apt`
+# for Alpine Linux.
+RUN apk update && apk upgrade
+RUN apk add --no-cache python3-dev libstdc++ openblas \
+  libpq postgresql-dev postgresql-client \
+  bash curl
 
-COPY ./requirements.txt .
+##
+###
+# Deps for fiona importer
+RUN apk add --no-cache \
+  --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+  --repository http://dl-cdn.alpinelinux.org/alpine/edge/main \
+  geos \
+  gdal-dev \
+  proj
+
+# Install Poetry & ensure it is in $PATH
+RUN curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | POETRY_PREVIEW=1 python
+ENV PATH "/root/.poetry/bin:/opt/venv/bin:${PATH}"
+ENV POETRY_VIRTUALENVS_CREATE false
+
+RUN apk add --no-cache --virtual .build_deps gcc g++ gfortran \
+  musl-dev python3-dev
+RUN ln -s /usr/include/locale.h /usr/include/xlocale.h
+
+RUN pip install --no-cache-dir numpy==1.20.2
+RUN pip install --no-cache-dir numba==0.53.1
+RUN pip install --no-cache-dir scipy==1.6.2
+RUN pip install --no-cache-dir psycopg2==2.8.6
+RUN pip install --no-cache-dir numpy-quaternion==2021.4.5
+RUN pip install --no-cache-dir fiona==1.18.19
+
+RUN rm /usr/include/xlocale.h && apk del .build_deps
+
+COPY ./pyproject.toml .
 
 # psycopg2-binary doesn't work under alpine linux but is needed
 # for local installation
-RUN sed -i 's/psycopg2-binary/psycopg2/g' requirements.txt \
- && pip install -r requirements.txt
+RUN sed -i 's/psycopg2-binary/psycopg2/g' pyproject.toml \
+  && && poetry export --without-hashes -f requirements.txt --dev \
+  |  poetry run pip install -r /dev/stdin
+
 
 WORKDIR /module
 COPY ./setup.py /module/
 COPY ./corelle /module/corelle/
 
-RUN pip install -e .
 ENV CORELLE_DB=postgresql://postgres@database:5432/corelle
 
 # For importing data
-RUN apk add --no-cache curl bash
 
 WORKDIR /run
 COPY ./bin/* ./
 
-CMD ./run-docker
+CMD poetry run ./run-docker
