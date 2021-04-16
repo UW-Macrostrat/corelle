@@ -202,6 +202,27 @@ class Point(ModelResource):
         return out_points
 
 
+class Reconstruct(ModelResource):
+    """
+    Resource to do plate reconstructions for Macrostrat... e.g.
+    https://macrostrat.org/gplates/reconstruct?lng=-89&lat=43&age=500&model=scotese2017&referrer=rockd
+    """
+    def __init__(self):
+        super().__init__()
+        self.parser.add_argument("lat", type=float, required=True)
+        self.parser.add_argument("lng", type=float, required=True)
+        self.parser.add_argument("model", type=str, default="scotese2017")
+        self.parser.add_argument("age", type=float, required=True)
+        self.parser.add_argument("referrer", type=str)
+
+    def get(self):
+        args = self.parser.parse_args()
+        pt = [args["lon"], args["lat"]]
+        out = rotate_point(pt, args["model"], args["time"])
+        if out is None:
+            return None
+        return dict(type="Feature", geometry=dict(type="Point", coordinates=out))
+
 api.add_resource(Help, "/api")
 api.add_resource(ModernPlates, "/api/plates")
 api.add_resource(Rotation, "/api/rotate")
@@ -211,3 +232,4 @@ api.add_resource(Features, "/api/feature/<string:dataset>")
 api.add_resource(Pole, "/api/pole")
 api.add_resource(Point, "/api/point")
 api.add_resource(Model, "/api/model")
+api.add_resource(Reconstruct, "/api/reconstruct")
