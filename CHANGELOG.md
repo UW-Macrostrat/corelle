@@ -6,6 +6,12 @@
   [usage in Python](notebooks/Corelle-Basic-Usage.ipynb) and building towards
   [paleolatitude tracers](notebooks/Corelle-Paleolatitude.ipynb).
 
+
+## [1.1.0] - 2021-04-16
+
+- Added a `/reconstruct` service that mirrors Macrostrat's legacy endpoint
+- Switch dependency management to Poetry
+
 ## [1.0.4] - 2020-09-14
 
 - `old_lim` and `young_lim` for plate polygons are now defaulted to the model
