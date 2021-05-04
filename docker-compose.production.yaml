@@ -10,8 +10,7 @@ services:
     environment:
       - CERTBOT_EMAIL
       # Substitute in value for SPARROW_DOMAIN
-      - ENVSUBST_VARS=CORELLE_DOMAIN
-      - CORELLE_DOMAIN
+      # - CORELLE_DOMAIN
     volumes:
       # Swap out nginx conf for a certbot version
-      - ./conf/nginx.certbot.conf:/etc/nginx/user.conf.d/site.conf:ro
+      - ./conf/nginx.certbot.conf:/etc/nginx/user_conf.d/site.conf:ro
