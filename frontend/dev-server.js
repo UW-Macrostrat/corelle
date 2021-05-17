@@ -18,6 +18,8 @@ const backend = spawn("corelle", ["serve", "--debug", "-p", port], {
 
 let app = express();
 
+process.env.CORELLE_API_BASE_URL = `http://127.0.0.1:${[port]}/api`
+
 let bundler = new Bundler("./index.html", {
   // Scope hoisting interferes with CSS bundling apparently
   //scopeHoist: true,

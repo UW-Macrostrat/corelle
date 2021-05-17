@@ -6,7 +6,8 @@
   "scripts": {
     "preinstall": "npm install -D npm-run-all linklocal && linklocal",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node -r esm dev-server.js"
+    "dev": "node -r esm dev-server.js",
+    "dev:local": "parcel index.html"
   },
   "author": "Daven Quinn",
   "alias": {
