@@ -14,7 +14,7 @@ import {
   NumericInput,
 } from "@blueprintjs/core";
 import { RotationsContext } from "@macrostrat/corelle";
-import styles from "./main.styl";
+import * as styles from "./main.module.styl";
 import { MapSettingsContext } from "./map-settings";
 
 const h = hyper.styled(styles);

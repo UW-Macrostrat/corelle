@@ -13,7 +13,7 @@ import "@macrostrat/map-components/dist/esm/index.css";
 import { MapSettingsContext } from "./map-settings";
 import chroma from "chroma-js";
 
-import styles from "./main.styl";
+import * as styles from "./main.module.styl";
 
 const h = hyper.styled(styles);
 
