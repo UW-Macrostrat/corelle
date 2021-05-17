@@ -13,7 +13,7 @@
   "alias": {
     "react": "./node_modules/react",
     "react-dom": "./node_modules/react-dom",
-    "@macrostrat/corelle": "./corelle-client"
+    "corelle-client": "./corelle-client"
   },
   "license": "ISC",
   "devDependencies": {
@@ -30,6 +30,7 @@
     "stylus": "^0.54.5",
     "typescript": "^3.9.3"
   },
+  "prettier": {},
   "dependencies": {
     "@blueprintjs/core": "^3.18.0",
     "@macrostrat/corelle": "^1.0.4",

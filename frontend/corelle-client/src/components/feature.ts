@@ -68,6 +68,8 @@ const PlateFeatureLayer = function (props: FeatureDatasetProps) {
 
   const data: any[] = useRotationsAPI(`/feature/${name}`, { model }) ?? [];
 
+  console.log(data);
+
   return h(
     FeatureLayer,
     { className: name, useCanvas, style },

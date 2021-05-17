@@ -2,7 +2,7 @@ import { useState, useContext, useEffect, useCallback } from "react";
 import { WorldMap } from "./world-map";
 import ControlPanel from "./control-panel";
 import h from "@macrostrat/hyper";
-import { RotationsProvider } from "@macrostrat/corelle";
+import { RotationsProvider } from "corelle-client";
 import { MapSettingsProvider } from "./map-settings";
 import { Spinner } from "@blueprintjs/core";
 import {
@@ -13,23 +13,28 @@ import {
   getQueryString,
 } from "@macrostrat/ui-components";
 
-const qs = getQueryString()
+const qs = getQueryString();
 
 const initialState = {
-    time: qs?.time ?? 0,
-    model: qs?.model ?? "Seton2012",
-    features: qs?.features ?? "ne_110m_land",
-  }
-
+  time: qs?.time ?? 0,
+  model: qs?.model ?? "Seton2012",
+  features: qs?.features ?? "ne_110m_land",
+};
 function App(props) {
   const [state, setState] = useState(initialState);
 
-  useEffect(() =>{
-    setQueryString(state)
-  }, [state])
+  useEffect(() => {
+    setQueryString(state);
+  }, [state]);
 
-  const setTime = useCallback((time) => setState({ ...state, time }), [setState]);
-  const setModel = useCallback((model) => setState({ ...state, model }), [setState]);
+  const setTime = useCallback(
+    (time) => setState({ ...state, time }),
+    [setState]
+  );
+  const setModel = useCallback(
+    (model) => setState({ ...state, model }),
+    [setState]
+  );
 
   const { baseURL } = useContext(APIContext);
   const models = useAPIResult<string[]>("/model", null, (data: any) =>
