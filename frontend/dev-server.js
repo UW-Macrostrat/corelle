@@ -3,7 +3,8 @@ This dev server supports local development.
 For development in a Docker containerized setting,
 parcel should be run directly.
 */
-import Bundler from "parcel-bundler";
+// TODO: this may not run with Parcel 2
+import Bundler from "parcel";
 import express from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import path from "path";
@@ -18,7 +19,7 @@ const backend = spawn("corelle", ["serve", "--debug", "-p", port], {
 
 let app = express();
 
-process.env.CORELLE_API_BASE_URL = `http://127.0.0.1:${[port]}/api`
+process.env.CORELLE_API_BASE_URL = `http://127.0.0.1:${port}/api`
 
 let bundler = new Bundler("./index.html", {
   // Scope hoisting interferes with CSS bundling apparently
