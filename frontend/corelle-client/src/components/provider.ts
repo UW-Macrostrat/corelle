@@ -1,4 +1,4 @@
-import { createContext, useContext, PropsWithChildren } from "react";
+import React, { createContext, useContext } from "react";
 import h from "@macrostrat/hyper";
 import { useAPIResult } from "@macrostrat/ui-components";
 import join from "url-join";
@@ -16,7 +16,7 @@ const RotationsAPIContext = createContext({
   endpoint: defaultEndpoint,
 });
 
-const useRotationsAPI = (route, ...args): any[] => {
+const useRotationsAPI: typeof useAPIResult = (route, ...args): any[] => {
   const { endpoint } = useContext(RotationsAPIContext);
   const uri = join(endpoint, route);
   return useAPIResult(uri, ...args);
@@ -31,7 +31,7 @@ type P = {
   debounce: number;
 } & RotationOptions;
 
-function RotationsProvider(props: PropsWithChildren<P>) {
+function RotationsProvider(props: React.PropsWithChildren<P>) {
   const { time, children, model, endpoint, debounce } = props;
   const rotations: any[] =
     useAPIResult(
