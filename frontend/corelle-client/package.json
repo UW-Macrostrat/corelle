@@ -1,6 +1,6 @@
 {
   "name": "@macrostrat/corelle",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "A client library for the Corelle plate-rotation API",
   "scripts": {
     "dev": "rollup -c -w & tsc --emitDeclarationOnly -w",

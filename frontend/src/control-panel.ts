@@ -13,7 +13,7 @@ import {
   Alignment,
   NumericInput,
 } from "@blueprintjs/core";
-import { RotationsContext } from "corelle-client";
+import { RotationsContext } from "../corelle-client/src/components";
 import * as styles from "./main.module.styl";
 import { MapSettingsContext } from "./map-settings";
 

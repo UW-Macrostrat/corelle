@@ -13,7 +13,7 @@
   "alias": {
     "react": "./node_modules/react",
     "react-dom": "./node_modules/react-dom",
-    "corelle-client": "./corelle-client"
+    "@macrostrat/map-components": "./node_modules/@macrostrat/map-components"
   },
   "license": "ISC",
   "devDependencies": {
@@ -33,7 +33,7 @@
   "prettier": {},
   "dependencies": {
     "@blueprintjs/core": "^3.18.0",
-    "@macrostrat/corelle": "^1.0.4",
+    "@macrostrat/corelle": "file:./corelle-client",
     "@macrostrat/hyper": "^1.2.10",
     "@macrostrat/map-components": "^0.2.6",
     "@macrostrat/ui-components": "^0.5.1",

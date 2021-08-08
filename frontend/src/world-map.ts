@@ -6,7 +6,7 @@ import {
   PlateFeatureLayer,
   RotationsContext,
   PlatePolygons,
-} from "@macrostrat/corelle";
+} from "../corelle-client/src/components";
 import { Globe, MapContext } from "@macrostrat/map-components";
 import "@macrostrat/map-components/dist/esm/index.css";
 

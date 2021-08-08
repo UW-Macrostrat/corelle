@@ -9,7 +9,8 @@ import { RotationData, RotationOptions } from "../rotations";
 // https://stackoverflow.com/questions/16964993/compose-two-rotations-in-d3-geo-projection
 // https://www.jasondavies.com/maps/rotate/
 
-const defaultEndpoint = "https://birdnest.geology.wisc.edu/corelle/api";
+// TODO: this is hardcoded now essentially
+const defaultEndpoint = "https://rotate.macrostrat.org/api";
 
 const RotationsAPIContext = createContext({
   endpoint: defaultEndpoint,
@@ -17,7 +18,8 @@ const RotationsAPIContext = createContext({
 
 const useRotationsAPI = (route, ...args): any[] => {
   const { endpoint } = useContext(RotationsAPIContext);
-  return useAPIResult(join(endpoint, route), ...args);
+  const uri = join(endpoint, route);
+  return useAPIResult(uri, ...args);
 };
 
 const defaultRotations = new RotationData({ time: 0, rotations: [] });
