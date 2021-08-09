@@ -6,6 +6,7 @@ import { RotationsContext, useRotationsAPI } from "./provider";
 
 function usePlatePolygons(modelOverride: string | null = null) {
   const { model } = useContext<any>(RotationsContext);
+  console.log(model);
   return useRotationsAPI("/plates", { model: modelOverride ?? model });
 }
 
@@ -13,12 +14,12 @@ function PlatePolygon(props) {
   // An arbitrary feature tied to a plate
   const { feature, ...rest } = props;
   const { id, properties } = feature;
-  const { old_lim, young_lim } = properties;
+  const { old_lim, young_lim, plate_id } = properties;
   return h(PlateFeature, {
     feature,
     oldLim: old_lim,
     youngLim: young_lim,
-    plateId: id,
+    plateId: plate_id ?? id,
     ...rest,
   });
 }

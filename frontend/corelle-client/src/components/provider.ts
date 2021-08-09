@@ -1,4 +1,4 @@
-import { createContext, useContext, PropsWithChildren } from "react";
+import React, { createContext, useContext } from "react";
 import h from "@macrostrat/hyper";
 import { useAPIResult } from "@macrostrat/ui-components";
 import join from "url-join";
@@ -9,15 +9,17 @@ import { RotationData, RotationOptions } from "../rotations";
 // https://stackoverflow.com/questions/16964993/compose-two-rotations-in-d3-geo-projection
 // https://www.jasondavies.com/maps/rotate/
 
-const defaultEndpoint = "https://birdnest.geology.wisc.edu/corelle/api";
+// TODO: this is hardcoded now essentially
+const defaultEndpoint = "https://rotate.macrostrat.org/api";
 
 const RotationsAPIContext = createContext({
   endpoint: defaultEndpoint,
 });
 
-const useRotationsAPI = (route, ...args): any[] => {
+const useRotationsAPI: typeof useAPIResult = (route, ...args): any[] => {
   const { endpoint } = useContext(RotationsAPIContext);
-  return useAPIResult(join(endpoint, route), ...args);
+  const uri = join(endpoint, route);
+  return useAPIResult(uri, ...args);
 };
 
 const defaultRotations = new RotationData({ time: 0, rotations: [] });
@@ -29,7 +31,7 @@ type P = {
   debounce: number;
 } & RotationOptions;
 
-function RotationsProvider(props: PropsWithChildren<P>) {
+function RotationsProvider(props: React.PropsWithChildren<P>) {
   const { time, children, model, endpoint, debounce } = props;
   const rotations: any[] =
     useAPIResult(

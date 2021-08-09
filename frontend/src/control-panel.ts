@@ -13,8 +13,8 @@ import {
   Alignment,
   NumericInput,
 } from "@blueprintjs/core";
-import { RotationsContext } from "@macrostrat/corelle";
-import styles from "./main.styl";
+import { RotationsContext } from "../corelle-client/src/components";
+import * as styles from "./main.module.styl";
 import { MapSettingsContext } from "./map-settings";
 
 const h = hyper.styled(styles);
@@ -62,9 +62,8 @@ const SelectFeatureDataset = function (props) {
 };
 
 const SelectProjection = function (props) {
-  const { projection, projections, updateState } = useContext(
-    MapSettingsContext
-  );
+  const { projection, projections, updateState } =
+    useContext(MapSettingsContext);
   const options = projections.map((d) => d.id);
   const value = projection.id;
   const onChange = function (value) {

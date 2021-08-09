@@ -1,0 +1,4 @@
+{
+  "presets": ["@parcel/babel-preset-env", "@babel/preset-react"],
+  "plugins": ["@babel/plugin-transform-typescript", "@parcel/babel-plugin-transform-runtime"]
+}
