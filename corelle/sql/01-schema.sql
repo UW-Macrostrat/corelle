@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS rotation (
 );
 
 -- Features that can be clipped by plate IDs and returned
-CREATE TABLE IF NOT EXISTS feature (
+CREATE TABLE IF NOT EXISTS corelle.feature (
   id serial PRIMARY KEY,
   dataset_id text NOT NULL,
   geometry geometry(Geometry, 4326),

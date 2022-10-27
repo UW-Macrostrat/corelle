@@ -1,5 +1,5 @@
 SELECT id
-FROM plate
+FROM corelle.plate
 WHERE model_id = (
   SELECT id
   FROM model

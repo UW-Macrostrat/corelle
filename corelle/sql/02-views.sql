@@ -10,8 +10,8 @@ SELECT
   p.name,
   ST_AsGeoJSON(geometry)::jsonb geometry,
   pp.model_id
-FROM plate_polygon pp
-JOIN plate p
+FROM corelle.plate_polygon pp
+JOIN corelle.plate p
   ON pp.plate_id = p.id
  AND pp.model_id = p.model_id
 ),
@@ -43,5 +43,5 @@ SELECT
   m.name model_name,
   c.geojson
 FROM c
-JOIN model m
+JOIN corelle.model m
   ON m.id = c.model_id;

@@ -8,18 +8,12 @@ conn_string = environ.get("CORELLE_DB", "postgresql:///plate-rotations")
 db = create_engine(conn_string)
 create_session = sessionmaker(bind=db)
 
-__drop_tables = """
-DROP TABLE IF EXISTS
-corelle.model, corelle.plate, corelle.plate_polygon, corelle.rotation
-CASCADE
-"""
-
 
 def initialize(drop=False):
     # Run all SQL in the `sql` directory
     dn = relative_path(__file__, "sql")
     if drop:
-        db.execute(__drop_tables)
+        db.execute("DROP SCHEMA corelle CASCADE")
 
     session = create_session()
 

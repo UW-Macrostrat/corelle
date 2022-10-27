@@ -11,11 +11,11 @@ SELECT
     )
   )::json geometry,
 	'Feature' "type"
-FROM feature f
-JOIN plate_polygon p
+FROM corelle.feature f
+JOIN corelle.plate_polygon p
   ON p.geometry && f.geometry
  AND ST_Intersects(p.geometry, f.geometry)
-JOIN model m
+JOIN corelle.model m
   ON m.id = p.model_id
 WHERE dataset_id = :dataset
-  AND model_id = (SELECT id FROM model WHERE name = :model_name)
+  AND model_id = (SELECT id FROM corelle.model WHERE name = :model_name)

@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-args='-h database -d corelle -p 5432 -U postgres'
+args="${CORELLE_DB_ARGS:-"-h database -d corelle -p 5432 -U postgres"}"
 until pg_isready $args
 do
   echo "Waiting for database"

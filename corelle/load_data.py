@@ -35,10 +35,10 @@ def create_model(name, **kwargs):
     return conn.execute(model.select().where(model.c.name == name)).first()[0]
 
 
-__plate = reflect_table(db, "plate")
-__feature = reflect_table(db, "feature")
-__rotation = reflect_table(db, "rotation")
-__plate_polygon = reflect_table(db, "plate_polygon")
+__plate = reflect_table(db, "plate", schema_name="corelle")
+__feature = reflect_table(db, "feature", schema_name="corelle")
+__rotation = reflect_table(db, "rotation", schema_name="corelle")
+__plate_polygon = reflect_table(db, "plate_polygon", schema_name="corelle")
 
 
 def pg_geometry(feature):

@@ -5,10 +5,10 @@ SELECT
   old_lim,
   ST_AsGeoJSON(geometry) geometry,
   p.name
-FROM plate_polygon pp
-JOIN plate p
+FROM corelle.plate_polygon pp
+JOIN corelle.plate p
   ON pp.plate_id = p.id
  AND pp.model_id = p.model_id
-JOIN model m
+JOIN corelle.model m
   ON p.model_id = m.id
 WHERE m.name = :model_name

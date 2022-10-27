@@ -11,10 +11,10 @@ SELECT
   lag(t_step, 1) OVER (
     ORDER BY plate_id, ref_plate_id, t_step
   ) prev_step
-FROM rotation
+FROM corelle.rotation
 WHERE model_id = (
     SELECT id
-    FROM model
+    FROM corelle.model
     WHERE name = :model_name)
 ORDER BY t_step
 ),
