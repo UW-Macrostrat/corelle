@@ -7,7 +7,6 @@ services:
     ports:
       - "${CORELLE_HTTP_PORT:-5480}:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
       # Serve frontend directly (build happens locally)
       - frontend_dist:/frontend:ro
       - api_cache:/var/cache/nginx/
