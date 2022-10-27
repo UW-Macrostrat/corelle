@@ -22,7 +22,7 @@ def connect():
 
 
 def create_model(name, **kwargs):
-    model = reflect_table(db, "model")
+    model = reflect_table(db, "model", schema="corelle")
     conn = connect()
     try:
         conn.execute(

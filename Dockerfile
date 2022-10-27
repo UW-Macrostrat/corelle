@@ -1,22 +1,18 @@
 # Dockerfile for the corelle API
 FROM python:3.10
 
-WORKDIR /install
-COPY ./build-deps.sh .
-RUN sh ./build-deps.sh
+WORKDIR /code
 
-COPY ./requirements.txt .
+RUN pip install poetry==1.2.2
 
-# psycopg2-binary doesn't work under alpine linux but is needed
-# for local installation
-RUN sed -i 's/psycopg2-binary/psycopg2/g' requirements.txt \
-  && pip install -r requirements.txt
+COPY ./corelle-api-server/poetry.lock ./corelle-api-server/pyproject.toml /code/
 
-WORKDIR /module
-COPY ./setup.py /module/
-COPY ./corelle /module/corelle/
+RUN poetry install --no-dev --no-root
 
-RUN pip install -e .
+COPY ./corelle-api-server/corelle_server ./corelle_server
+
+RUN poetry install --no-dev --no-root
+
 ENV CORELLE_DB=postgresql://postgres@database:5432/corelle
 
 WORKDIR /run

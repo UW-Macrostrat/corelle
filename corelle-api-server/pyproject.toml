@@ -5,7 +5,7 @@ license = "MIT"
 name = "corelle-api-server"
 version = "1.0.0"
 
-package = [
+packages = [
   {include = "corelle_server"},
 ]
 
