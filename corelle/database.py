@@ -10,7 +10,7 @@ create_session = sessionmaker(bind=db)
 
 __drop_tables = """
 DROP TABLE IF EXISTS
-model, plate, plate_polygon, rotation
+corelle.model, corelle.plate, corelle.plate_polygon, corelle.rotation
 CASCADE
 """
 

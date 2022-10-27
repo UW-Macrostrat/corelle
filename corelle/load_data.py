@@ -112,7 +112,7 @@ def import_plates(model_id, plates, fields={}):
         trans.commit()
 
         # For faster updates, this materialized view could become an actual table
-        conn.execute("REFRESH MATERIALIZED VIEW cache.plate_polygon")
+        conn.execute("REFRESH MATERIALIZED VIEW corelle.plate_polygon_cache")
 
 
 def import_feature(dataset, feature):

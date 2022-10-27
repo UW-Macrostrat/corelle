@@ -1,5 +1,5 @@
 # Dockerfile for the corelle API
-FROM python:3.8-alpine
+FROM python:3.10
 
 WORKDIR /install
 COPY ./build-deps.sh .

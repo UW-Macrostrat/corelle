@@ -1,5 +1,5 @@
-DROP MATERIALIZED VIEW IF EXISTS cache.plate_polygon;
-CREATE MATERIALIZED VIEW cache.plate_polygon AS
+DROP MATERIALIZED VIEW IF EXISTS corelle.plate_polygon_cache;
+CREATE MATERIALIZED VIEW corelle.plate_polygon_cache AS
 WITH a AS (
 -- Basic query for plate polygons
 SELECT

@@ -57,7 +57,8 @@ CREATE TABLE IF NOT EXISTS feature (
   properties jsonb
 );
 
-CREATE TABLE IF NOT EXISTS cache.feature (
+/* Cache of features pre-converted to GeoJSON (probably should be deprecated!)*/
+CREATE TABLE IF NOT EXISTS corelle.feature_cache (
   model_id integer NOT NULL REFERENCES model(id),
   model_name text NOT NULL REFERENCES model(name),
   dataset_id text NOT NULL,

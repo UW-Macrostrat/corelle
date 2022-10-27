@@ -55,7 +55,7 @@ class ModelResource(Resource):
 
 class AllFeatures(Resource):
     def get(self):
-        q = text("SELECT DISTINCT dataset_id FROM cache.feature")
+        q = text("SELECT DISTINCT dataset_id FROM corelle.feature_cache")
         return [r[0] for r in conn.execute(q)]
 
 
@@ -207,6 +207,7 @@ class Reconstruct(ModelResource):
     Resource to do plate reconstructions for Macrostrat... e.g.
     https://macrostrat.org/gplates/reconstruct?lng=-89&lat=43&age=500&model=scotese2017&referrer=rockd
     """
+
     def __init__(self):
         super().__init__()
         self.parser.add_argument("lat", type=float, required=True)
@@ -225,8 +226,9 @@ class Reconstruct(ModelResource):
             type="FeatureCollection",
             features=[
                 dict(type="Feature", geometry=dict(type="Point", coordinates=out))
-            ]
+            ],
         )
+
 
 api.add_resource(Help, "/api")
 api.add_resource(ModernPlates, "/api/plates")

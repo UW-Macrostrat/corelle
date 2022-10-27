@@ -25,7 +25,7 @@ JOIN model m
 WHERE dataset_id = :dataset_id
 GROUP BY model_id
 )
-INSERT INTO cache.feature (model_id, model_name, geojson, dataset_id)
+INSERT INTO corelle.feature_cache (model_id, model_name, geojson, dataset_id)
 SELECT
 	model_id,
 	(SELECT name FROM model WHERE id = model_id) AS model_name,
