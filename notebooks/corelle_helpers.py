@@ -1,6 +1,6 @@
 """
 This mini-module is essentially the equivalent of the Javascript `@macrostrat/corelle`
-library, for rotating plates provided by the Corelle server.
+library, for rotating plates provided by a Corelle rotations server.
 """
 import sys
 import os
@@ -47,7 +47,7 @@ def rotate_features(
 
 def rotate_dataframe(df, rotations, time=None):
     """Rotate a GeoPandas GeoDataFrame. This function expects a
-       quaternion and geometry column."""
+    quaternion and geometry column."""
 
     def rotate_row(row):
         # This bit actually does the rotation
