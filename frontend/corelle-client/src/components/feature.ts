@@ -11,7 +11,12 @@ import {
 function usePathGenerator(plateId, context = null) {
   // Filter out features that are too young
   const { geographyRotator } = useRotations();
-  const { projection } = useContext(MapContext);
+  const ctx = useContext(MapContext);
+
+  const { projection } = ctx;
+
+  if (projection == null) console.log("Projection not found");
+
   if (projection == null || geographyRotator == null) return null;
 
   const rotate = geographyRotator(plateId);
