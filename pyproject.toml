@@ -1,33 +1,23 @@
 [tool.poetry]
 authors = ["Daven Quinn <dev@davenquinn.com>"]
 description = "An API service to support plate rotations on the web"
-name = "corelle"
+name = "corelle.env"
 version = "2.0.0"
+
+packages = [
+  {include = "corelle"},
+]
 
 [tool.poetry.dependencies]
 
-# Fiona = "^1.8.19"
-# Flask = "^1.1.2"
-# Flask-RESTful = "^0.3.8"
-# PyYAML = "^5.4.1"
-# Shapely = "^1.7.1"
-# click = "^7.1.2"
 "corelle.api_server" = {path = "./api-server", develop = true}
-# ipython = "^7.22.0"
-# numba = "^0.53.1"
-# numpy = "^1.20.2"
-# numpy-quaternion = "^2021.4.5"
-# pandas = "^1.2.4"
-# pg-viewtils = {url = "https://github.com/davenquinn/pg-viewtils/archive/master.zip"}
-# psycopg2-binary = "^2.8.6"
 python = ">=3.8,<4.0"
-# simplejson = "^3.17.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.3"
 
 [tool.poetry.scripts]
-corelle = 'corelle.cli:cli'
+corelle = 'corelle.api_server.cli:cli'
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
