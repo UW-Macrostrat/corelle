@@ -2,11 +2,11 @@
 authors = ["Daven Quinn <dev@davenquinn.com>"]
 description = "An API server application for the Corelle plate-rotation system"
 license = "MIT"
-name = "corelle-api-server"
+name = "corelle.api_server"
 version = "1.0.0"
 
 packages = [
-  {include = "corelle_server"},
+  {include = "corelle"},
 ]
 
 [tool.poetry.dependencies]
@@ -15,9 +15,10 @@ Fiona = "^1.8.22"
 Flask = "^1"
 Flask-RESTful = "^0.3.9"
 PyYAML = "^6.0"
+numba = "^0.56.3"
 numpy = "^1.23.4"
 numpy-quaternion = "^2022.4.2"
-pg_viewtils = "https://github.com/davenquinn/pg-viewtils/archive/master.zip"
+pg-viewtils = {url = "https://github.com/davenquinn/pg-viewtils/archive/master.zip"}
 psycopg2-binary = "^2.9.5"
 python = "^3.8"
 simplejson = "^3.17.6"
