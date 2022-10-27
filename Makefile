@@ -3,13 +3,12 @@ all: install
 .PHONY: install init update_functions test dev features
 
 install:
-	pip install -r requirements.txt
-	pip install -e .
+	poetry install
 
 init:
 	-createdb plate-rotations
-	corelle init --drop
-	bin/load-models
+	poetry run corelle init --drop
+	poetry run bin/load-models
 
 update_functions:
 	cat corelle/sql/02-functions.sql | psql plate-rotations
@@ -17,10 +16,10 @@ update_functions:
 baseurl := https://raw.githubusercontent.com/martynafford/natural-earth-geojson/master
 
 features: bin/load-features
-	bin/load-features --redo plate-rotations
+	poetry run bin/load-features --redo plate-rotations
 
 test:
-	bin/run-tests
+	poetry run bin/run-tests
 
 dev:
-	cd frontend && npm run dev
+	cd frontend && poetry run npm run dev

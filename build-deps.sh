@@ -7,8 +7,10 @@ apk update
 apk upgrade
 apk add --no-cache python3-dev libstdc++ openblas \
     libpq postgresql-dev postgresql-client \
-    curl bash
+    bash curl
 
+##
+###
 # Deps for fiona importer
 apk add --no-cache \
     --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
@@ -28,5 +30,5 @@ pip install --no-cache-dir numpy-quaternion
 pip install --no-cache-dir fiona
 pip install --no-cache-dir greenlet
 
-rm /usr/include/xlocale.h
 apk del .build_deps
+rm /usr/include/xlocale.h
