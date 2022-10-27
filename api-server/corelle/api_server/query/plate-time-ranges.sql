@@ -1,11 +1,9 @@
 SELECT
-  p.id,
-  coalesce(pp.old_lim, m.max_age) old_lim,
-  coalesce(pp.young_lim, m.min_age) young_lim
-FROM corelle.plate p
-JOIN corelle.plate_polygon pp
-  ON p.id = pp.plate_id
- AND p.model_id = pp.model_id
+	plate_id id,
+	model_id,
+	coalesce(p.old_lim, m.max_age, 4500) old_lim,
+	coalesce(p.young_lim, m.min_age, 0) young_lim
+FROM corelle.plate_polygon p
 JOIN corelle.model m
-  ON p.model_id = m.id
+  ON m.id = p.model_id
 WHERE m.name = :model_name

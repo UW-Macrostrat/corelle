@@ -35,7 +35,7 @@ def load_fields(fn):
         if ext == ".json":
             return json.load(f)
         if ext in [".yaml", ".yml"]:
-            return yaml.load(f)
+            return yaml.load(f, Loader=yaml.SafeLoader)
     return None
 
 
@@ -148,3 +148,10 @@ def shell():
     from .api import app
 
     embed()
+
+
+@cli.command(name="cache-rotations")
+def build_cache():
+    from .build_cache import build_rotation_caches
+
+    build_rotation_caches()

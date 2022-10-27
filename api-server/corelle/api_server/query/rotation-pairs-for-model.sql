@@ -14,7 +14,7 @@ SELECT
 FROM corelle.rotation
 WHERE model_id = (
     SELECT id
-    FROM model
+    FROM corelle.model
     WHERE name = :model_name)
 ORDER BY t_step
 ),

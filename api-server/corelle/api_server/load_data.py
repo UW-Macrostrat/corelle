@@ -8,7 +8,7 @@ import fiona
 from click import echo, style
 
 from .database import db, create_session
-from .rotate.engine import get_rotation
+from .rotate.engine import get_rotation, get_rotation_series
 from .query import get_sql
 
 __conn = None
@@ -35,10 +35,10 @@ def create_model(name, **kwargs):
     return conn.execute(model.select().where(model.c.name == name)).first()[0]
 
 
-__plate = reflect_table(db, "plate", schema_name="corelle")
-__feature = reflect_table(db, "feature", schema_name="corelle")
-__rotation = reflect_table(db, "rotation", schema_name="corelle")
-__plate_polygon = reflect_table(db, "plate_polygon", schema_name="corelle")
+__plate = reflect_table(db, "plate", schema="corelle")
+__feature = reflect_table(db, "feature", schema="corelle")
+__rotation = reflect_table(db, "rotation", schema="corelle")
+__plate_polygon = reflect_table(db, "plate_polygon", schema="corelle")
 
 
 def pg_geometry(feature):
@@ -215,6 +215,7 @@ def import_rotations(model_id, rotations):
 
 
 def cache_rotations(model_id):
+
     return
     v = db.execute(__rotation.select(__rotation.c.model_id == model_id))
     for row in v:
@@ -226,7 +227,7 @@ def import_model(
     name, plates, rotations, fields=None, overwrite=False, min_age=None, max_age=None
 ):
     conn = connect()
-    q = text("SELECT count(*) FROM model WHERE name=:name")
+    q = text("SELECT count(*) FROM corelle.model WHERE name=:name")
     res = conn.execute(q, name=name).scalar()
     if res == 1 and not overwrite:
         print("Model has already been imported.")

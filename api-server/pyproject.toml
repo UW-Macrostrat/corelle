@@ -23,6 +23,8 @@ pg-viewtils = {url = "https://github.com/davenquinn/pg-viewtils/archive/master.z
 psycopg2-binary = "^2.9.5"
 python = "^3.8"
 simplejson = "^3.17.6"
+typer = "^0.6.1"
+rich = "^12.6.0"
 
 [tool.poetry.dev-dependencies]
 

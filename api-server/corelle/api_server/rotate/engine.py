@@ -1,21 +1,12 @@
 import numpy as N
 import quaternion as Q
-from pg_viewtils import reflect_table
 from click import secho
 from decimal import Decimal
-from sqlalchemy.sql import select
-from sqlalchemy.dialects.postgresql import array, insert
 
 from .math import cart2sph, sph2cart, euler_to_quaternion, quaternion_to_euler
 from ..query import get_sql
 from ..database import db
-
-__model = reflect_table(db, "model")
-__plate = reflect_table(db, "plate")
-__rotation = reflect_table(db, "rotation")
-__rotation_cache = reflect_table(db, "rotation")
-
-conn = db.connect()
+from .storage import conn, model_id
 
 
 class RotationError(Exception):
@@ -44,48 +35,6 @@ def build_cache(q, cache_args):
         except KeyError:
             pass
     return q
-
-
-def add_to_cache(cache_args, q):
-    # Builds an on-database cache of rotations
-    (model_name, plate_id, time) = cache_args
-
-    rval = None
-    if q is not None:
-        rval = array([q.w, q.x, q.y, q.z])
-    stmt = select([__model.c.id, plate_id, time, rval]).where(
-        __model.c.name == model_name
-    )
-    conn.execute(
-        insert(__rotation_cache)
-        .from_select(["model_id", "plate_id", "t_step", "rotation"], stmt)
-        .on_conflict_do_update(
-            constraint=__rotation_cache.primary_key, set_=dict(rotation=rval)
-        )
-    )
-    return q
-
-
-def get_from_cache(cache_args):
-    # Get a rotation from the in-memory cache
-    (model_name, plate_id, time) = cache_args
-
-    tbl = __rotation_cache.join(__model, __model.c.id == __rotation_cache.c.model_id)
-    res = conn.execute(
-        select([__rotation_cache.c.rotation])
-        .select_from(tbl)
-        .where(__model.c.name == model_name)
-        .where(__rotation_cache.c.plate_id == plate_id)
-        .where(__rotation_cache.c.t_step == time)
-    ).scalar()
-    if res is not None:
-        return N.quaternion(*res)
-    return None
-
-
-def model_id(name):
-    stmt = __model.select().where(__model.c.name == name)
-    return conn.execute(stmt).scalar()
 
 
 __sql = get_sql("rotation-pairs")
