@@ -110,12 +110,14 @@ def get_rotation(
 ):
     """Core function to rotate a plate to a time by accumulating quaternions"""
     time = float(time)
-    cache_args = (model_name, plate_id, time)
-    cached_val = get_from_cache(cache_args)
-    if cached_val is not None:
-        return cached_val
+    cache_args = (model_name, plate_id, Decimal(time))
+    if cache_args in cache:
+        return cache[cache_args]
 
-    __cache = lambda q: add_to_cache(cache_args, q)
+    if safe:
+        check_model_id(model_name)
+
+    __cache = lambda q: build_cache(q, cache_args)
 
     prefix = " " * depth
     if verbose:
@@ -149,6 +151,23 @@ def get_rotation(
 
     q1 = euler_to_quaternion(row.r1_rotation)
 
+    if not row.interpolated:
+        base = get_rotation(
+            model_name,
+            row.ref_plate_id,
+            row.r1_step,
+            verbose=verbose,
+            depth=depth + 1,
+            rowset=rowset,
+            safe=False,
+        )
+        if base is None:
+            return __cache(None)
+        # We have an exact match!
+        # Just a precautionary guard, this should be assured by our SQL
+        return __cache(base * q1)
+
+    # Interpolated rotations
     base = get_rotation(
         model_name,
         row.ref_plate_id,
@@ -161,17 +180,7 @@ def get_rotation(
     if base is None:
         return __cache(None)
 
-    if not row.interpolated:
-        # We have an exact match!
-        # Just a precautionary guard, this should be assured by our SQL
-        assert N.allclose(float(row.r1_step), time)
-        return __cache(base * q1)
-
-    ## Interpolated rotations
-
-    # Rotation for Q2 timestep
     q2 = euler_to_quaternion(row.r2_rotation)
-
     # Calculate interpolated rotation between the two timesteps
     res = Q.slerp(q1, q2, float(row.r1_step), float(row.r2_step), time)
     return __cache(base * res)
