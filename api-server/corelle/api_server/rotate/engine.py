@@ -13,7 +13,7 @@ from ..database import db
 __model = reflect_table(db, "model")
 __plate = reflect_table(db, "plate")
 __rotation = reflect_table(db, "rotation")
-__rotation_cache = reflect_table(db, "rotation", schema="cache")
+__rotation_cache = reflect_table(db, "rotation")
 
 conn = db.connect()
 
@@ -33,8 +33,21 @@ cache = {}
 cache_list = []
 
 
+def build_cache(q, cache_args):
+    # Builds an in-memory cache of rotations
+    cache[cache_args] = q
+    cache_list.append(cache_args)
+    if len(cache_list) > 50000:
+        id = cache_list.pop(0)
+        try:
+            del cache[id]
+        except KeyError:
+            pass
+    return q
+
+
 def add_to_cache(cache_args, q):
-    # Fetches a sequence of rotations per unit time
+    # Builds an on-database cache of rotations
     (model_name, plate_id, time) = cache_args
 
     rval = None
@@ -54,6 +67,7 @@ def add_to_cache(cache_args, q):
 
 
 def get_from_cache(cache_args):
+    # Get a rotation from the in-memory cache
     (model_name, plate_id, time) = cache_args
 
     tbl = __rotation_cache.join(__model, __model.c.id == __rotation_cache.c.model_id)

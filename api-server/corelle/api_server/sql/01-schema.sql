@@ -66,7 +66,8 @@ CREATE TABLE IF NOT EXISTS corelle.feature_cache (
   PRIMARY KEY (model_id, dataset_id)
 );
 
-CREATE TABLE IF NOT EXISTS cache.rotation (
+/* Cache of rotations at various time steps */
+CREATE TABLE IF NOT EXISTS corelle.rotation_cache (
   model_id integer NOT NULL REFERENCES model(id),
   plate_id integer NOT NULL,
   t_step numeric NOT NULL,
