@@ -4,9 +4,6 @@ they need to be here to avoid initialization issues.
 """
 from pg_viewtils import reflect_table
 from sqlalchemy.sql import select
-from sqlalchemy import bindparam
-from sqlalchemy.types import NUMERIC
-from sqlalchemy.dialects.postgresql import array, insert, ARRAY
 
 from ..database import db
 
@@ -16,28 +13,6 @@ _rotation = reflect_table(db, "rotation", schema="corelle")
 _rotation_cache = reflect_table(db, "rotation_cache", schema="corelle")
 
 conn = db.connect()
-
-
-def add_to_cache(cache_args, q):
-    # Builds an on-database cache of rotations
-    (model_name, plate_id, time) = cache_args
-
-    if q is None:
-        return
-    rval = array([q.w, q.x, q.y, q.z])
-
-    scalar_subq = (
-        select(_model.c.id).where(_model.c.name == model_name).scalar_subquery()
-    )
-
-    conn.execute(
-        insert(_rotation_cache)
-        .values(model_id=scalar_subq, plate_id=plate_id, t_step=time, rotation=rval)
-        .on_conflict_do_update(
-            constraint=_rotation_cache.primary_key, set_=dict(rotation=rval)
-        )
-    )
-    return q
 
 
 def get_from_cache(cache_args):
