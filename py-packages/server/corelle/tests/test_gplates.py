@@ -10,7 +10,7 @@ from .rotate.engine import get_rotation, get_all_rotations, rotate_point
 
 # Test against gplates web service data
 def fixture(filename):
-    fn = relative_path(__file__, "..", "test-data", filename)
+    fn = relative_path(__file__, "test-data", filename)
     return open(fn, "r")
 
 
