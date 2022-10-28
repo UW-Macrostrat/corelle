@@ -4,10 +4,12 @@
 # Activate poetry virtualenv
 source .venv/bin/activate
 
+export POETRY_VIRTUALENVS_CREATE=false
+
 for package in $(ls py-packages); do
     echo "Updating $package"
     pushd py-packages/$package
-    poetry lock --no-update
+    poetry lock
     popd
 done
 

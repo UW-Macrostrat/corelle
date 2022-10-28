@@ -89,7 +89,7 @@ def get_rotation(
                 break
     else:
         # Fall back to fetching the data ourselves
-        pairs = db.execute(__sql, **params).fetchall()
+        pairs = conn.execute(__sql, **params).fetchall()
     if len(pairs) == 0:
         return __cache(None)
     if verbose:

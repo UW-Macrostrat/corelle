@@ -1,12 +1,13 @@
 import pytest
 import numpy as N
+
+from corelle.math import euler_equal, quaternion_to_euler, euler_to_quaternion
 from .rotate.engine import (
     get_rotation,
     get_all_rotations,
     get_rotation_series,
     RotationError,
 )
-from corelle.math import euler_equal, quaternion_to_euler, euler_to_quaternion
 
 
 def test_seton_recursion():

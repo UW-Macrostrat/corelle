@@ -18,8 +18,9 @@ IPython = "^8"
 MarkupSafe = "2.0.1"
 PyYAML = "^6.0"
 "corelle.client" = {path = "../client", develop = true}
+itsdangerous = "<2.1.0"
 jinja2 = "<3.1.0"
-"macrostrat.database" = "^1.0.2"
+"macrostrat.database" = "2.0.0.dev3"
 "macrostrat.utils" = "^1.0.1"
 numba = "^0.56.3"
 numpy = "^1.23.4"
@@ -29,6 +30,7 @@ python = "^3.8"
 rich = "^12.6.0"
 simplejson = "^3.17.6"
 typer = "^0.6.1"
+"werkzeug" = "2.0.3"
 
 [tool.poetry.dev-dependencies]
 

@@ -1,4 +1,3 @@
-from pg_viewtils import reflect_table
 from sqlalchemy import func, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.dialects.postgresql import insert
@@ -6,8 +5,6 @@ from time import perf_counter
 from json import dumps
 import fiona
 from click import echo, style
-
-from macrostrat.database import reflect_table
 
 from .database import db
 from .query import get_sql
@@ -36,10 +33,10 @@ def create_model(name, **kwargs):
     return conn.execute(model.select().where(model.c.name == name)).first()[0]
 
 
-__plate = db.mapper.reflect_table("plate", schema="corelle")
-__feature = db.mapper.reflect_table("feature", schema="corelle")
-__rotation = db.mapper.reflect_table("rotation", schema="corelle")
-__plate_polygon = db.mapper.reflect_table("plate_polygon", schema="corelle")
+__plate = db.reflect_table("plate", schema="corelle")
+__feature = db.reflect_table("feature", schema="corelle")
+__rotation = db.reflect_table("rotation", schema="corelle")
+__plate_polygon = db.reflect_table("plate_polygon", schema="corelle")
 
 
 def pg_geometry(feature):
