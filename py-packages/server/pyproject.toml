@@ -16,7 +16,7 @@ Flask = "^1"
 Flask-RESTful = "^0.3.9"
 IPython = "^8"
 PyYAML = "^6.0"
-"corelle.math" = {path = "../basics", develop = true}
+"corelle.client" = {path = "../client", develop = true}
 numba = "^0.56.3"
 numpy = "^1.23.4"
 numpy-quaternion = "^2022.4.2"
