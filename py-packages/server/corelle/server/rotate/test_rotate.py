@@ -1,14 +1,15 @@
 import numpy as N
 import quaternion as Q
 import pytest
-from .util import vector, unit_vector
-from .math import (
+from corelle.math.util import vector, unit_vector
+from corelle.math import (
     sph2cart,
     cart2sph,
     euler_to_quaternion,
     quaternion_to_euler,
     euler_equal,
 )
+
 from .engine import rotate_point
 
 equal = N.allclose

@@ -4,17 +4,15 @@ library, for rotating plates provided by a Corelle rotations server.
 """
 import sys
 import os
+from collections.abc import Iterable
+
 import numpy as N
 import quaternion as Q
 from shapely.ops import transform
 from shapely.geometry import shape
-from collections.abc import Iterable
 from pandas import DataFrame
 
-# Add corelle to our path
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-
-from corelle.rotate.math import cart2sph, sph2cart
+from corelle.math import cart2sph, sph2cart
 
 
 def rotate_point(q, point):

@@ -9,7 +9,7 @@ from .rotate.engine import (
     get_rotation_series,
     RotationError,
 )
-from .rotate.math import euler_equal, quaternion_to_euler, euler_to_quaternion
+from corelle.math import euler_equal, quaternion_to_euler, euler_to_quaternion
 
 
 def test_seton_recursion():

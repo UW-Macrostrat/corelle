@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Update all packages
+
+# Activate poetry virtualenv
+source .venv/bin/activate
+
+for package in $(ls py-packages); do
+    echo "Updating $package"
+    pushd py-packages/$package
+    poetry lock
+    popd
+done
+
+poetry lock

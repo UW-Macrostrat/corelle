@@ -26,6 +26,7 @@ python = "^3.8"
 rich = "^12.6.0"
 simplejson = "^3.17.6"
 typer = "^0.6.1"
+MarkupSafe = "2.0.1"
 
 [tool.poetry.dev-dependencies]
 

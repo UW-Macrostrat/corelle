@@ -3,7 +3,8 @@ import quaternion as Q
 from click import secho
 from decimal import Decimal
 
-from .math import cart2sph, sph2cart, euler_to_quaternion, quaternion_to_euler
+from corelle.math import cart2sph, sph2cart, euler_to_quaternion, quaternion_to_euler
+
 from ..query import get_sql
 from ..database import db
 from .storage import conn, model_id

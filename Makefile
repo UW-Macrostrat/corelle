@@ -2,6 +2,9 @@ all: install
 
 .PHONY: install init update_functions test dev features
 
+lock:
+	bin/update-packages
+
 install:
 	poetry install
 
