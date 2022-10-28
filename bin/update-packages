@@ -7,7 +7,7 @@ source .venv/bin/activate
 for package in $(ls py-packages); do
     echo "Updating $package"
     pushd py-packages/$package
-    poetry lock
+    poetry lock --no-update
     popd
 done
 
