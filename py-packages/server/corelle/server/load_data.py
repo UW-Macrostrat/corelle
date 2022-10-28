@@ -214,15 +214,6 @@ def import_rotations(model_id, rotations):
         print(f"Imported {i+1} rotations in {elapsed:.2f} seconds")
 
 
-def cache_rotations(model_id):
-
-    return
-    v = db.execute(__rotation.select(__rotation.c.model_id == model_id))
-    for row in v:
-        q = get_rotation(row.plate_id)
-        print(row.plate)
-
-
 def import_model(
     name, plates, rotations, fields=None, overwrite=False, min_age=None, max_age=None
 ):
@@ -236,4 +227,4 @@ def import_model(
     model_id = create_model(name, min_age=min_age, max_age=max_age)
     import_plates(model_id, plates, fields=fields)
     import_rotations(model_id, rotations)
-    cache_rotations(model_id)
+    # Right now we don't cache rotations on model import, but we could.

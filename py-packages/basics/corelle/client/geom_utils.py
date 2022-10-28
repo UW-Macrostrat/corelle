@@ -1,14 +1,5 @@
 import numpy as N
 
-
-def cart2euler(x, y, z):
-    """This is a different spherical coordinate convention than Corelle uses"""
-    hxy = N.hypot(x, y)
-    el = N.arctan2(z, hxy)
-    az = N.arctan2(y, x)
-    return N.degrees(az), N.degrees(el)
-
-
 def points_on_sphere(n_points):
     """A nearly-uniform distribution of points on a sphere"""
     # https://scicomp.stackexchange.com/questions/29959/uniform-dots-distribution-in-a-sphere
@@ -26,5 +17,12 @@ def points_on_sphere(n_points):
             xp = N.sin(nu) * N.cos(phi)
             yp = N.sin(nu) * N.sin(phi)
             zp = N.cos(nu)
-            points.append(cart2euler(xp, yp, zp))
+            points.append(__cart2euler(xp, yp, zp))
     return N.array(points)
+
+def __cart2euler(x, y, z):
+    """This is a different spherical coordinate convention than Corelle uses"""
+    hxy = N.hypot(x, y)
+    el = N.arctan2(z, hxy)
+    az = N.arctan2(y, x)
+    return N.degrees(az), N.degrees(el)

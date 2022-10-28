@@ -3,4 +3,4 @@
 python -m pytest \
   --pdbcls=IPython.terminal.debugger:Pdb \
   --durations=10 \
-  --pyargs corelle "$@"
+  --pyargs corelle.api_server "$@"

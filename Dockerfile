@@ -1,4 +1,4 @@
-# Dockerfile for the corelle API
+# Dockerfile for the corelle API server
 FROM python:3.10
 
 WORKDIR /code

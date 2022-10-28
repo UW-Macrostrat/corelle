@@ -9,7 +9,7 @@ import quaternion as Q
 from shapely.ops import transform
 from shapely.geometry import shape
 from collections.abc import Iterable
-from pandas import DataFrame, isna
+from pandas import DataFrame
 
 # Add corelle to our path
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
