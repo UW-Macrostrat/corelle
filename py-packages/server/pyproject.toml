@@ -15,18 +15,20 @@ Fiona = "^1.8.22"
 Flask = "^1"
 Flask-RESTful = "^0.3.9"
 IPython = "^8"
+MarkupSafe = "2.0.1"
 PyYAML = "^6.0"
 "corelle.client" = {path = "../client", develop = true}
+jinja2 = "<3.1.0"
+"macrostrat.database" = "^1.0.2"
+"macrostrat.utils" = "^1.0.1"
 numba = "^0.56.3"
 numpy = "^1.23.4"
 numpy-quaternion = "^2022.4.2"
-pg-viewtils = {url = "https://github.com/davenquinn/pg-viewtils/archive/master.zip"}
 psycopg2-binary = "^2.9.5"
 python = "^3.8"
 rich = "^12.6.0"
 simplejson = "^3.17.6"
 typer = "^0.6.1"
-MarkupSafe = "2.0.1"
 
 [tool.poetry.dev-dependencies]
 

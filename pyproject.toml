@@ -12,9 +12,6 @@ python = ">=3.8,<4.0"
 "corelle.server" = {path = "./py-packages/server", develop = true}
 pytest = "^6.2.3"
 
-[tool.poetry.scripts]
-corelle = 'corelle.server.cli:cli'
-
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"
 

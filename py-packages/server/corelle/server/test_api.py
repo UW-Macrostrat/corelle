@@ -1,6 +1,4 @@
 from pytest import fixture
-import sys
-from os import path
 from numpy import allclose
 
 from corelle.client import rotate_features

@@ -6,6 +6,7 @@ lock:
 	bin/update-packages
 
 install:
+	make lock
 	poetry install
 
 init:

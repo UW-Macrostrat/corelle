@@ -19,7 +19,7 @@ app = Flask(__name__)
 app.config["RESTFUL_JSON"] = dict(cls=JSONEncoder)
 api = Api(app)
 
-conn = db.connect()
+conn = db.engine.connect()
 
 
 class Help(Resource):

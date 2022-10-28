@@ -2,17 +2,16 @@
 Mapped database models. These would ideally be in the database module, but
 they need to be here to avoid initialization issues.
 """
-from pg_viewtils import reflect_table
 from sqlalchemy.sql import select
 
 from ..database import db
 
-_model = reflect_table(db, "model", schema="corelle")
-_plate = reflect_table(db, "plate", schema="corelle")
-_rotation = reflect_table(db, "rotation", schema="corelle")
-_rotation_cache = reflect_table(db, "rotation_cache", schema="corelle")
+_model = db.mapper.reflect_table("model", schema="corelle")
+_plate = db.mapper.reflect_table("plate", schema="corelle")
+_rotation = db.mapper.reflect_table("rotation", schema="corelle")
+_rotation_cache = db.mapper.reflect_table("rotation_cache", schema="corelle")
 
-conn = db.connect()
+conn = db.engine.connect()
 
 
 def get_from_cache(cache_args):

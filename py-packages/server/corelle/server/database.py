@@ -3,11 +3,11 @@ from sqlalchemy.exc import ProgrammingError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from pg_viewtils import run_sql_file, relative_path
+from macrostrat.utils import relative_path
+from macrostrat.database import Database
 
 conn_string = environ.get("CORELLE_DB", "postgresql:///plate-rotations")
-db = create_engine(conn_string)
-create_session = sessionmaker(bind=db)
+db = Database(conn_string)
 
 
 def initialize(drop=False):
@@ -19,10 +19,8 @@ def initialize(drop=False):
         except ProgrammingError:
             pass
 
-    session = create_session()
-
     for file in sorted(listdir(dn)):
         if not file.endswith(".sql"):
             continue
         fn = path.join(dn, file)
-        run_sql_file(session, fn)
+        db.exec_sql(fn)

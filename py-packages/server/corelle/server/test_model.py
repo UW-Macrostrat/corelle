@@ -1,7 +1,4 @@
 import pytest
-import json
-from pg_viewtils import relative_path
-from os import path
 import numpy as N
 from .rotate.engine import (
     get_rotation,

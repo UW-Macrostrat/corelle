@@ -1,11 +1,11 @@
-from rich import print
 from rich.progress import Progress
-from sqlalchemy.dialects.postgresql import array, insert
+from sqlalchemy.dialects.postgresql import insert
 import numpy as N
+
+from corelle.math import quaternion_to_euler
 
 from .rotate.storage import _model, _rotation_cache, conn
 from .rotate.engine import get_rotation_series
-from .rotate.math import quaternion_to_euler
 
 
 def build_rotation_caches():

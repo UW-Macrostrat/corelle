@@ -7,8 +7,9 @@ from json import dumps
 import fiona
 from click import echo, style
 
-from .database import db, create_session
-from .rotate.engine import get_rotation, get_rotation_series
+from macrostrat.database import reflect_table
+
+from .database import db
 from .query import get_sql
 
 __conn = None
@@ -17,12 +18,12 @@ __conn = None
 def connect():
     global __conn
     if __conn is None:
-        __conn = db.connect()
+        __conn = db.engine.connect()
     return __conn
 
 
 def create_model(name, **kwargs):
-    model = reflect_table(db, "model", schema="corelle")
+    model = db.reflect_table("model", schema="corelle")
     conn = connect()
     try:
         conn.execute(
@@ -35,10 +36,10 @@ def create_model(name, **kwargs):
     return conn.execute(model.select().where(model.c.name == name)).first()[0]
 
 
-__plate = reflect_table(db, "plate", schema="corelle")
-__feature = reflect_table(db, "feature", schema="corelle")
-__rotation = reflect_table(db, "rotation", schema="corelle")
-__plate_polygon = reflect_table(db, "plate_polygon", schema="corelle")
+__plate = db.mapper.reflect_table("plate", schema="corelle")
+__feature = db.mapper.reflect_table("feature", schema="corelle")
+__rotation = db.mapper.reflect_table("rotation", schema="corelle")
+__plate_polygon = db.mapper.reflect_table("plate_polygon", schema="corelle")
 
 
 def pg_geometry(feature):
@@ -91,7 +92,6 @@ def import_plate(model_id, feature, fields=None):
 
 
 def import_plates(model_id, plates, fields={}):
-    session = create_session()
     if fields is None:
         fields = {}
     with fiona.open(plates, "r") as src:
@@ -128,7 +128,6 @@ def import_feature(dataset, feature):
 
 
 def import_features(name, features, overwrite=False):
-    session = create_session()
     start = perf_counter()
     conn = connect()
     with fiona.open(features, "r") as src:
@@ -205,7 +204,6 @@ def import_rotations(model_id, rotations):
     well for other `.rot` files in its current
     form.
     """
-    conn = connect()
     with open(rotations, "r") as f:
         start = perf_counter()
         for i, line in enumerate(f):
