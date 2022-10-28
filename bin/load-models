@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ $1 == '--redo' ]; then
+if [ "$1" = "--redo" ]; then
   shift
   corelle init --drop
 fi

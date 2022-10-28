@@ -1,4 +1,5 @@
 from os import path, listdir, environ
+from sqlalchemy.exc import ProgrammingError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -13,7 +14,10 @@ def initialize(drop=False):
     # Run all SQL in the `sql` directory
     dn = relative_path(__file__, "sql")
     if drop:
-        db.execute("DROP SCHEMA corelle CASCADE")
+        try:
+            db.execute("DROP SCHEMA corelle CASCADE")
+        except ProgrammingError:
+            pass
 
     session = create_session()
 

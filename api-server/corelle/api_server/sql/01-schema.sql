@@ -1,24 +1,24 @@
-CREATE TABLE IF NOT EXISTS model (
+CREATE TABLE IF NOT EXISTS corelle.model (
   id serial PRIMARY KEY,
   name text UNIQUE NOT NULL,
   min_age numeric DEFAULT 0,
   max_age numeric
 );
 
-CREATE TABLE IF NOT EXISTS plate (
+CREATE TABLE IF NOT EXISTS corelle.plate (
   id integer,
-  model_id integer NOT NULL REFERENCES model(id),
+  model_id integer NOT NULL REFERENCES corelle.model(id),
   parent_id integer,
   name text,
   cotid text,
   coid text,
   PRIMARY KEY (id, model_id),
   FOREIGN KEY (parent_id, model_id)
-    REFERENCES plate (id, model_id)
+    REFERENCES corelle.plate (id, model_id)
     ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS plate_polygon (
+CREATE TABLE IF NOT EXISTS corelle.plate_polygon (
   id serial PRIMARY KEY,
   plate_id integer NOT NULL,
   model_id integer NOT NULL,
@@ -26,11 +26,11 @@ CREATE TABLE IF NOT EXISTS plate_polygon (
   old_lim numeric,
   geometry geometry(MultiPolygon, 4326),
   FOREIGN KEY (plate_id, model_id)
-    REFERENCES plate (id, model_id)
+    REFERENCES corelle.plate (id, model_id)
     ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS rotation (
+CREATE TABLE IF NOT EXISTS corelle.rotation (
   id serial PRIMARY KEY,
   plate_id integer NOT NULL,
   model_id integer NOT NULL,
@@ -42,10 +42,10 @@ CREATE TABLE IF NOT EXISTS rotation (
   metadata text,
   UNIQUE (plate_id, model_id, t_step, ref_plate_id),
   FOREIGN KEY (plate_id, model_id)
-    REFERENCES plate (id, model_id)
+    REFERENCES corelle.plate (id, model_id)
     ON DELETE CASCADE,
   FOREIGN KEY (ref_plate_id, model_id)
-    REFERENCES plate (id, model_id)
+    REFERENCES corelle.plate (id, model_id)
     ON DELETE CASCADE
 );
 
@@ -59,9 +59,23 @@ CREATE TABLE IF NOT EXISTS corelle.feature (
 
 /* Cache of features pre-converted to GeoJSON (probably should be deprecated!)*/
 CREATE TABLE IF NOT EXISTS corelle.feature_cache (
-  model_id integer NOT NULL REFERENCES model(id),
-  model_name text NOT NULL REFERENCES model(name),
+  model_id integer NOT NULL REFERENCES corelle.model(id),
+  model_name text NOT NULL REFERENCES corelle.model(name),
   dataset_id text NOT NULL,
   geojson json NOT NULL,
   PRIMARY KEY (model_id, dataset_id)
+);
+
+/* Cache of rotations at various time steps */
+CREATE TABLE IF NOT EXISTS corelle.rotation_cache (
+  model_id integer NOT NULL REFERENCES corelle.model(id),
+  plate_id integer NOT NULL,
+  t_step numeric NOT NULL,
+  rotation numeric[],
+  pole geometry(Point, 4326),
+  angle numeric,
+  PRIMARY KEY (model_id, plate_id, t_step),
+  FOREIGN KEY (plate_id, model_id)
+    REFERENCES corelle.plate (id, model_id)
+    ON DELETE CASCADE
 );

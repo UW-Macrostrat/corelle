@@ -1,18 +1,12 @@
 import numpy as N
 import quaternion as Q
-from pg_viewtils import reflect_table
 from click import secho
 from decimal import Decimal
 
 from .math import cart2sph, sph2cart, euler_to_quaternion, quaternion_to_euler
 from ..query import get_sql
 from ..database import db
-
-__model = reflect_table(db, "model")
-__plate = reflect_table(db, "plate")
-__rotation = reflect_table(db, "rotation")
-
-conn = db.connect()
+from .storage import conn, model_id
 
 
 class RotationError(Exception):
@@ -31,7 +25,7 @@ cache_list = []
 
 
 def build_cache(q, cache_args):
-    # Fetches a sequence of rotations per unit time
+    # Builds an in-memory cache of rotations
     cache[cache_args] = q
     cache_list.append(cache_args)
     if len(cache_list) > 50000:
@@ -41,11 +35,6 @@ def build_cache(q, cache_args):
         except KeyError:
             pass
     return q
-
-
-def model_id(name):
-    stmt = __model.select().where(__model.c.name == name)
-    return conn.execute(stmt).scalar()
 
 
 __sql = get_sql("rotation-pairs")
@@ -60,7 +49,13 @@ def check_model_id(model_name):
 
 # Cache this expensive, recursive function.
 def get_rotation(
-    model_name, plate_id, time, verbose=False, depth=0, rowset=None, safe=True,
+    model_name,
+    plate_id,
+    time,
+    verbose=False,
+    depth=0,
+    rowset=None,
+    safe=True,
 ):
     """Core function to rotate a plate to a time by accumulating quaternions"""
     time = float(time)
@@ -226,7 +221,10 @@ def get_rotation_series(model, *times, **kwargs):
     # LOL this actually makes things slower
     check_model_id(model)
 
-    plate_ages = conn.execute(__plate_time_ranges, model_name=model,).fetchall()
+    plate_ages = conn.execute(
+        __plate_time_ranges,
+        model_name=model,
+    ).fetchall()
 
     rowset = conn.execute(
         __model_rotation_pairs,
