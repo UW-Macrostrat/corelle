@@ -7,14 +7,9 @@ in the database for each time step and plate ID.
 CREATE OR REPLACE FUNCTION corelle.rotate_geometry(geom geometry, quaternion numeric[])
 RETURNS geometry
 AS $$
-DECLARE
-  cart numeric[];
-  rotated numeric[];
 BEGIN
   IF ST_GeometryType(geom) = 'ST_Point' THEN
-    cart := sph2cart(geom);
-    rotated := corelle.rotate_point(cart, quaternion);
-    RETURN cart2sph(rotated);
+    RETURN corelle.rotate_point(geom, quaternion);
   ELSIF ST_GeometryType(geom) = 'ST_MultiPoint' THEN
     RETURN ST_Collect(ARRAY(
       SELECT corelle.rotate_geometry(point, quaternion)
@@ -53,7 +48,7 @@ DECLARE
   q1 numeric := quaternion[2];
   q2 numeric := quaternion[3];
   q3 numeric := quaternion[4];
-  cart numeric := corelle.sph2cart(point);
+  cart numeric[] := corelle.sph2cart(point);
   x numeric := cart[1];
   y numeric := cart[2];
   z numeric := cart[3];
@@ -89,8 +84,8 @@ $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 CREATE OR REPLACE FUNCTION corelle.sph2cart(point geometry)
 RETURNS numeric[] AS $$
 DECLARE
-  lat numeric := ST_Y(point);
-  lon numeric := ST_X(point);
+  lat numeric := corelle.radians(ST_Y(point));
+  lon numeric := corelle.radians(ST_X(point));
   r numeric := coalesce(ST_Z(point), 1);
 BEGIN
   RETURN ARRAY[
@@ -107,13 +102,36 @@ RETURNS geometry
 AS $$
 DECLARE
   r numeric := sqrt(x * x + y * y + z * z);
-  lat numeric := asin(z / r);
-  lon numeric := atan2(y, x);
+  lat numeric := corelle.degrees(asin(z / r));
+  lon numeric := corelle.degrees(atan2(y, x));
 BEGIN
-  IF r = 1 THEN
+  IF abs(r-1) < 0.0000001 THEN
     RETURN ST_SetSRID(ST_MakePoint(lon, lat), 4326);
   ELSE
     RETURN ST_SetSRID(ST_MakePoint(lon, lat, r), 4326);
+  END IF;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE STRICT;
+
+/* Convert to radians */
+CREATE OR REPLACE FUNCTION corelle.radians(degrees double precision)
+RETURNS double precision AS $$
+BEGIN
+  RETURN degrees * pi() / 180;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE STRICT;
+
+/* Convert to degrees */
+CREATE OR REPLACE FUNCTION corelle.degrees(radians double precision)
+RETURNS double precision AS $$
+DECLARE
+  uncorrected double precision := radians * 180 / pi();
+BEGIN
+  -- Return data in the right quadrant
+  IF uncorrected < -180 THEN
+    RETURN uncorrected + 360;
+  ELSE
+    RETURN uncorrected;
   END IF;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;

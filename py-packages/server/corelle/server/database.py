@@ -20,4 +20,4 @@ def initialize(drop=False):
     files = sorted(dn.glob("*.sql"))
 
     for file in files:
-        db.run_sql(Path(dn) / file)
+        list(db.run_sql(Path(dn) / file))
