@@ -7,6 +7,8 @@ in the database for each time step and plate ID.
 CREATE OR REPLACE FUNCTION corelle.rotate_geometry(geom geometry, quaternion numeric[])
 RETURNS geometry
 AS $$
+DECLARE
+  result geometry;
 BEGIN
   IF ST_GeometryType(geom) = 'ST_Point' THEN
     RETURN corelle.rotate_point(geom, quaternion);
@@ -44,48 +46,52 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 CREATE OR REPLACE FUNCTION corelle.rotate_point(point geometry, quaternion numeric[])
 RETURNS geometry AS $$
 DECLARE
-  q0 numeric := quaternion[1];
-  q1 numeric := quaternion[2];
-  q2 numeric := quaternion[3];
-  q3 numeric := quaternion[4];
-  cart numeric[] := corelle.sph2cart(point);
-  x numeric := cart[1];
-  y numeric := cart[2];
-  z numeric := cart[3];
-  x2 numeric;
-  y2 numeric;
-  z2 numeric;
-  w2 numeric;
-  xy numeric;
-  xz numeric;
-  yz numeric;
-  wx numeric;
-  wy numeric;
-  wz numeric;
+  pt numeric[] := corelle.sph2cart(point);
+  q_conj numeric[];
+  q_res numeric[];
+  r numeric[];
 BEGIN
-  x2 := q0 * q0;
-  y2 := q1 * q1;
-  z2 := q2 * q2;
-  w2 := q3 * q3;
-  xy := q0 * q1;
-  xz := q0 * q2;
-  yz := q1 * q2;
-  wx := q3 * q0;
-  wy := q3 * q1;
-  wz := q3 * q2;
+  q_conj := ARRAY[
+    quaternion[1],
+    -quaternion[2],
+    -quaternion[3],
+    -quaternion[4]
+  ];
+
+  r := ARRAY[0, pt[1], pt[2], pt[3]];
+
+  q_res := corelle.quaternion_multiply(
+    corelle.quaternion_multiply(quaternion, r),
+    q_conj
+  );
+
   RETURN corelle.cart2sph(
-    (x2 + y2 - z2 - w2) * x + 2 * (xy - wz) * y + 2 * (xz + wy) * z,
-    (x2 - y2 + z2 - w2) * y + 2 * (xy + wz) * x + 2 * (yz - wx) * z,
-    (x2 - y2 - z2 + w2) * z + 2 * (xz - wy) * x + 2 * (yz + wx) * y
+    q_res[2],
+    q_res[3],
+    q_res[4]
   );
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
+CREATE OR REPLACE FUNCTION corelle.quaternion_multiply(q numeric[], r numeric[])
+RETURNS numeric[]
+AS $$
+BEGIN 
+  RETURN ARRAY[
+    r[1]*q[1]-r[2]*q[2]-r[3]*q[3]-r[4]*q[4],
+    r[1]*q[2]+r[2]*q[1]-r[3]*q[4]+r[4]*q[3],
+    r[1]*q[3]+r[2]*q[4]+r[3]*q[1]-r[4]*q[2],
+    r[1]*q[4]-r[2]*q[3]+r[3]*q[2]+r[4]*q[1]
+  ];
+END;
+$$ LANGUAGE plpgsql IMMUTABLE STRICT;
+
+
 CREATE OR REPLACE FUNCTION corelle.sph2cart(point geometry)
 RETURNS numeric[] AS $$
 DECLARE
-  lat numeric := corelle.radians(ST_Y(point));
   lon numeric := corelle.radians(ST_X(point));
+  lat numeric := corelle.radians(ST_Y(point));
   r numeric := coalesce(ST_Z(point), 1);
 BEGIN
   RETURN ARRAY[
