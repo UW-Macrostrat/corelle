@@ -2,7 +2,7 @@ import pytest
 import numpy as N
 
 from corelle.math import euler_equal, quaternion_to_euler, euler_to_quaternion
-from ..rotate import (
+from corelle.engine.rotate import (
     get_rotation,
     get_all_rotations,
     get_rotation_series,

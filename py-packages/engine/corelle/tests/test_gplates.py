@@ -1,16 +1,15 @@
 import pytest
 import json
-from pg_viewtils import relative_path
-from os import path
 import numpy as N
-from corelle.math import quaternion_to_euler, euler_equal
 
-from corelle.engine.rotate import get_rotation, get_all_rotations, rotate_point
+from macrostrat.utils import relative_path
+from corelle.math import quaternion_to_euler, euler_equal
+from corelle.engine.rotate import get_rotation, rotate_point
 
 
 # Test against gplates web service data
 def fixture(filename):
-    fn = relative_path(__file__, "test-data", filename)
+    fn = relative_path(__file__, "fixtures", filename)
     return open(fn, "r")
 
 

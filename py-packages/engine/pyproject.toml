@@ -2,8 +2,8 @@
 authors = ["Daven Quinn <dev@davenquinn.com>"]
 description = "An API server application for the Corelle plate-rotation system"
 license = "MIT"
-name = "corelle.rotate"
-version = "1.0.0"
+name = "corelle.engine"
+version = "1.2.0"
 
 packages = [
   {include = "corelle"},

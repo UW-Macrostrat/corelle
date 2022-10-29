@@ -9,6 +9,7 @@ python = ">=3.8,<4.0"
 
 [tool.poetry.dev-dependencies]
 "corelle.client" = {path = "./py-packages/client", develop = true}
+"corelle.engine" = {path = "./py-packages/engine", develop = true}
 "corelle.server" = {path = "./py-packages/server", develop = true}
 pytest = "^6.2.3"
 
