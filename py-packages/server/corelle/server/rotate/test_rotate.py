@@ -56,7 +56,7 @@ def test_quaternion_composition():
     assert N.allclose(N.degrees(qc.angle()), 60)
 
 
-r = [(25, 80, 32), (22, -10, -20), (-80, 120, 5.2)]
+r = [(80, 25, 32), (-10, 22, -20), (120, -80, 5.2)]
 
 
 @pytest.mark.parametrize("angles", r)
@@ -67,7 +67,7 @@ def test_euler_recovery(angles):
 
 @pytest.mark.parametrize("angles", r)
 def test_quaternion_angle_recovery(angles):
-    axis = sph2cart(angles[1], angles[0])
+    axis = sph2cart(angles[0], angles[1])
     angle = N.radians(angles[2])
     q1 = Q.from_rotation_vector(axis * angle)
 

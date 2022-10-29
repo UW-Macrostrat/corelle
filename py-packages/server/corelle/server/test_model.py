@@ -88,7 +88,7 @@ def test_identity():
 def test_simple_rotation():
     time = 10
     plate_id = 701
-    euler = (46.19, -87.86, -1.92)
+    euler = (-87.86, 46.19, -1.92)
     q = get_rotation("Seton2012", plate_id, time)
     q1 = euler_to_quaternion(euler)
     euler1 = quaternion_to_euler(q)

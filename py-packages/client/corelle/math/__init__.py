@@ -20,7 +20,7 @@ def cart2sph(unit_vec):
 
 
 def euler_to_quaternion(euler_pole):
-    lat, lon, angle = [float(i) for i in euler_pole]
+    lon, lat, angle = [float(i) for i in euler_pole]
     angle = N.radians(angle)
     w = N.cos(angle / 2)
     v = sph2cart(lon, lat) * N.sin(angle / 2)
@@ -30,16 +30,16 @@ def euler_to_quaternion(euler_pole):
 def quaternion_to_euler(q):
     angle = 2 * N.arccos(q.w)
     lon, lat = cart2sph(q.vec / N.sin(angle / 2))
-    return lat, lon, N.degrees(angle)
+    return lon, lat, N.degrees(angle)
 
 
 def euler_equal(a1, a2):
     a2 = list(a2)
     a1 = list(a1)
-    if N.sign(a1[0]) != N.sign(a2[0]):
-        a2[0] *= -1
-        a2[1] += 180
-        if a2[1] > 180:
-            a2[1] -= 360
+    if N.sign(a1[1]) != N.sign(a2[1]):
+        a2[1] *= -1
+        a2[0] += 180
+        if a2[0] > 180:
+            a2[0] -= 360
         a2[2] *= -1
     return N.allclose(a1, a2, atol=0.001)

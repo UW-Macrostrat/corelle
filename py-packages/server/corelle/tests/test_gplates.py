@@ -70,7 +70,7 @@ def check_seton2012_rotation(time, *row):
         return
     rot = get_rotation("Seton2012", plate_id, time)
     v = quaternion_to_euler(rot)
-    assert euler_equal(v, (lat, lon, angle))
+    assert euler_equal(v, (lon, lat, angle))
 
 
 times = [10, 100]

@@ -7,7 +7,7 @@ SELECT
   ref_plate_id,
   metadata,
   t_step,
-  ARRAY[latitude, longitude, angle] rotation,
+  ARRAY[longitude, latitude, angle] rotation,
   lag(t_step, 1) OVER (
     ORDER BY plate_id, ref_plate_id, t_step
   ) prev_step
