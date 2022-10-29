@@ -141,3 +141,56 @@ BEGIN
   END IF;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
+
+/* Rotate a geometry and clip to a bounding plate polygon */
+CREATE OR REPLACE FUNCTION corelle.rotate_geometry(
+  geom geometry,
+  model_id integer,
+  plate_id integer,
+  t_step integer
+)
+RETURNS geometry
+AS $$
+DECLARE
+  plate geometry;
+  rotation numeric[];
+  clipped geometry;
+BEGIN
+
+  -- get rotation at closest time step
+  SELECT rotation
+  FROM corelle.rotation
+  WHERE model_id = model_id
+    AND plate_id = plate_id
+    AND t_step = t_step
+  INTO rotation;
+
+  IF t_step != 0 AND rotation IS null THEN
+    RETURN null;
+  END IF;
+
+  SELECT geom
+  FROM corelle.plate_polygon
+  WHERE model_id = model_id
+    AND plate_id = plate_id
+    AND coalesce(old_lim, 4000) >= t_step
+    AND coalesce(young_lim, 0) < t_step
+  INTO plate;
+
+  IF plate IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  IF NOT geom && plate THEN
+    RETURN NULL;
+  END IF;
+
+  clipped := ST_Intersection(geom, plate);
+
+  IF t_step = 0 THEN
+    RETURN clipped;
+  END IF;
+
+  RETURN corelle.rotate_geometry(clipped, rotation);
+END;
+$$ LANGUAGE plpgsql IMMUTABLE STRICT;
