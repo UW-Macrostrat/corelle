@@ -5,7 +5,7 @@ from os import path
 import numpy as N
 from corelle.math import quaternion_to_euler, euler_equal
 
-from corelle.server.rotate.engine import get_rotation, get_all_rotations, rotate_point
+from corelle.engine.rotate import get_rotation, get_all_rotations, rotate_point
 
 
 # Test against gplates web service data

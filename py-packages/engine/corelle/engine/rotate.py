@@ -5,8 +5,8 @@ from decimal import Decimal
 
 from corelle.math import cart2sph, sph2cart, euler_to_quaternion, quaternion_to_euler
 
-from ..query import get_sql
-from ..database import db
+from .query import get_sql
+from .database import db
 from .storage import conn, model_id
 
 

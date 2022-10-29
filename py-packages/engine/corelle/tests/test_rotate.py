@@ -10,7 +10,7 @@ from corelle.math import (
     euler_equal,
 )
 
-from .engine import rotate_point
+from ..rotate import rotate_point
 
 equal = N.allclose
 

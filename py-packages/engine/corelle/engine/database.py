@@ -10,7 +10,7 @@ db = Database(conn_string)
 
 def initialize(drop=False):
     # Run all SQL in the `sql` directory
-    dn = Path(relative_path(__file__, "sql"))
+    dn = Path(relative_path(__file__, "schema"))
     if drop:
         try:
             db.engine.execute("DROP SCHEMA corelle CASCADE")

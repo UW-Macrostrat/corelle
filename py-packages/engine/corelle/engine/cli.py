@@ -6,6 +6,7 @@ import numpy as N
 from IPython import embed
 
 from click import group, argument, option, echo, Path
+from corelle.math import quaternion_to_euler
 from os.path import splitext
 
 warnings.filterwarnings("ignore")
@@ -107,7 +108,6 @@ def rotate(model, plate, time, verbose=False):
     Rotate a plate to a time
     """
     from .rotate import get_rotation
-    from .rotate.math import quaternion_to_euler
 
     q = get_rotation(model, plate, time, verbose=verbose)
     if q is None:
@@ -138,15 +138,13 @@ def rotate_all(model, time, verbose=False):
 @option("-p", "--port", type=int, default=5000)
 @option("--debug", is_flag=True, default=False)
 def serve(**kwargs):
-    from .api import app
+    from corelle.api import app
 
     app.run(host="0.0.0.0", **kwargs)
 
 
 @cli.command(name="shell")
 def shell():
-    from .api import app
-
     embed()
 
 

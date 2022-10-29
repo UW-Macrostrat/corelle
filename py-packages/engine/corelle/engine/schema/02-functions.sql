@@ -194,3 +194,4 @@ BEGIN
   RETURN corelle.rotate_geometry(clipped, rotation);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
+
