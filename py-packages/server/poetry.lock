@@ -155,7 +155,7 @@ url = "../client"
 
 [[package]]
 name = "corelle-engine"
-version = "2.0.0"
+version = "1.2.0"
 description = "An API server application for the Corelle plate-rotation system"
 category = "main"
 optional = false

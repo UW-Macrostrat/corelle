@@ -2,7 +2,7 @@ from pytest import fixture
 from numpy import allclose
 
 from corelle.client import rotate_features
-from .api import app
+from . import app
 
 
 @fixture

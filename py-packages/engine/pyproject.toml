@@ -28,7 +28,7 @@ typer = "^0.6.1"
 [tool.poetry.dev-dependencies]
 
 [tool.poetry.scripts]
-corelle = 'corelle.rotate.cli:cli'
+corelle = 'corelle.engine:cli'
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
