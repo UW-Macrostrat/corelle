@@ -30,6 +30,11 @@ CREATE TABLE IF NOT EXISTS corelle.plate_polygon (
     ON DELETE CASCADE
 );
 
+CREATE INDEX
+IF NOT EXISTS corelle_plate_polygon_geometry_idx
+ON corelle.plate_polygon
+USING gist (geometry);
+
 CREATE TABLE IF NOT EXISTS corelle.rotation (
   id serial PRIMARY KEY,
   plate_id integer NOT NULL,

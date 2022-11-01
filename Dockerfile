@@ -3,6 +3,8 @@ FROM python:3.10
 
 WORKDIR /code
 
+RUN apt-get -y update && apt-get -y install postgresql-client
+
 RUN pip install poetry==1.2.2
 
 COPY ./poetry.lock ./pyproject.toml /code/
