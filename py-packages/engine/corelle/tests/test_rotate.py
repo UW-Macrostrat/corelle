@@ -72,7 +72,7 @@ def test_quaternion_angle_recovery(angles):
     q1 = Q.from_rotation_vector(axis * angle)
 
     assert equal(N.abs(q1.angle()), N.abs(angle))
-    assert q1.w == N.cos(q1.angle() / 2)
+    assert equal(q1.w, N.cos(q1.angle() / 2))
     assert equal(q1.vec, axis * N.sin(angle / 2))
     assert euler_equal(quaternion_to_euler(q1), angles)
 
