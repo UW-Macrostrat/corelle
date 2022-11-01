@@ -3,16 +3,15 @@ FROM python:3.10
 
 WORKDIR /code
 
+ENV POETRY_VIRTUALENVS_CREATE=false
+
 RUN apt-get -y update && apt-get -y install postgresql-client
 
 RUN pip install poetry==1.2.2
 
-COPY ./poetry.lock ./pyproject.toml /code/
-COPY ./py-packages/client/pyproject.toml /code/py-packages/client/
-COPY ./py-packages/server/pyproject.toml /code/py-packages/server/
-COPY ./py-packages/engine/pyproject.toml /code/py-packages/engine/
+COPY ./requirements.txt /code/
 
-ENV POETRY_VIRTUALENVS_CREATE=false
+RUN pip install -r requirements.txt
 
 COPY ./py-packages /code/py-packages
 
