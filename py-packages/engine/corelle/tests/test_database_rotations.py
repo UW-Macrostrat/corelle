@@ -137,3 +137,20 @@ def test_postgis_geometry_rotation(geom):
         geom = to_shape(WKBElement(result))
         print(geom.wkt)
         assert geom.is_valid
+
+
+@mark.parametrize("geom", geometries)
+def test_inverse_rotation(geom):
+    q = euler_to_quaternion((0, 90, 45))
+    sql = "SELECT corelle.rotate_geometry(corelle.rotate_geometry(ST_GeomFromText(:geom, 4326), :quaternion), corelle.invert_rotation(:quaternion))"
+    with db.session_scope() as session:
+        # Check validity of the input geometry
+        g0 = wkt.loads(geom)
+        result = session.execute(
+            sql, params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
+        ).scalar()
+        geom = to_shape(WKBElement(result))
+        assert geom.is_valid
+
+        # Check that the geometry is the same as the original
+        assert g0.almost_equals(geom)
