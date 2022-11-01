@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from corelle.math.util import unit_vector
 import numpy as N
 import quaternion as Q
+from shapely import wkt
 from corelle.engine.database import db
 from geoalchemy2 import Geometry
 from geoalchemy2.shape import to_shape
@@ -108,3 +109,31 @@ def test_postgis_euler_rotation():
     # Convert the WKBElement to a Shapely geometry
     geom = to_shape(WKBElement(result))
     assert N.allclose(list(geom.coords), end_point)
+
+
+geometries = [
+    "POINT(0 0)",
+    "LINESTRING(0 0, 1 1)",
+    "POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))",
+    "POLYGON((0 0, 0 1, 1 1, 1 0, 0 0), (0.25 0.25, 0.25 0.75, 0.75 0.75, 0.75 0.25, 0.25 0.25))",
+    "MULTIPOINT(0 0, 1 1)",
+    "MULTILINESTRING((0 0, 1 1), (2 2, 3 3))",
+    "MULTIPOLYGON(((0 0, 0 1, 1 1, 1 0, 0 0)), ((2 2, 2 3, 3 3, 3 2, 2 2)))",
+    "MULTIPOLYGON(((0 0, 0 1, 1 1, 1 0, 0 0), (0.25 0.25, 0.25 0.75, 0.75 0.75, 0.75 0.25, 0.25 0.25)), ((2 2, 2 3, 3 3, 3 2, 2 2)))",
+]
+
+
+@mark.parametrize("geom", geometries)
+def test_postgis_geometry_rotation(geom):
+    q = euler_to_quaternion((0, 90, 45))
+    sql = "SELECT corelle.rotate_geometry(ST_GeomFromText(:geom, 4326), :quaternion)"
+    with db.session_scope() as session:
+        # Check validity of the input geometry
+        assert wkt.loads(geom).is_valid
+
+        result = session.execute(
+            sql, params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
+        ).scalar()
+        geom = to_shape(WKBElement(result))
+        print(geom.wkt)
+        assert geom.is_valid
