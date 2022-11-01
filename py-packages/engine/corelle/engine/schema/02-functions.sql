@@ -142,12 +142,26 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
+CREATE OR REPLACE FUNCTION corelle.invert_rotation(quaternion numeric[])
+RETURNS numeric[]
+AS $$
+BEGIN
+  RETURN ARRAY[
+    quaternion[1],
+    -quaternion[2],
+    -quaternion[3],
+    -quaternion[4]
+  ];
+END;
+$$ LANGUAGE plpgsql IMMUTABLE STRICT;
+
 /* Rotate a geometry and clip to a bounding plate polygon */
 CREATE OR REPLACE FUNCTION corelle.rotate_geometry(
   geom geometry,
   model_id integer,
   plate_id integer,
-  t_step integer
+  time_ma numeric,
+  should_clip boolean DEFAULT true
 )
 RETURNS geometry
 AS $$
@@ -158,23 +172,33 @@ DECLARE
 BEGIN
 
   -- get rotation at closest time step
-  SELECT rotation
-  FROM corelle.rotation
+  SELECT r.rotation
+  FROM corelle.rotation_cache r
   WHERE model_id = model_id
     AND plate_id = plate_id
-    AND t_step = t_step
+    AND t_step = time_ma::integer
   INTO rotation;
 
-  IF t_step != 0 AND rotation IS null THEN
+  IF time_ma != 0 AND rotation IS null THEN
     RETURN null;
   END IF;
 
+  /* If we're not clipping, the operation is relatively simple, and also
+    should be much faster. */
+  IF NOT should_clip THEN
+    IF time_ma = 0 THEN
+      RETURN geom;
+    END IF;
+    RETURN corelle.rotate_geometry(geom, rotation);
+  END IF;
+
+  /* If we're clipping, we need more information */
   SELECT geom
   FROM corelle.plate_polygon
   WHERE model_id = model_id
     AND plate_id = plate_id
-    AND coalesce(old_lim, 4000) >= t_step
-    AND coalesce(young_lim, 0) < t_step
+    AND coalesce(old_lim, 4000) >= time_ma
+    AND coalesce(young_lim, 0) < time_ma
   INTO plate;
 
   IF plate IS NULL THEN
@@ -185,7 +209,10 @@ BEGIN
     RETURN NULL;
   END IF;
 
-  clipped := ST_Intersection(geom, plate);
+  clipped := ST_Intersection(
+    geom,
+    plate
+  );
 
   IF t_step = 0 THEN
     RETURN clipped;
@@ -195,3 +222,5 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
+-- Drop old function signatures
+DROP FUNCTION IF EXISTS corelle.rotate_geometry(geometry, integer, integer, integer);
