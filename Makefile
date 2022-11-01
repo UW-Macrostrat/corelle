@@ -27,3 +27,6 @@ test:
 
 dev:
 	cd frontend && poetry run npm run dev
+
+prepare:
+	poetry export -f requirements.txt --output requirements.txt --with dev

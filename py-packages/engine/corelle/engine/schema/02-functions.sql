@@ -158,7 +158,7 @@ BEGIN
     -quaternion[4]
   ];
 END;
-$$ LANGUAGE plpgsql IMMUTABLE STRICT;
+$$ LANGUAGE plpgsql STABLE;
 
 /* Rotate a geometry and clip to a bounding plate polygon */
 CREATE OR REPLACE FUNCTION corelle.rotate_geometry(
@@ -225,7 +225,7 @@ BEGIN
 
   RETURN corelle.rotate_geometry(clipped, rotation);
 END;
-$$ LANGUAGE plpgsql IMMUTABLE STRICT;
+$$ LANGUAGE plpgsql STABLE;
 
 -- Drop old function signatures
 DROP FUNCTION IF EXISTS corelle.rotate_geometry(geometry, integer, integer, integer);
