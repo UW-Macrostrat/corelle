@@ -1,0 +1,38 @@
+#!/usr/bin/env bash -e
+
+# Remove pre-existing containers if they exist
+docker rm -f corelle-db || true
+
+# Build the image
+docker build -t corelle .
+
+# Spin up the database
+docker run --name corelle-db -d \
+  -e POSTGRES_HOST_AUTH_METHOD=trust \
+  -p 54321:5432 postgis/postgis:14-3.3
+
+# Wait for the database to be ready
+until docker exec corelle-db pg_isready -h localhost -p 5432 -U postgres
+do
+  echo "Waiting for database"
+  sleep 1
+done
+
+# Create the corelle database
+docker exec corelle-db createdb -U postgres corelle
+
+# Initialize the database and load features
+docker run --rm \
+  --link corelle-db:database \
+  --volume $(pwd)/data:/code/data \
+  -i corelle bash <<EOF
+  corelle init
+  bin/load-models
+EOF
+
+# Run the tests
+docker run --rm --link corelle-db:database corelle /code/bin/run-tests
+
+# Stop the database
+docker stop corelle-db
+docker rm corelle-db

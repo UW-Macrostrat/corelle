@@ -5,17 +5,19 @@ WORKDIR /code
 
 RUN pip install poetry==1.2.2
 
-COPY ./api-server/poetry.lock ./api-server/pyproject.toml /code/
+COPY ./poetry.lock ./pyproject.toml /code/
+COPY ./py-packages/client/pyproject.toml /code/py-packages/client/
+COPY ./py-packages/server/pyproject.toml /code/py-packages/server/
+COPY ./py-packages/engine/pyproject.toml /code/py-packages/engine/
 
-RUN poetry install --no-dev --no-root
+ENV POETRY_VIRTUALENVS_CREATE=false
 
-COPY ./api-server/corelle_server ./corelle_server
+COPY ./py-packages /code/py-packages
 
-RUN poetry install --no-dev
+RUN poetry install
 
 ENV CORELLE_DB=postgresql://postgres@database:5432/corelle
 
-WORKDIR /run
-COPY ./bin/* ./
+COPY ./bin/* /code/bin/
 
-CMD poetry run ./run-docker
+CMD poetry run /code/bin/run-docker

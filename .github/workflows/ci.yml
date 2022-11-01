@@ -1,0 +1,15 @@
+name: Corelle continuous integration testing
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Run tests in a Docker environment
+        run: bin/test-docker

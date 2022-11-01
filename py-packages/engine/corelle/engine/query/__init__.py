@@ -1,4 +1,4 @@
-from pg_viewtils import relative_path
+from macrostrat.utils import relative_path
 from sqlalchemy import text
 
 
