@@ -159,13 +159,13 @@ BEGIN
     -quaternion[4]
   ];
 END;
-$$ LANGUAGE plpgsql STABLE;
+$$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
 /* Rotate a geometry and clip to a bounding plate polygon */
 CREATE OR REPLACE FUNCTION corelle.rotate_geometry(
   geom geometry,
-  model_id integer,
-  plate_id integer,
+  _model_id integer,
+  _plate_id integer,
   time_ma numeric,
   should_clip boolean DEFAULT true
 )
@@ -180,8 +180,8 @@ BEGIN
   -- get rotation at closest time step
   SELECT r.rotation
   FROM corelle.rotation_cache r
-  WHERE model_id = model_id
-    AND plate_id = plate_id
+  WHERE model_id = _model_id
+    AND plate_id = _plate_id
     AND t_step = time_ma::integer
   INTO rotation;
 
@@ -201,8 +201,8 @@ BEGIN
   /* If we're clipping, we need more information */
   SELECT geom
   FROM corelle.plate_polygon
-  WHERE model_id = model_id
-    AND plate_id = plate_id
+  WHERE model_id = _model_id
+    AND plate_id = _plate_id
     AND coalesce(old_lim, 4000) >= time_ma
     AND coalesce(young_lim, 0) < time_ma
   INTO plate;
@@ -226,7 +226,7 @@ BEGIN
 
   RETURN corelle.rotate_geometry(clipped, rotation);
 END;
-$$ LANGUAGE plpgsql STABLE;
+$$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
 -- Drop old function signatures
 DROP FUNCTION IF EXISTS corelle.rotate_geometry(geometry, integer, integer, integer);
