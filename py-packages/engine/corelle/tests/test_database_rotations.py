@@ -23,7 +23,7 @@ def test_postgis_noop_rotation():
     result = db.session.execute(sql, params=dict(quaternion=identity)).scalar()
     # Convert the WKBElement to a Shapely geometry
     geom = to_shape(WKBElement(result))
-    assert N.allclose(geom.coords, (0, 0))
+    assert N.allclose(N.array(geom.coords), (0, 0))
 
 
 @dataclass
@@ -60,6 +60,17 @@ cases = [
         end_pos=(0, -45),
     ),
 ]
+
+
+@mark.parametrize("case", cases)
+def test_postgis_euler_recovery(case):
+    sql = "SELECT corelle.quaternion_to_euler(:quaternion)"
+    euler = (*case.pole, case.angle)
+    q = euler_to_quaternion(euler)
+    result = db.session.execute(
+        sql, params=dict(quaternion=[q.w, q.x, q.y, q.z])
+    ).scalar()
+    assert N.allclose(N.degrees(N.array(result)), euler)
 
 
 @mark.parametrize("case", cases)

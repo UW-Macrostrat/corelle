@@ -8,43 +8,12 @@ CREATE OR REPLACE FUNCTION corelle.rotate_geometry(geom geometry, quaternion num
 RETURNS geometry
 AS $$
 DECLARE
-  result geometry;
-  rings geometry[];
+  projection text := corelle.build_proj_string(quaternion);
 BEGIN
-  IF ST_GeometryType(geom) = 'ST_Point' THEN
-    RETURN corelle.rotate_point(geom, quaternion);
-  ELSIF ST_GeometryType(geom) = 'ST_MultiPoint' THEN
-    RETURN ST_Collect(ARRAY(
-      SELECT corelle.rotate_geometry(g.geom, quaternion)
-      FROM ST_DumpPoints(geom) AS g
-    ));
-  ELSIF ST_GeometryType(geom) = 'ST_LineString' THEN
-    RETURN ST_MakeLine(ARRAY(
-      SELECT corelle.rotate_geometry(g.geom, quaternion)
-      FROM ST_DumpPoints(geom) AS g
-    ));
-  ELSIF ST_GeometryType(geom) = 'ST_MultiLineString' THEN
-    RETURN ST_Collect(ARRAY(
-      SELECT corelle.rotate_geometry(g.geom, quaternion)
-      FROM ST_Dump(geom) AS g
-    ));
-  ELSIF ST_GeometryType(geom) = 'ST_Polygon' THEN
-    -- don't handle rings yet...
-    -- Rotate interior rings
-    rings := ARRAY(
-      SELECT corelle.rotate_geometry(ST_InteriorRingN(geom, r), quaternion)
-      FROM generate_series(1, ST_NumInteriorRing(geom)) AS r
-    );
-
-    RETURN ST_MakePolygon(corelle.rotate_geometry(ST_ExteriorRing(geom), quaternion), rings);
-  ELSIF ST_GeometryType(geom) = 'ST_MultiPolygon' THEN
-    RETURN ST_Collect(ARRAY(
-      SELECT corelle.rotate_geometry(g.geom, quaternion)
-      FROM ST_Dump(geom) AS g
-    ));
-  ELSE
-    RAISE EXCEPTION 'Unsupported geometry type: %', ST_GeometryType(geom);
+  IF projection IS null THEN
+    RETURN geom;
   END IF;
+  RETURN ST_Transform(geom, projection);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
@@ -121,6 +90,38 @@ BEGIN
   ELSE
     RETURN ST_SetSRID(ST_MakePoint(lon, lat, r), 4326);
   END IF;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION corelle.quaternion_to_euler(q numeric[])
+RETURNS numeric[] AS $$
+DECLARE
+  w numeric := q[1];
+  x numeric := q[2];
+  y numeric := q[3];
+  z numeric := q[4];
+  angle numeric := 2 * acos(w);
+  scalar numeric := sin(angle / 2);
+  lat numeric;
+  lon numeric;
+BEGIN
+  IF scalar = 0 THEN
+    RETURN null;
+  ELSE
+    lat := asin(z/scalar);
+    lon := atan2(y/scalar, x/scalar);
+    RETURN ARRAY[lon, lat, angle];
+  END IF;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION corelle.build_proj_string(quaternion numeric[])
+RETURNS text AS $$
+DECLARE
+  new_pole geometry;
+BEGIN
+  new_pole = corelle.rotate_point(ST_MakePoint(0, 90), quaternion);
+  RETURN '+proj=ob_tran +o_proj=longlat +o_lon_p=' || ST_X(new_pole) || ' +o_lat_p=' || ST_Y(new_pole);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
