@@ -118,10 +118,17 @@ $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 CREATE OR REPLACE FUNCTION corelle.build_proj_string(quaternion numeric[])
 RETURNS text AS $$
 DECLARE
-  new_pole geometry;
+  euler numeric[];
+  lon numeric;
+  lat numeric;
+  angle numeric;
 BEGIN
-  new_pole = corelle.rotate_point(ST_MakePoint(0, 90), quaternion);
-  RETURN '+proj=ob_tran +o_proj=longlat +o_lon_p=' || ST_X(new_pole) || ' +o_lat_p=' || ST_Y(new_pole);
+  euler := corelle.quaternion_to_euler(quaternion);
+  IF euler IS null THEN
+    RETURN '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs';
+  END IF;
+  --new_pole = corelle.rotate_point(ST_MakePoint(0, 90), quaternion);
+  RETURN '+proj=ob_tran +o_proj=longlat +o_lon_c=' || euler[1] || 'r +o_lat_c=' || euler[2] || 'r +lon_0=' || euler[1] || 'r +o_alpha=' || euler[3] || 'r';
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
