@@ -10,9 +10,6 @@ AS $$
 DECLARE
   projection text := corelle.build_proj_string(quaternion);
 BEGIN
-  IF projection IS null THEN
-    RETURN geom;
-  END IF;
   RETURN ST_Transform(geom, projection);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
@@ -128,7 +125,7 @@ BEGIN
     RETURN '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs';
   END IF;
   --new_pole = corelle.rotate_point(ST_MakePoint(0, 90), quaternion);
-  RETURN '+proj=ob_tran +o_proj=longlat +o_lon_c=' || euler[1] || 'r +o_lat_c=' || euler[2] || 'r +lon_0=' || euler[1] || 'r +o_alpha=' || euler[3] || 'r';
+  RETURN '+proj=ob_tran +o_proj=longlat +o_lon_c=0 +o_lat_c=0 +o_alpha=5';
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 

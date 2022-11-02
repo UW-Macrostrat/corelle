@@ -70,7 +70,43 @@ def test_postgis_euler_recovery(case):
     result = db.session.execute(
         sql, params=dict(quaternion=[q.w, q.x, q.y, q.z])
     ).scalar()
-    assert N.allclose(N.degrees(N.array(result)), euler)
+    assert N.allclose(N.degrees([float(i) for i in result]), euler)
+
+
+@mark.parametrize("case", cases)
+def test_postgis_direct_rotations(case):
+    pole_lon = case.pole[0]
+    pole_lat = case.pole[1]
+
+    euler = (*case.pole, case.angle)
+    q = euler_to_quaternion(euler)
+
+    new_pole = Q.rotate_vectors(q, sph2cart(-90, 0))
+    new_pole = cart2sph(new_pole)
+
+    p1 = Q.rotate_vectors(q, sph2cart(90, 0))
+    p1 = cart2sph(p1)
+
+    proj_string = f"+proj=ob_tran +o_proj=longlat +o_lon_c={90-pole_lon} +o_alpha={90-case.angle} "
+    if pole_lat != 90:
+        proj_string += f"+o_lat_c={pole_lat} "
+    proj_string += f"+to +proj=ob_tran +o_proj=longlat +o_lon_p={-180} +o_lat_p={0}"
+    print(proj_string)
+
+    sql = "SELECT ST_Transform(ST_GeomFromText('POINT(:x :y)', 4326), :proj_string)"
+    # Get the result of the rotation as a WKBElement
+    with db.session_scope() as session:
+        result = session.execute(
+            sql,
+            params=dict(
+                x=case.start_pos[0],
+                y=case.start_pos[1],
+                proj_string=proj_string,
+            ),
+        ).scalar()
+    # Convert the WKBElement to a Shapely geometry
+    geom = to_shape(WKBElement(result))
+    assert N.allclose(list(geom.coords), case.end_pos)
 
 
 @mark.parametrize("case", cases)
@@ -114,9 +150,10 @@ def test_postgis_euler_rotation():
 
     sql = "SELECT corelle.rotate_geometry(ST_GeomFromText('POINT(0 0)', 4326), :quaternion)"
     # Get the result of the rotation as a WKBElement
-    result = db.session.execute(
-        sql, params=dict(quaternion=[q.w, q.x, q.y, q.z])
-    ).scalar()
+    with db.session_scope() as session:
+        result = session.execute(
+            sql, params=dict(quaternion=[q.w, q.x, q.y, q.z])
+        ).scalar()
     # Convert the WKBElement to a Shapely geometry
     geom = to_shape(WKBElement(result))
     assert N.allclose(list(geom.coords), end_point)
