@@ -13,7 +13,7 @@ BEGIN
   IF projection IS null THEN
     RETURN geom;
   END IF;
-  RETURN ST_Transform(geom, projection);
+  RETURN ST_SetSRID(ST_Transform(ST_SetSRID(geom, 4326), projection), 4326);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
