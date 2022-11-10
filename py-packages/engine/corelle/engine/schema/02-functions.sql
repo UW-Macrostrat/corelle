@@ -14,6 +14,53 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
+/**
+Naïve implementation of the quaternion rotation algorithm using PostGIS functions directly.
+*/
+CREATE OR REPLACE FUNCTION corelle.rotate_geometry_pointwise(geom geometry, quaternion numeric[])
+RETURNS geometry
+AS $$
+DECLARE
+  result geometry;
+  rings geometry[];
+BEGIN
+  IF ST_GeometryType(geom) = 'ST_Point' THEN
+    RETURN corelle.rotate_point(geom, quaternion);
+  ELSIF ST_GeometryType(geom) = 'ST_MultiPoint' THEN
+    RETURN ST_Collect(ARRAY(
+      SELECT corelle.rotate_geometry_pointwise(g.geom, quaternion)
+      FROM ST_DumpPoints(geom) AS g
+    ));
+  ELSIF ST_GeometryType(geom) = 'ST_LineString' THEN
+    RETURN ST_MakeLine(ARRAY(
+      SELECT corelle.rotate_geometry_pointwise(g.geom, quaternion)
+      FROM ST_DumpPoints(geom) AS g
+    ));
+  ELSIF ST_GeometryType(geom) = 'ST_MultiLineString' THEN
+    RETURN ST_Collect(ARRAY(
+      SELECT corelle.rotate_geometry_pointwise(g.geom, quaternion)
+      FROM ST_Dump(geom) AS g
+    ));
+  ELSIF ST_GeometryType(geom) = 'ST_Polygon' THEN
+    -- don't handle rings yet...
+    -- Rotate interior rings
+    rings := ARRAY(
+      SELECT corelle.rotate_geometry_pointwise(ST_InteriorRingN(geom, r), quaternion)
+      FROM generate_series(1, ST_NumInteriorRing(geom)) AS r
+    );
+
+    RETURN ST_MakePolygon(corelle.rotate_geometry_pointwise(ST_ExteriorRing(geom), quaternion), rings);
+  ELSIF ST_GeometryType(geom) = 'ST_MultiPolygon' THEN
+    RETURN ST_Collect(ARRAY(
+      SELECT corelle.rotate_geometry_pointwise(g.geom, quaternion)
+      FROM ST_Dump(geom) AS g
+    ));
+  ELSE
+    RAISE EXCEPTION 'Unsupported geometry type: %', ST_GeometryType(geom);
+  END IF;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
 CREATE OR REPLACE FUNCTION corelle.rotate_point(point geometry, quaternion numeric[])
 RETURNS geometry AS $$
 DECLARE
