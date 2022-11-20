@@ -84,6 +84,24 @@ def test_postgis_euler_recovery(case):
         assert N.allclose(N.degrees([float(i) for i in result]), euler)
 
 
+def _direct_rotation(case, lon_p, lat_p, lon_0):
+    proj_string = f"+proj=ob_tran +o_proj=longlat +o_lon_p={lon_p:.5f} +o_lat_p={lat_p:.5f} +lon_0={lon_0}"
+    sql = "SELECT ST_Transform(ST_GeomFromText('POINT(:x :y)', 4326), :proj_string)"
+    # Get the result of the rotation as a WKBElement
+    with db.session_scope() as session:
+        result = session.execute(
+            sql,
+            params=dict(
+                x=case.start_pos[0],
+                y=case.start_pos[1],
+                proj_string=proj_string,
+            ),
+        ).scalar()
+    # Convert the WKBElement to a Shapely geometry
+    geom = to_shape(WKBElement(result))
+    assert N.allclose(list(geom.coords), case.end_pos)
+
+
 @mark.parametrize("case", cases)
 def test_postgis_direct_rotations(case):
     euler = (*case.pole, case.angle)
@@ -136,29 +154,58 @@ def test_postgis_direct_rotations(case):
     # by that amount. I think this is a PROJ quirk? So we need to subtract this to rotate everything back into alignment.
     lon_0 = new_pole_sph[0] - twist_angle
 
-    proj_string = f"+proj=ob_tran +o_proj=longlat +o_lon_p={new_pole_sph[0]:.5f} +o_lat_p={new_pole_sph[1]:.5f} +lon_0={lon_0}"
-
-    print(proj_string)
-
-    sql = "SELECT ST_Transform(ST_GeomFromText('POINT(:x :y)', 4326), :proj_string)"
-    # Get the result of the rotation as a WKBElement
-    with db.session_scope() as session:
-        result = session.execute(
-            sql,
-            params=dict(
-                x=case.start_pos[0],
-                y=case.start_pos[1],
-                proj_string=proj_string,
-            ),
-        ).scalar()
-    # Convert the WKBElement to a Shapely geometry
-    geom = to_shape(WKBElement(result))
-    assert N.allclose(list(geom.coords), case.end_pos)
+    _direct_rotation(case, new_pole_sph[0], new_pole_sph[1], lon_0)
 
 
 @mark.parametrize("case", cases)
-def test_postgis_rotations_pointwise(case):
-    sql = "SELECT corelle.rotate_geometry_pointwise(ST_GeomFromText('POINT(:x :y)', 4326), :quaternion)"
+def test_postgis_direct_rotations_simplified_math(case):
+    """Same operation as above, but using simplified math constructs that
+    shadow the PostGIS implementation."""
+    euler = (*case.pole, case.angle)
+    q = euler_to_quaternion(euler)
+
+    # Step 1: Take the pole and rotate it along a meridian
+    # to a new location (pole is at some point on the equator)
+
+    # Find new pole location
+    orig_pole = unit_vector(0, 0, 1)
+    new_pole = Q.rotate_vectors(q, orig_pole)
+
+    new_pole_lat = N.arcsin(new_pole[2])
+    new_pole_lon = N.arctan2(new_pole[1], new_pole[0])
+
+    # Pole rotation angle
+    angle = -N.arccos(new_pole[2])
+    _lon = new_pole_lon + N.pi / 2
+
+    # Get rotation component around new pole (the "twist")
+    # The z component is always 0
+    twist_q_w = (
+        q.w * N.cos(angle / 2)
+        - q.x * N.cos(_lon) * N.sin(angle / 2)
+        - q.y * N.sin(_lon) * N.sin(angle / 2)
+    )
+
+    # Get the twist angle around the new pole
+    twist_angle = 2 * N.arccos(twist_q_w)
+
+    lon_0 = new_pole_lon - twist_angle
+
+    _direct_rotation(
+        case, N.degrees(new_pole_lon), N.degrees(new_pole_lat), N.degrees(lon_0)
+    )
+
+
+rotation_functions = [
+    "corelle.rotate_geometry_pointwise",
+    # "corelle.rotate_geometry",
+]
+
+
+@mark.parametrize("func", rotation_functions)
+@mark.parametrize("case", cases)
+def test_postgis_rotations(func, case):
+    sql = f"SELECT {func}(ST_GeomFromText('POINT(:x :y)', 4326), :quaternion)"
     q = euler_to_quaternion((*case.pole, case.angle))
 
     v1 = Q.rotate_vectors(q, sph2cart(*case.start_pos))
@@ -187,10 +234,11 @@ geometries = [
 ]
 
 
+@mark.parametrize("func", rotation_functions)
 @mark.parametrize("geom", geometries)
-def test_postgis_geometry_rotation_pointwise(geom):
+def test_postgis_geometry_rotation(func, geom):
     q = euler_to_quaternion((0, 90, 45))
-    sql = "SELECT corelle.rotate_geometry_pointwise(ST_GeomFromText(:geom, 4326), :quaternion)"
+    sql = f"SELECT {func}(ST_GeomFromText(:geom, 4326), :quaternion)"
     with db.session_scope() as session:
         # Check validity of the input geometry
         assert wkt.loads(geom).is_valid
@@ -203,11 +251,12 @@ def test_postgis_geometry_rotation_pointwise(geom):
         assert geom.is_valid
 
 
+@mark.parametrize("func", rotation_functions)
 @mark.parametrize("geom", geometries)
-def test_inverse_rotation_pointwise(geom):
+def test_inverse_rotation(func, geom):
     q = euler_to_quaternion((0, 90, 45))
-    sql = """SELECT corelle.rotate_geometry_pointwise(
-        corelle.rotate_geometry_pointwise(ST_GeomFromText(:geom, 4326), :quaternion),
+    sql = f"""SELECT {func}(
+        {func}(ST_GeomFromText(:geom, 4326), :quaternion),
         corelle.invert_rotation(:quaternion)
     )"""
     with db.session_scope() as session:

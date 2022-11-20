@@ -159,20 +159,106 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
+CREATE OR REPLACE FUNCTION corelle.euler_to_quaternion(pole geometry, angle numeric)
+RETURNS numeric[] AS $$
+DECLARE
+  half_angle numeric := corelle.radians(angle) / 2;
+  scalar numeric := sin(half_angle);
+  v numeric[] := corelle.sph2cart(pole);
+BEGIN
+  RETURN ARRAY[
+    cos(half_angle),
+    v[1] * scalar,
+    v[2] * scalar,
+    v[3] * scalar
+  ];
+END;
+$$ LANGUAGE plpgsql IMMUTABLE STRICT;
+
 CREATE OR REPLACE FUNCTION corelle.build_proj_string(quaternion numeric[])
 RETURNS text AS $$
 DECLARE
-  euler numeric[];
-  lon numeric;
-  lat numeric;
-  angle numeric;
+  new_pole geometry;
+  swing_q_inv numeric[];
+  twist_q_w numeric;
+  twist_angle numeric;
+  lon_0 numeric;
 BEGIN
-  euler := corelle.quaternion_to_euler(quaternion);
-  IF euler IS null THEN
-    RETURN '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs';
-  END IF;
-  --new_pole = corelle.rotate_point(ST_MakePoint(0, 90), quaternion);
-  RETURN '+proj=ob_tran +o_proj=longlat +o_lon_c=0 +o_lat_c=0 +o_alpha=5';
+
+  -- Rotate the north pole by the quaternion
+  q_conj := ARRAY[
+    quaternion[1],
+    -quaternion[2],
+    -quaternion[3],
+    -quaternion[4]
+  ];
+
+  r := ARRAY[0, 0, 0, 1];
+
+  new_pole := corelle.quaternion_multiply(
+    corelle.quaternion_multiply(quaternion, r),
+    q_conj
+  );
+
+  half_angle := acos(new_pole[1]);
+  scalar numeric := sin(half_angle);
+  v numeric[] := corelle.sph2cart(pole);
+
+  -- get the new pole vector by cross product
+  pole := ARRAY[
+    new_pole[2],
+    new_pole[1],
+    0
+  ];
+
+  swing_q_inv := ARRAY[
+    cos(half_angle),
+    -v[1] * scalar,
+    -v[2] * scalar,
+    -v[3] * scalar
+  ];
+BEGIN
+  RETURN ARRAY[
+    cos(half_angle),
+    v[1] * scalar,
+    v[2] * scalar,
+    v[3] * scalar
+  ];
+
+  RETURN corelle.cart2sph(
+    q_res[2],
+    q_res[3],
+    q_res[4]
+  );
+
+
+  new_pole := corelle.rotate_point(ST_SetSRID(ST_MakePoint(0, 90), 4326), quaternion);
+
+  swing_q_inv := corelle.euler_to_quaternion(
+    ST_MakePoint(ST_X(new_pole) + 90, 0),
+    (ST_Y(new_pole) - 90)::numeric
+  );
+
+  RAISE NOTICE 'new_pole: %', ST_AsText(new_pole);
+
+  RAISE NOTICE 'swing_q_inv: %', swing_q_inv;
+
+  twist_q_w := quaternion[1] * swing_q_inv[1]
+              - quaternion[2] * swing_q_inv[2]
+              - quaternion[3] * swing_q_inv[3]
+              - quaternion[4] * swing_q_inv[4];
+
+  RAISE NOTICE 'twist_q: %', twist_q_w;
+
+  twist_angle := corelle.degrees(2 * acos(twist_q_w));
+
+  lon_0 := ST_X(new_pole) - twist_angle;
+
+  RETURN format('+proj=ob_tran +o_proj=longlat +o_lon_p=%s +o_lat_p=%s +lon_0=%s',
+    ST_X(new_pole),
+    ST_Y(new_pole),
+    lon_0
+  );
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
