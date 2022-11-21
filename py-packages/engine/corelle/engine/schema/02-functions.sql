@@ -1,10 +1,27 @@
+-- drop outdated function signatures
+DROP FUNCTION IF EXISTS corelle.rotate_geometry(geometry, numeric[]);
+DROP FUNCTION IF EXISTS corelle.rotate_geometry_pointwise(geometry, numeric[]);
+DROP FUNCTION IF EXISTS corelle.build_proj_string(numeric[]);
+DROP FUNCTION IF EXISTS corelle.rotate_geometry(geometry, numeric[]);
+DROP FUNCTION IF EXISTS corelle.rotate_geometry_pointwise(geometry, numeric[]);
+DROP FUNCTION IF EXISTS corelle.rotate_point(geometry, numeric[]);
+DROP FUNCTION IF EXISTS corelle.quaternion_multiply(numeric[], numeric[]);
+DROP FUNCTION IF EXISTS corelle.sph2cart(geometry);
+DROP FUNCTION IF EXISTS corelle.cart2sph(numeric, numeric, numeric);
+DROP FUNCTION IF EXISTS corelle.quaternion_to_euler(numeric[]);
+DROP FUNCTION IF EXISTS corelle.euler_to_quaternion(geometry, numeric);
+DROP FUNCTION IF EXISTS corelle.build_proj_string(numeric[]);
+DROP FUNCTION IF EXISTS corelle.radians(numeric);
+DROP FUNCTION IF EXISTS corelle.degrees(numeric);
+DROP FUNCTION IF EXISTS corelle.invert_rotation(numeric[]);
+DROP FUNCTION IF EXISTS corelle.rotate_geometry(geometry, integer, integer, integer);
+
 /*
 Functions to rotate geometries directly in PostGIS. This allows Corelle plate rotations
 to be applied to any geometry in the database. This requires plate geometries to be pre-cached
 in the database for each time step and plate ID.
 */
-
-CREATE OR REPLACE FUNCTION corelle.rotate_geometry(geom geometry, quaternion numeric[])
+CREATE OR REPLACE FUNCTION corelle.rotate_geometry(geom geometry, quaternion double precision[])
 RETURNS geometry
 AS $$
 DECLARE
@@ -17,7 +34,7 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 /**
 Naïve implementation of the quaternion rotation algorithm using PostGIS functions directly.
 */
-CREATE OR REPLACE FUNCTION corelle.rotate_geometry_pointwise(geom geometry, quaternion numeric[])
+CREATE OR REPLACE FUNCTION corelle.rotate_geometry_pointwise(geom geometry, quaternion double precision[])
 RETURNS geometry
 AS $$
 DECLARE
@@ -61,13 +78,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION corelle.rotate_point(point geometry, quaternion numeric[])
+CREATE OR REPLACE FUNCTION corelle.rotate_point(point geometry, quaternion double precision[])
 RETURNS geometry AS $$
 DECLARE
-  pt numeric[] := corelle.sph2cart(point);
-  q_conj numeric[];
-  q_res numeric[];
-  r numeric[];
+  pt double precision[] := corelle.sph2cart(point);
+  q_conj double precision[];
+  q_res double precision[];
+  r double precision[];
 BEGIN
   q_conj := ARRAY[
     quaternion[1],
@@ -91,8 +108,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION corelle.quaternion_multiply(q numeric[], r numeric[])
-RETURNS numeric[]
+CREATE OR REPLACE FUNCTION corelle.quaternion_multiply(q double precision[], r double precision[])
+RETURNS double precision[]
 AS $$
 BEGIN 
   RETURN ARRAY[
@@ -106,11 +123,11 @@ $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
 
 CREATE OR REPLACE FUNCTION corelle.sph2cart(point geometry)
-RETURNS numeric[] AS $$
+RETURNS double precision[] AS $$
 DECLARE
-  lon numeric := corelle.radians(ST_X(point));
-  lat numeric := corelle.radians(ST_Y(point));
-  r numeric := coalesce(ST_Z(point), 1);
+  lon double precision := corelle.radians(ST_X(point));
+  lat double precision := corelle.radians(ST_Y(point));
+  r double precision := coalesce(ST_Z(point), 1);
 BEGIN
   RETURN ARRAY[
     r * cos(lat) * cos(lon),
@@ -121,13 +138,13 @@ END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
 
-CREATE OR REPLACE FUNCTION corelle.cart2sph(x numeric, y numeric, z numeric)
+CREATE OR REPLACE FUNCTION corelle.cart2sph(x double precision, y double precision, z double precision)
 RETURNS geometry
 AS $$
 DECLARE
-  r numeric := sqrt(x * x + y * y + z * z);
-  lat numeric := corelle.degrees(asin(z / r));
-  lon numeric := corelle.degrees(atan2(y, x));
+  r double precision := sqrt(x * x + y * y + z * z);
+  lat double precision := corelle.degrees(asin(z / r));
+  lon double precision := corelle.degrees(atan2(y, x));
 BEGIN
   IF abs(r-1) < 0.0000001 THEN
     RETURN ST_SetSRID(ST_MakePoint(lon, lat), 4326);
@@ -137,17 +154,17 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION corelle.quaternion_to_euler(q numeric[])
-RETURNS numeric[] AS $$
+CREATE OR REPLACE FUNCTION corelle.quaternion_to_euler(q double precision[])
+RETURNS double precision[] AS $$
 DECLARE
-  w numeric := q[1];
-  x numeric := q[2];
-  y numeric := q[3];
-  z numeric := q[4];
-  angle numeric := 2 * acos(w);
-  scalar numeric := sin(angle / 2);
-  lat numeric;
-  lon numeric;
+  w double precision := q[1];
+  x double precision := q[2];
+  y double precision := q[3];
+  z double precision := q[4];
+  angle double precision := 2 * acos(w);
+  scalar double precision := sin(angle / 2);
+  lat double precision;
+  lon double precision;
 BEGIN
   IF scalar = 0 THEN
     RETURN null;
@@ -159,12 +176,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION corelle.euler_to_quaternion(pole geometry, angle numeric)
-RETURNS numeric[] AS $$
+CREATE OR REPLACE FUNCTION corelle.euler_to_quaternion(pole geometry, angle double precision)
+RETURNS double precision[] AS $$
 DECLARE
-  half_angle numeric := corelle.radians(angle) / 2;
-  scalar numeric := sin(half_angle);
-  v numeric[] := corelle.sph2cart(pole);
+  half_angle double precision := corelle.radians(angle) / 2;
+  scalar double precision := sin(half_angle);
+  v double precision[] := corelle.sph2cart(pole);
 BEGIN
   RETURN ARRAY[
     cos(half_angle),
@@ -175,7 +192,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION corelle.build_proj_string(quaternion numeric[])
+CREATE OR REPLACE FUNCTION corelle.build_proj_string(quaternion double precision[])
 RETURNS text AS $$
 DECLARE
   new_pole double precision[];
@@ -244,8 +261,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION corelle.invert_rotation(quaternion numeric[])
-RETURNS numeric[]
+CREATE OR REPLACE FUNCTION corelle.invert_rotation(quaternion double precision[])
+RETURNS double precision[]
 AS $$
 BEGIN
   RETURN ARRAY[
@@ -269,7 +286,7 @@ RETURNS geometry
 AS $$
 DECLARE
   plate geometry;
-  rotation numeric[];
+  rotation double precision[];
   clipped geometry;
 BEGIN
 
@@ -324,5 +341,3 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
--- Drop old function signatures
-DROP FUNCTION IF EXISTS corelle.rotate_geometry(geometry, integer, integer, integer);
