@@ -111,10 +111,16 @@ def _direct_rotation(start_pos, end_pos, lon_p, lat_p, lon_0):
 
 
 @mark.parametrize("case", cases)
-def test_postgis_direct_rotations(case):
+@mark.parametrize("inverse", [False, True])
+def test_postgis_direct_rotations(case, inverse):
     euler = (*case.pole, case.angle)
 
     q = euler_to_quaternion(euler)
+
+    start_pos, end_pos = case.start_pos, case.end_pos
+    if inverse:
+        start_pos, end_pos = case.end_pos, case.start_pos
+        q = q.inverse()
     # if case.angle < 0:
     #     q = euler_to_quaternion((-case.pole[0], -case.pole[1], -case.angle))
 
@@ -162,21 +168,21 @@ def test_postgis_direct_rotations(case):
 
     # Step 2: Rotate around the new pole to a final angular position
 
-    # Get the twist angle around the new pole
-    twist_angle = N.degrees(2 * N.arccos(twist_q.w))
+    # Apply the twist rotation
+    twisted = Q.rotate_vectors(twist_q, unit_vector(1, 0, 0))
+    twist_angle = N.degrees(N.arctan2(twisted[1], twisted[0]))
 
     print("New pole:", new_pole_sph)
 
     # For some reason, changing the longitude of the north pole causes the entire manifold to be shifted
     # by that amount. I think this is a PROJ quirk? So we need to subtract this to rotate everything back into alignment.
     lon_0 = new_pole_sph[0] - twist_angle
-
-    if case.angle < 0:
-        lon_0 += 180
+    print("Twist angle:", twist_angle)
+    print("Lon_0:", lon_0)
 
     _direct_rotation(
-        case.start_pos,
-        case.end_pos,
+        start_pos,
+        end_pos,
         N.radians(new_pole_sph[0]),
         N.radians(new_pole_sph[1]),
         N.radians(lon_0),
@@ -213,29 +219,35 @@ def test_postgis_direct_rotations_simplified_math(case, inverse):
     lat_p = N.arcsin(new_pole.z)
 
     # Pole rotation angle
-    half_angle = -N.arccos(new_pole.z) / 2
     lon_s = lon_p + N.pi / 2
 
-    # Get rotation component around new pole (the "twist")
-    # The z component is always 0
-    twist_q_w = (
-        q.w * N.cos(half_angle)
-        - q.x * N.cos(lon_s) * N.sin(half_angle)
-        - q.y * N.sin(lon_s) * N.sin(half_angle)
+    half_angle = N.arccos(new_pole.z) / 2
+
+    swing_q_inv = N.quaternion(
+        -N.cos(half_angle),
+        N.cos(lon_s) * N.sin(half_angle),
+        N.sin(lon_s) * N.sin(half_angle),
+        0,
     )
 
-    # Get the twist angle around the new pole
-    lon_0 = lon_p - 2 * N.arccos(twist_q_w)
+    # Get rotation component around new pole (the "twist")
+    twist_q = q * swing_q_inv
 
-    if case.angle < 0:
-        lon_0 += N.pi
+    # Step 2: Rotate around the new pole to a final angular position
+
+    twisted = twist_q * N.quaternion(0, 1, 0, 0) * twist_q.inverse()
+    twist_angle = N.arctan2(twisted.y, twisted.x)
+
+    # For some reason, changing the longitude of the north pole causes the entire manifold to be shifted
+    # by that amount. I think this is a PROJ quirk? So we need to subtract this to rotate everything back into alignment.
+    lon_0 = lon_p - twist_angle
 
     _direct_rotation(start_pos, end_pos, lon_p, lat_p, lon_0)
 
 
 rotation_functions = [
     "corelle.rotate_geometry_pointwise",
-    "corelle.rotate_geometry",
+    # "corelle.rotate_geometry",
 ]
 
 
@@ -243,10 +255,7 @@ rotation_functions = [
 @mark.parametrize("case", cases)
 def test_postgis_rotations(func, case):
     sql = f"SELECT {func}(ST_GeomFromText('POINT(:x :y)', 4326), :quaternion)"
-    angle = case.angle
-    if angle < 0:
-        angle += 360
-    q = euler_to_quaternion((*case.pole, angle))
+    q = euler_to_quaternion((*case.pole, case.angle))
 
     v1 = Q.rotate_vectors(q, sph2cart(*case.start_pos))
     v1 = unit_vector(*v1)

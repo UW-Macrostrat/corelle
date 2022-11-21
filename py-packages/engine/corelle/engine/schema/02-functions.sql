@@ -32,6 +32,56 @@ END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
 /**
+Builds a projection string from a quaternion. This is the core of Corelle's on-database
+rotation functionality.
+*/
+CREATE OR REPLACE FUNCTION corelle.build_proj_string(quaternion double precision[])
+RETURNS text AS $$
+DECLARE
+  new_pole double precision[];
+  lat_p double precision;
+  lon_p double precision;
+  lon_0 double precision;
+  pz double precision;
+  half_angle double precision;
+  lon_s double precision;
+  twist_q_w double precision;
+BEGIN
+
+  new_pole := corelle.quaternion_multiply(
+    ARRAY[-quaternion[4], quaternion[3], -quaternion[2], quaternion[1]],
+    corelle.invert_rotation(quaternion)
+  );
+
+  -- Make sure our latitude is never out of range
+  pz := greatest(least(new_pole[4], 1::double precision), -1::double precision);
+  lon_p := atan2(new_pole[3], new_pole[2]);
+  lat_p := asin(pz);
+
+  -- Pole rotation angle
+  half_angle := -0.5*acos(pz);
+  lon_s := lon_p + 0.5*pi();
+
+  -- Get rotation component around new pole (the "twist")
+  -- The z component is always 0
+  twist_q_w := (
+      quaternion[1] * cos(half_angle)
+      - quaternion[2] * cos(lon_s) * sin(half_angle)
+      - quaternion[3] * sin(lon_s) * sin(half_angle)
+  );
+
+  -- Get the twist angle around the new pole
+  lon_0 := lon_p - 2 * acos(twist_q_w);
+
+  RETURN format('+proj=ob_tran +o_proj=longlat +o_lon_p=%sr +o_lat_p=%sr +lon_0=%sr',
+    lon_p,
+    lat_p,
+    lon_0
+  );
+END;
+$$ LANGUAGE plpgsql IMMUTABLE STRICT;
+
+/**
 Naïve implementation of the quaternion rotation algorithm using PostGIS functions directly.
 */
 CREATE OR REPLACE FUNCTION corelle.rotate_geometry_pointwise(geom geometry, quaternion double precision[])
@@ -108,6 +158,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
+/**
+Hamilton product of two quaternions.
+*/
 CREATE OR REPLACE FUNCTION corelle.quaternion_multiply(q double precision[], r double precision[])
 RETURNS double precision[]
 AS $$
@@ -189,52 +242,6 @@ BEGIN
     v[2] * scalar,
     v[3] * scalar
   ];
-END;
-$$ LANGUAGE plpgsql IMMUTABLE STRICT;
-
-CREATE OR REPLACE FUNCTION corelle.build_proj_string(quaternion double precision[])
-RETURNS text AS $$
-DECLARE
-  new_pole double precision[];
-  lat_p double precision;
-  lon_p double precision;
-  lon_0 double precision;
-  pz double precision;
-  half_angle double precision;
-  lon_s double precision;
-  twist_q_w double precision;
-BEGIN
-
-  new_pole := corelle.quaternion_multiply(
-    ARRAY[-quaternion[4], quaternion[3], -quaternion[2], quaternion[1]],
-    corelle.invert_rotation(quaternion)
-  );
-
-  -- Make sure our latitude is never out of range
-  pz := greatest(least(new_pole[4], 1::double precision), -1::double precision);
-  lon_p := atan2(new_pole[3], new_pole[2]);
-  lat_p := asin(pz);
-
-  -- Pole rotation angle
-  half_angle := -0.5*acos(pz);
-  lon_s := lon_p + 0.5*pi();
-
-  -- Get rotation component around new pole (the "twist")
-  -- The z component is always 0
-  twist_q_w := (
-      quaternion[1] * cos(half_angle)
-      - quaternion[2] * cos(lon_s) * sin(half_angle)
-      - quaternion[3] * sin(lon_s) * sin(half_angle)
-  );
-
-  -- Get the twist angle around the new pole
-  lon_0 := lon_p - 2 * acos(twist_q_w);
-
-  RETURN format('+proj=ob_tran +o_proj=longlat +o_lon_p=%sr +o_lat_p=%sr +lon_0=%sr',
-    lon_p,
-    lat_p,
-    lon_0
-  );
 END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 
