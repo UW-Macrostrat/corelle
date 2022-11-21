@@ -10,7 +10,7 @@ AS $$
 DECLARE
   projection text := corelle.build_proj_string(quaternion);
 BEGIN
-  RETURN ST_Transform(geom, projection);
+  RETURN ST_SetSRID(ST_Transform(geom, projection), 4326);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
@@ -178,85 +178,44 @@ $$ LANGUAGE plpgsql IMMUTABLE STRICT;
 CREATE OR REPLACE FUNCTION corelle.build_proj_string(quaternion numeric[])
 RETURNS text AS $$
 DECLARE
-  new_pole geometry;
-  swing_q_inv numeric[];
-  twist_q_w numeric;
-  twist_angle numeric;
-  lon_0 numeric;
+  new_pole double precision[];
+  lat_p double precision;
+  lon_p double precision;
+  lon_0 double precision;
+  pz double precision;
+  half_angle double precision;
+  lon_s double precision;
+  twist_q_w double precision;
 BEGIN
-
-  -- Rotate the north pole by the quaternion
-  q_conj := ARRAY[
-    quaternion[1],
-    -quaternion[2],
-    -quaternion[3],
-    -quaternion[4]
-  ];
-
-  r := ARRAY[0, 0, 0, 1];
 
   new_pole := corelle.quaternion_multiply(
-    corelle.quaternion_multiply(quaternion, r),
-    q_conj
+    ARRAY[-quaternion[4], quaternion[3], -quaternion[2], quaternion[1]],
+    corelle.invert_rotation(quaternion)
   );
 
-  half_angle := acos(new_pole[1]);
-  scalar numeric := sin(half_angle);
-  v numeric[] := corelle.sph2cart(pole);
+  -- Make sure our latitude is never out of range
+  pz := greatest(least(new_pole[4], 1::double precision), -1::double precision);
+  lon_p := atan2(new_pole[3], new_pole[2]);
+  lat_p := asin(pz);
 
-  -- get the new pole vector by cross product
-  pole := ARRAY[
-    new_pole[2],
-    new_pole[1],
-    0
-  ];
+  -- Pole rotation angle
+  half_angle := -0.5*acos(pz);
+  lon_s := lon_p + 0.5*pi();
 
-  swing_q_inv := ARRAY[
-    cos(half_angle),
-    -v[1] * scalar,
-    -v[2] * scalar,
-    -v[3] * scalar
-  ];
-BEGIN
-  RETURN ARRAY[
-    cos(half_angle),
-    v[1] * scalar,
-    v[2] * scalar,
-    v[3] * scalar
-  ];
-
-  RETURN corelle.cart2sph(
-    q_res[2],
-    q_res[3],
-    q_res[4]
+  -- Get rotation component around new pole (the "twist")
+  -- The z component is always 0
+  twist_q_w := (
+      quaternion[1] * cos(half_angle)
+      - quaternion[2] * cos(lon_s) * sin(half_angle)
+      - quaternion[3] * sin(lon_s) * sin(half_angle)
   );
 
+  -- Get the twist angle around the new pole
+  lon_0 := lon_p - 2 * acos(twist_q_w);
 
-  new_pole := corelle.rotate_point(ST_SetSRID(ST_MakePoint(0, 90), 4326), quaternion);
-
-  swing_q_inv := corelle.euler_to_quaternion(
-    ST_MakePoint(ST_X(new_pole) + 90, 0),
-    (ST_Y(new_pole) - 90)::numeric
-  );
-
-  RAISE NOTICE 'new_pole: %', ST_AsText(new_pole);
-
-  RAISE NOTICE 'swing_q_inv: %', swing_q_inv;
-
-  twist_q_w := quaternion[1] * swing_q_inv[1]
-              - quaternion[2] * swing_q_inv[2]
-              - quaternion[3] * swing_q_inv[3]
-              - quaternion[4] * swing_q_inv[4];
-
-  RAISE NOTICE 'twist_q: %', twist_q_w;
-
-  twist_angle := corelle.degrees(2 * acos(twist_q_w));
-
-  lon_0 := ST_X(new_pole) - twist_angle;
-
-  RETURN format('+proj=ob_tran +o_proj=longlat +o_lon_p=%s +o_lat_p=%s +lon_0=%s',
-    ST_X(new_pole),
-    ST_Y(new_pole),
+  RETURN format('+proj=ob_tran +o_proj=longlat +o_lon_p=%sr +o_lat_p=%sr +lon_0=%sr',
+    lon_p,
+    lat_p,
     lon_0
   );
 END;

@@ -85,7 +85,7 @@ def test_postgis_euler_recovery(case):
 
 
 def _direct_rotation(case, lon_p, lat_p, lon_0):
-    proj_string = f"+proj=ob_tran +o_proj=longlat +o_lon_p={lon_p:.5f} +o_lat_p={lat_p:.5f} +lon_0={lon_0}"
+    proj_string = f"+proj=ob_tran +o_proj=longlat +o_lon_p={lon_p}r +o_lat_p={lat_p}r +lon_0={lon_0}r"
     sql = "SELECT ST_Transform(ST_GeomFromText('POINT(:x :y)', 4326), :proj_string)"
     # Get the result of the rotation as a WKBElement
     with db.session_scope() as session:
@@ -154,7 +154,9 @@ def test_postgis_direct_rotations(case):
     # by that amount. I think this is a PROJ quirk? So we need to subtract this to rotate everything back into alignment.
     lon_0 = new_pole_sph[0] - twist_angle
 
-    _direct_rotation(case, new_pole_sph[0], new_pole_sph[1], lon_0)
+    _direct_rotation(
+        case, N.radians(new_pole_sph[0]), N.radians(new_pole_sph[1]), N.radians(lon_0)
+    )
 
 
 @mark.parametrize("case", cases)
@@ -168,37 +170,39 @@ def test_postgis_direct_rotations_simplified_math(case):
     # to a new location (pole is at some point on the equator)
 
     # Find new pole location
-    orig_pole = unit_vector(0, 0, 1)
-    new_pole = Q.rotate_vectors(q, orig_pole)
+    # new_pole = q * N.quaternion(0, 0, 0, 1) * q.inverse()
+    q1 = N.quaternion(
+        -q.z,
+        q.y,
+        -q.x,
+        q.w,
+    )
+    new_pole = q1 * q.inverse()
 
-    new_pole_lat = N.arcsin(new_pole[2])
-    new_pole_lon = N.arctan2(new_pole[1], new_pole[0])
+    lon_p = N.arctan2(new_pole.y, new_pole.x)
+    lat_p = N.arcsin(new_pole.z)
 
     # Pole rotation angle
-    angle = -N.arccos(new_pole[2])
-    _lon = new_pole_lon + N.pi / 2
+    half_angle = -N.arccos(new_pole.z) / 2
+    lon_s = lon_p + N.pi / 2
 
     # Get rotation component around new pole (the "twist")
     # The z component is always 0
     twist_q_w = (
-        q.w * N.cos(angle / 2)
-        - q.x * N.cos(_lon) * N.sin(angle / 2)
-        - q.y * N.sin(_lon) * N.sin(angle / 2)
+        q.w * N.cos(half_angle)
+        - q.x * N.cos(lon_s) * N.sin(half_angle)
+        - q.y * N.sin(lon_s) * N.sin(half_angle)
     )
 
     # Get the twist angle around the new pole
-    twist_angle = 2 * N.arccos(twist_q_w)
+    lon_0 = lon_p - 2 * N.arccos(twist_q_w)
 
-    lon_0 = new_pole_lon - twist_angle
-
-    _direct_rotation(
-        case, N.degrees(new_pole_lon), N.degrees(new_pole_lat), N.degrees(lon_0)
-    )
+    _direct_rotation(case, lon_p, lat_p, lon_0)
 
 
 rotation_functions = [
     "corelle.rotate_geometry_pointwise",
-    # "corelle.rotate_geometry",
+    "corelle.rotate_geometry",
 ]
 
 
@@ -251,9 +255,24 @@ def test_postgis_geometry_rotation(func, geom):
         assert geom.is_valid
 
 
+@mark.parametrize("geom", geometries)
+def test_postgis_geometry_rotation_invalid(geom):
+    q = euler_to_quaternion((0, 90, 45))
+    sql = f"SELECT corelle.rotate_geometry(ST_GeomFromText(:geom, 4326), :quaternion)"
+    with db.session_scope() as session:
+        g0 = wkt.loads(geom)
+        result = session.execute(
+            sql, params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
+        ).scalar()
+        assert result is not None
+        geom = to_shape(WKBElement(result))
+        assert geom.is_valid
+
+
+# Right now this doesn't work with the Proj implementation
 @mark.parametrize("func", rotation_functions)
 @mark.parametrize("geom", geometries)
-def test_inverse_rotation(func, geom):
+def test_inverse_rotation(geom, func):
     q = euler_to_quaternion((0, 90, 45))
     sql = f"""SELECT {func}(
         {func}(ST_GeomFromText(:geom, 4326), :quaternion),
@@ -265,6 +284,7 @@ def test_inverse_rotation(func, geom):
         result = session.execute(
             sql, params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
         ).scalar()
+        assert result is not None
         geom = to_shape(WKBElement(result))
         assert geom.is_valid
 
