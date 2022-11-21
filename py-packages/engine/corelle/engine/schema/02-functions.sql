@@ -34,6 +34,9 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 /**
 Builds a projection string from a quaternion. This is the core of Corelle's on-database
 rotation functionality.
+
+Big thanks to Duncan Agnew and the PROJ listserv for helping me figure out the right angular
+representation to use here.
 */
 CREATE OR REPLACE FUNCTION corelle.build_proj_string(quaternion double precision[])
 RETURNS text AS $$
@@ -45,7 +48,9 @@ DECLARE
   pz double precision;
   half_angle double precision;
   lon_s double precision;
-  twist_q_w double precision;
+  swing_q_inv double precision[];
+  twist_q double precision[];
+  twisted double precision[];
 BEGIN
 
   new_pole := corelle.quaternion_multiply(
@@ -59,19 +64,27 @@ BEGIN
   lat_p := asin(pz);
 
   -- Pole rotation angle
-  half_angle := -0.5*acos(pz);
+  half_angle := 0.5 * acos(pz);
   lon_s := lon_p + 0.5*pi();
 
+  swing_q_inv := ARRAY[
+    -cos(half_angle),
+    cos(lon_s) * sin(half_angle),
+    sin(lon_s) * sin(half_angle),
+    0
+  ];
+
   -- Get rotation component around new pole (the "twist")
-  -- The z component is always 0
-  twist_q_w := (
-      quaternion[1] * cos(half_angle)
-      - quaternion[2] * cos(lon_s) * sin(half_angle)
-      - quaternion[3] * sin(lon_s) * sin(half_angle)
+  twist_q := corelle.quaternion_multiply(quaternion, swing_q_inv);
+
+  -- Step 2: Rotate around the new pole to a final angular position
+
+  twisted := corelle.quaternion_multiply(
+    corelle.quaternion_multiply(twist_q, ARRAY[0, 1, 0, 0]),
+    corelle.invert_rotation(twist_q)
   );
 
-  -- Get the twist angle around the new pole
-  lon_0 := lon_p - 2 * acos(twist_q_w);
+  lon_0 := lon_p - atan2(twisted[3], twisted[2]);
 
   RETURN format('+proj=ob_tran +o_proj=longlat +o_lon_p=%sr +o_lat_p=%sr +lon_0=%sr',
     lon_p,

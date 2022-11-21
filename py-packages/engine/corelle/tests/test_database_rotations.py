@@ -247,7 +247,7 @@ def test_postgis_direct_rotations_simplified_math(case, inverse):
 
 rotation_functions = [
     "corelle.rotate_geometry_pointwise",
-    # "corelle.rotate_geometry",
+    "corelle.rotate_geometry",
 ]
 
 
