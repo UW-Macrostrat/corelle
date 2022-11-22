@@ -18,7 +18,7 @@ DECLARE
 BEGIN
   RETURN ST_SetSRID(ST_Transform(geom, projection), 4326);
 END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+$$ LANGUAGE plpgsql VOLATILE;
 
 CREATE OR REPLACE FUNCTION corelle.invert_rotation(quaternion double precision[])
 RETURNS double precision[]
@@ -31,7 +31,7 @@ BEGIN
     -quaternion[4]
   ];
 END;
-$$ LANGUAGE plpgsql IMMUTABLE STRICT;
+$$ LANGUAGE plpgsql IMMUTABLE;
 
 /* Rotate a geometry and clip to a bounding plate polygon */
 CREATE OR REPLACE FUNCTION corelle.rotate_geometry(
@@ -98,7 +98,7 @@ BEGIN
 
   RETURN corelle.rotate_geometry(clipped, rotation);
 END;
-$$ LANGUAGE plpgsql IMMUTABLE STRICT;
+$$ LANGUAGE plpgsql IMMUTABLE;
 
 
 /**
