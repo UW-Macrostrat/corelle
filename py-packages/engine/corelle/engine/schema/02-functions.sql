@@ -92,7 +92,7 @@ BEGIN
     plate
   );
 
-  IF t_step = 0 THEN
+  IF time_ma = 0 THEN
     RETURN clipped;
   END IF;
 
