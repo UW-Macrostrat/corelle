@@ -75,12 +75,17 @@ CREATE TABLE IF NOT EXISTS corelle.feature_cache (
 CREATE TABLE IF NOT EXISTS corelle.rotation_cache (
   model_id integer NOT NULL REFERENCES corelle.model(id),
   plate_id integer NOT NULL,
-  t_step numeric NOT NULL,
+  t_step decimal NOT NULL,
   rotation numeric[],
-  pole geometry(Point, 4326),
-  angle numeric,
+  proj4text text,
+  proj4inv text,
+  envelope geometry(Polygon, 4326),
   PRIMARY KEY (model_id, plate_id, t_step),
   FOREIGN KEY (plate_id, model_id)
     REFERENCES corelle.plate (id, model_id)
     ON DELETE CASCADE
 );
+
+CREATE INDEX IF NOT EXISTS corelle_rotation_cache_envelope_idx
+ON corelle.rotation_cache
+USING GIST (envelope);

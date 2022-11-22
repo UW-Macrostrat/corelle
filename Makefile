@@ -15,7 +15,7 @@ init:
 	poetry run bin/load-models
 
 update_functions:
-	cat corelle/sql/02-functions.sql | psql plate-rotations
+	cat py-packages/engine/corelle/engine/schema/02-functions.sql | psql plate-rotations
 
 baseurl := https://raw.githubusercontent.com/martynafford/natural-earth-geojson/master
 
