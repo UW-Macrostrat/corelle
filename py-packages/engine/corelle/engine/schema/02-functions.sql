@@ -4,21 +4,42 @@ DROP FUNCTION IF EXISTS corelle.rotate_geometry(geometry, integer, integer, inte
 DROP FUNCTION IF EXISTS corelle.build_proj_string(numeric[]);
 DROP FUNCTION IF EXISTS corelle.quaternion_multiply(numeric[], numeric[]);
 DROP FUNCTION IF EXISTS corelle.invert_rotation(numeric[]);
+DROP FUNCTION IF EXISTS corelle.rotate_geometry(geometry, double precision[]);
 
 /*
 Functions to rotate geometries directly in PostGIS. This allows Corelle plate rotations
 to be applied to any geometry in the database. This requires plate geometries to be pre-cached
 in the database for each time step and plate ID.
 */
-CREATE OR REPLACE FUNCTION corelle.rotate_geometry(geom geometry, quaternion double precision[])
+CREATE OR REPLACE FUNCTION corelle.rotate_geometry(geom geometry, quaternion double precision[], wrap_lon numeric DEFAULT 0)
 RETURNS geometry
 AS $$
 DECLARE
   projection text := corelle.build_proj_string(quaternion);
+  g1 geometry;
 BEGIN
-  RETURN ST_SetSRID(ST_Transform(geom, projection), 4326);
+  g1 := ST_SetSRID(ST_Transform(geom, projection), 4326);
+  -- Heuristic to determine if the geometry crosses the antimeridian
+  -- https://gis.stackexchange.com/questions/182728/how-can-i-convert-postgis-geography-to-geometry-and-split-polygons-that-cross-th
+  -- https://macwright.com/2016/09/26/the-180th-meridian.html
+  -- This has to be run for each tile, because a lot of geometries that
+  -- don't properly intersect the tile are still included due to polygon winding effects.
+  -- We really should figure out how to exclude geometries with no points
+  -- in the tile envelope, so we don't have to run this check on every tile
+  IF wrap_lon > 0 AND ST_XMin(g1) < -180+wrap_lon AND ST_XMax(g1) > 180-wrap_lon THEN
+    g1 := ST_WrapX(
+      ST_Split(
+        ST_MakeValid(ST_ShiftLongitude(g1)),
+        -- Antimeridian
+        ST_GeomFromText('LINESTRING(180 -90, 180 90)', 4326)
+      ),
+      180,
+      -360
+    );
+  END IF;
+  RETURN g1;
 END;
-$$ LANGUAGE plpgsql VOLATILE;
+$$ LANGUAGE plpgsql IMMUTABLE;
 
 CREATE OR REPLACE FUNCTION corelle.invert_rotation(quaternion double precision[])
 RETURNS double precision[]
