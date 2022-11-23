@@ -18,39 +18,27 @@ DECLARE
   projection text := corelle.build_proj_string(quaternion);
   g1 geometry;
 BEGIN
-  g1 := ST_SetSRID(ST_Transform(geom, projection), 4326);
-  -- Heuristic to determine if the geometry crosses the antimeridian
-  -- https://gis.stackexchange.com/questions/182728/how-can-i-convert-postgis-geography-to-geometry-and-split-polygons-that-cross-th
-  -- https://macwright.com/2016/09/26/the-180th-meridian.html
-  -- This has to be run for each tile, because a lot of geometries that
-  -- don't properly intersect the tile are still included due to polygon winding effects.
-  -- We really should figure out how to exclude geometries with no points
-  -- in the tile envelope, so we don't have to run this check on every tile
-  IF wrap_lon > 0 AND ST_XMin(g1) < -180+wrap_lon AND ST_XMax(g1) > 180-wrap_lon THEN
-    g1 := ST_WrapX(
-      ST_Split(
-        ST_MakeValid(ST_ShiftLongitude(g1)),
-        -- Antimeridian
-        ST_GeomFromText('LINESTRING(180 -90, 180 90)', 4326)
-      ),
-      180,
-      -360
-    );
-  END IF;
-  RETURN g1;
+  return ST_SetSRID(ST_Transform(geom, projection), 4326);
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
 CREATE OR REPLACE FUNCTION corelle.invert_rotation(quaternion double precision[])
 RETURNS double precision[]
 AS $$
+DECLARE
+  norm double precision;
 BEGIN
+  norm := sqrt(
+    pow(quaternion[1],2) + pow(quaternion[2],2) +
+    pow(quaternion[3],2) + pow(quaternion[4], 2)
+  );
+
   RETURN ARRAY[
-    quaternion[1],
-    -quaternion[2],
-    -quaternion[3],
-    -quaternion[4]
-  ];
+    quaternion[1]/norm,
+    -quaternion[2]/norm,
+    -quaternion[3]/norm,
+    -quaternion[4]/norm
+  ] ;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
@@ -121,7 +109,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
-
+DROP FUNCTION IF EXISTS corelle.build_proj_string(double precision[]);
 /**
 Builds a projection string from a quaternion. This is the core of Corelle's on-database
 rotation functionality.
@@ -129,7 +117,7 @@ rotation functionality.
 Big thanks to Duncan Agnew and the PROJ listserv for helping me figure out the right angular
 representation to use here.
 */
-CREATE OR REPLACE FUNCTION corelle.build_proj_string(quaternion double precision[])
+CREATE OR REPLACE FUNCTION corelle.build_proj_string(quaternion double precision[], extra_params text DEFAULT '+proj=longlat')
 RETURNS text AS $$
 DECLARE
   new_pole double precision[];
@@ -177,13 +165,13 @@ BEGIN
 
   lon_0 := lon_p - atan2(twisted[3], twisted[2]);
 
-  RETURN format('+proj=ob_tran +o_proj=longlat +o_lon_p=%sr +o_lat_p=%sr +lon_0=%sr',
+  RETURN format('+proj=ob_tran +o_proj=longlat +o_lon_p=%sr +o_lat_p=%sr +lon_0=%sr ' || extra_params, 
     lon_p,
     lat_p,
     lon_0
   );
 END;
-$$ LANGUAGE plpgsql IMMUTABLE STRICT;
+$$ LANGUAGE plpgsql IMMUTABLE;
 
 
 /**
