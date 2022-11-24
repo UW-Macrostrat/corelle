@@ -117,7 +117,7 @@ rotation functionality.
 Big thanks to Duncan Agnew and the PROJ listserv for helping me figure out the right angular
 representation to use here.
 */
-CREATE OR REPLACE FUNCTION corelle.build_proj_string(quaternion double precision[], extra_params text DEFAULT '+proj=longlat')
+CREATE OR REPLACE FUNCTION corelle.build_proj_string(quaternion double precision[], extra_params text DEFAULT '+o_proj=longlat')
 RETURNS text AS $$
 DECLARE
   new_pole double precision[];
@@ -165,7 +165,7 @@ BEGIN
 
   lon_0 := lon_p - atan2(twisted[3], twisted[2]);
 
-  RETURN format('+proj=ob_tran +o_proj=longlat +o_lon_p=%sr +o_lat_p=%sr +lon_0=%sr ' || extra_params, 
+  RETURN format('+proj=ob_tran +o_lon_p=%sr +o_lat_p=%sr +lon_0=%sr ' || extra_params, 
     lon_p,
     lat_p,
     lon_0
