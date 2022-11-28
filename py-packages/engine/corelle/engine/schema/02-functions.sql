@@ -110,6 +110,9 @@ END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
 DROP FUNCTION IF EXISTS corelle.build_proj_string(double precision[]);
+DROP FUNCTION IF EXISTS corelle.build_proj_string(double precision[], text);
+DROP FUNCTION IF EXISTS corelle.build_proj_string(double precision[], text, text);
+
 /**
 Builds a projection string from a quaternion. This is the core of Corelle's on-database
 rotation functionality.
@@ -117,7 +120,11 @@ rotation functionality.
 Big thanks to Duncan Agnew and the PROJ listserv for helping me figure out the right angular
 representation to use here.
 */
-CREATE OR REPLACE FUNCTION corelle.build_proj_string(quaternion double precision[], extra_params text DEFAULT '+o_proj=longlat')
+CREATE OR REPLACE FUNCTION corelle.build_proj_string(
+  quaternion double precision[],
+  extra_params text DEFAULT '+o_proj=longlat',
+  lon_adjustment numeric DEFAULT 0
+)
 RETURNS text AS $$
 DECLARE
   new_pole double precision[];
@@ -138,12 +145,11 @@ BEGIN
   );
 
   -- Make sure our latitude is never out of range
-  pz := greatest(least(new_pole[4], 1::double precision), -1::double precision);
   lon_p := atan2(new_pole[3], new_pole[2]);
-  lat_p := asin(pz);
+  lat_p := asin(new_pole[4]);
 
   -- Pole rotation angle
-  half_angle := 0.5 * acos(pz);
+  half_angle := 0.5 * acos(new_pole[4]);
   lon_s := lon_p + 0.5*pi();
 
   swing_q_inv := ARRAY[
@@ -163,7 +169,7 @@ BEGIN
     corelle.invert_rotation(twist_q)
   );
 
-  lon_0 := lon_p - atan2(twisted[3], twisted[2]);
+  lon_0 := lon_p - atan2(twisted[3], twisted[2]) + lon_adjustment;
 
   RETURN format('+proj=ob_tran +o_lon_p=%sr +o_lat_p=%sr +lon_0=%sr ' || extra_params, 
     lon_p,

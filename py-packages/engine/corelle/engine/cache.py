@@ -68,7 +68,7 @@ def build_rotation_cache(model, time_step=1):
             add_to_cache(rows)
 
             # Add derived columns
-            conn.execute(update_derived, model_id=model.id, t_step=time)
+            #conn.execute(update_derived, model_id=model.id, t_step=time)
             progress.advance(task)
 
 
