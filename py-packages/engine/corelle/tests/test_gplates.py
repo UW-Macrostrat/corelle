@@ -1,28 +1,10 @@
 import pytest
-import json
 import numpy as N
 
-from macrostrat.utils import relative_path
 from corelle.math import quaternion_to_euler, euler_equal
 from corelle.engine.rotate import get_rotation, rotate_point
 
-
-# Test against gplates web service data
-def fixture(filename):
-    fn = relative_path(__file__, "fixtures", filename)
-    return open(fn, "r")
-
-
-def get_geojson(key):
-    with fixture(key + ".geojson") as f:
-        return json.load(f)
-
-
-def get_coordinates(fc):
-    """
-    Get the coordinates from a feature collection
-    """
-    return fc["features"][0]["geometry"]["coordinates"][0]
+from .utils import get_geojson, get_coordinates, fixture
 
 
 times = [0, 1, 10, 120, 140, 200]
