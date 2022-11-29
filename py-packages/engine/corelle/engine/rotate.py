@@ -142,13 +142,17 @@ def plates_for_model(model):
         yield row[0]
 
 
+def get_plate_id(point, model, time):
+    sql = get_sql("plate-for-point")
+    return conn.execute(
+        sql, lon=point[0], lat=point[1], model_name=model, time=time
+    ).scalar()
+
+
 def rotate_point(point, model, time):
     if time == 0:
         return point
-    sql = get_sql("plate-for-point")
-    plate_id = conn.execute(
-        sql, lon=point[0], lat=point[1], model_name=model, time=time
-    ).scalar()
+    plate_id = get_plate_id(point, model, time)
     if plate_id is None:
         return None
     q = get_rotation(model, plate_id, time)
