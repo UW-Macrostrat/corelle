@@ -13,6 +13,8 @@ from geoalchemy2.shape import to_shape
 from geoalchemy2.elements import WKBElement
 from corelle.math import euler_to_quaternion, quaternion_to_euler, sph2cart, cart2sph
 from pytest import mark
+from .utils import get_geojson, get_coordinates
+from corelle.engine.rotate import get_plate_id, get_rotation
 
 
 def test_postgis_noop_rotation():
@@ -20,7 +22,9 @@ def test_postgis_noop_rotation():
 
     sql = "SELECT corelle.rotate_geometry(ST_GeomFromText('POINT(0 0)', 4326), :quaternion)"
     # Get the result of the rotation as a WKBElement
-    result = db.session.execute(sql, params=dict(quaternion=identity)).scalar()
+    result = db.session.execute(
+        sql, params=dict(quaternion=list(N.array(identity, dtype=float)))
+    ).scalar()
     # Convert the WKBElement to a Shapely geometry
     geom = to_shape(WKBElement(result))
     assert N.allclose(N.array(geom.coords), (0, 0))
@@ -74,6 +78,23 @@ cases = [
         end_pos=(0, -45),
     ),
 ]
+
+
+def rotate_point(point, quaternion):
+    # Rotate a point using the PostGIS function
+    sql = "SELECT corelle.rotate_geometry(ST_MakePoint(:lon, :lat), :quaternion)"
+    # Get the result of the rotation as a WKBElement
+    result = db.session.execute(
+        sql,
+        params=dict(
+            lon=point[0],
+            lat=point[1],
+            quaternion=[quaternion.w, quaternion.x, quaternion.y, quaternion.z],
+        ),
+    ).scalar()
+    # Convert the WKBElement to a Shapely geometry
+    geom = to_shape(WKBElement(result))
+    return list(geom.coords)
 
 
 @mark.parametrize("case", cases)
@@ -261,14 +282,8 @@ def test_postgis_rotations(func, case):
     v1 = unit_vector(*v1)
     assert N.allclose(cart2sph(v1), case.end_pos)
 
-    result = db.session.execute(
-        sql,
-        params=dict(
-            x=case.start_pos[0], y=case.start_pos[1], quaternion=[q.w, q.x, q.y, q.z]
-        ),
-    ).scalar()
-    geom = to_shape(WKBElement(result))
-    assert N.allclose(list(geom.coords), case.end_pos)
+    coords = rotate_point(case.start_pos, q)
+    assert N.allclose(coords, case.end_pos)
 
 
 geometries = [
@@ -355,3 +370,57 @@ def test_inverse_rotation(geom, func):
 
         # Check that the geometry is the same as the original
         assert g0.almost_equals(geom)
+
+
+vectors = [
+    (1, 4, 0, 0),
+    (1, 1, 0, 1),
+    (1, 4, 1, 0),
+    (4, 0, 1, 1),
+]
+
+directions = [(0, 0), (90, 0), (45, 20), (-80, -15), (120, 40)]
+
+
+@mark.parametrize("vector", vectors)
+@mark.parametrize("direction", directions)
+def test_postgis_vector_rotation(vector, direction):
+    a = N.array(vector).astype(N.float64)
+    a /= N.linalg.norm(a)
+    q = Q.from_float_array(a)
+
+    vx = sph2cart(*direction)
+    vx0 = Q.rotate_vectors(q, vx)
+
+    result = db.session.execute(
+        "SELECT corelle.rotate_vector(:vector, :quaternion)::float[]",
+        params=dict(quaternion=[q.w, q.x, q.y, q.z], vector=list(vx)),
+    ).scalar()
+    coords = list(result)
+    assert N.allclose(vx0, coords)
+
+
+@mark.parametrize("vector", vectors)
+@mark.parametrize("direction", directions)
+def test_arbitrary_vector_rotations(vector, direction):
+    a = N.array(vector).astype(N.float64)
+    a /= N.linalg.norm(a)
+    q = Q.from_float_array(a)
+
+    vx = sph2cart(*direction)
+    vx0 = Q.rotate_vectors(q, vx)
+
+    coords = rotate_point(direction, q)
+    assert len(coords) == 1
+    vx1 = sph2cart(*coords[0])
+    assert N.allclose(vx0, vx1)
+
+
+def test_database_against_web_service(gplates_web_service_testcase):
+    case = gplates_web_service_testcase
+    assert len(case.current) == len(case.rotated)
+    for c0, ct in zip(case.current, case.rotated):
+        plate_id = get_plate_id(c0, case.model, case.time)
+        q = get_rotation(case.model, plate_id, case.time, safe=False)
+        p1 = rotate_point(c0, q)
+        assert N.allclose(p1, ct, atol=0.01)

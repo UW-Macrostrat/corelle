@@ -41,7 +41,32 @@ BEGIN
     -quaternion[4]
   ] ;
 END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+$$ LANGUAGE plpgsql IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION corelle.rotate_vector(vector numeric[], quaternion numeric[]) RETURNS numeric[] AS $$
+DECLARE
+  q_conj numeric[];
+  q_res numeric[];
+  r numeric[];
+BEGIN
+  q_conj := ARRAY[
+    quaternion[1],
+    -quaternion[2],
+    -quaternion[3],
+    -quaternion[4]
+  ];
+
+  r := ARRAY[0, vector[1], vector[2], vector[3]];
+
+  q_res := corelle.quaternion_multiply(
+    corelle.quaternion_multiply(quaternion, r),
+    q_conj
+  );
+
+  RETURN ARRAY[q_res[2], q_res[3], q_res[4]];
+END;
+$$ LANGUAGE plpgsql IMMUTABLE STRICT;
+
 
 /* Rotate a geometry and clip to a bounding plate polygon */
 CREATE OR REPLACE FUNCTION corelle.rotate_geometry(

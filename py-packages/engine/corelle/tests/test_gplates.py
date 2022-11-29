@@ -1,44 +1,16 @@
 import pytest
-import json
 import numpy as N
 
-from macrostrat.utils import relative_path
 from corelle.math import quaternion_to_euler, euler_equal
 from corelle.engine.rotate import get_rotation, rotate_point
 
-
-# Test against gplates web service data
-def fixture(filename):
-    fn = relative_path(__file__, "fixtures", filename)
-    return open(fn, "r")
+from .utils import get_geojson, get_coordinates, fixture_file
 
 
-def get_geojson(key):
-    with fixture(key + ".geojson") as f:
-        return json.load(f)
-
-
-def get_coordinates(fc):
-    """
-    Get the coordinates from a feature collection
-    """
-    return fc["features"][0]["geometry"]["coordinates"][0]
-
-
-times = [0, 1, 10, 120, 140, 200]
-
-
-@pytest.mark.parametrize("time", times)
-def test_against_gplates_web_service(time):
-    req = get_geojson("seton2012-gws-request")
-    res = get_geojson(f"seton2012-gws-response-{time}")
-
-    now = get_coordinates(req)
-    prev = get_coordinates(res)
-    assert len(now) == len(prev)
-
-    for c0, ct in zip(now, prev):
-        p1 = rotate_point(c0, "Seton2012", time)
+def test_against_web_service(gplates_web_service_testcase):
+    case = gplates_web_service_testcase
+    for c0, ct in zip(case.current, case.rotated):
+        p1 = rotate_point(c0, case.model, case.time)
         assert N.allclose(p1, ct, atol=0.01)
 
 
@@ -79,7 +51,7 @@ def test_all_gplates(time):
     """
     Test against all GPlates rotations at a given time step
     """
-    with fixture(f"Seton2012-rotations-{time}Ma.csv") as f:
+    with fixture_file(f"Seton2012-rotations-{time}Ma.csv") as f:
         for row in f:
             v = row.split(",")
             check_seton2012_rotation(time, *v)
