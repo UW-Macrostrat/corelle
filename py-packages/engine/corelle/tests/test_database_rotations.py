@@ -19,7 +19,9 @@ def test_postgis_noop_rotation():
 
     sql = "SELECT corelle.rotate_geometry(ST_GeomFromText('POINT(0 0)', 4326), :quaternion)"
     # Get the result of the rotation as a WKBElement
-    result = db.session.execute(sql, params=dict(quaternion=identity)).scalar()
+    result = db.session.execute(
+        sql, params=dict(quaternion=list(N.array(identity, dtype=float)))
+    ).scalar()
     # Convert the WKBElement to a Shapely geometry
     geom = to_shape(WKBElement(result))
     assert N.allclose(geom.coords, (0, 0))
@@ -108,3 +110,56 @@ def test_postgis_euler_rotation():
     # Convert the WKBElement to a Shapely geometry
     geom = to_shape(WKBElement(result))
     assert N.allclose(list(geom.coords), end_point)
+
+
+vectors = [
+    (1, 4, 0, 0),
+    (1, 1, 0, 1),
+    (1, 4, 1, 0),
+    (4, 0, 1, 1),
+]
+
+directions = [(0, 0), (90, 0), (45, 20), (-80, -15), (120, 40)]
+
+
+@mark.parametrize("vector", vectors)
+@mark.parametrize("direction", directions)
+def test_postgis_vector_rotation(vector, direction):
+    a = N.array(vector).astype(N.float64)
+    a /= N.linalg.norm(a)
+    q = Q.from_float_array(a)
+
+    vx = sph2cart(*direction)
+    vx0 = Q.rotate_vectors(q, vx)
+
+    result = db.session.execute(
+        "SELECT corelle.rotate_vector(:vector, :quaternion)::float[]",
+        params=dict(quaternion=[q.w, q.x, q.y, q.z], vector=list(vx)),
+    ).scalar()
+    coords = list(result)
+    assert N.allclose(vx0, coords)
+
+
+@mark.parametrize("vector", vectors)
+@mark.parametrize("direction", directions)
+def test_arbitrary_vector_rotations(vector, direction):
+    a = N.array(vector).astype(N.float64)
+    a /= N.linalg.norm(a)
+    q = Q.from_float_array(a)
+
+    vx = sph2cart(*direction)
+    vx0 = Q.rotate_vectors(q, vx)
+
+    sql = "SELECT corelle.rotate_geometry(ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), :quaternion)"
+
+    result = db.session.execute(
+        sql,
+        params=dict(
+            quaternion=[q.w, q.x, q.y, q.z], lon=direction[0], lat=direction[1]
+        ),
+    ).scalar()
+    geom = to_shape(WKBElement(result))
+    coords = list(geom.coords)
+    assert len(coords) == 1
+    vx1 = sph2cart(*coords[0])
+    assert N.allclose(vx0, vx1)
