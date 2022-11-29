@@ -80,9 +80,9 @@ cases = [
 ]
 
 
-def rotate_point(point, quaternion):
+def rotate_point(point, quaternion, func="corelle.rotate_geometry"):
     # Rotate a point using the PostGIS function
-    sql = "SELECT corelle.rotate_geometry(ST_MakePoint(:lon, :lat), :quaternion)"
+    sql = f"SELECT {func}(ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), :quaternion)"
     # Get the result of the rotation as a WKBElement
     result = db.session.execute(
         sql,
@@ -92,6 +92,7 @@ def rotate_point(point, quaternion):
             quaternion=[quaternion.w, quaternion.x, quaternion.y, quaternion.z],
         ),
     ).scalar()
+    assert result is not None
     # Convert the WKBElement to a Shapely geometry
     geom = to_shape(WKBElement(result))
     return list(geom.coords)
@@ -275,14 +276,13 @@ rotation_functions = [
 @mark.parametrize("func", rotation_functions)
 @mark.parametrize("case", cases)
 def test_postgis_rotations(func, case):
-    sql = f"SELECT {func}(ST_GeomFromText('POINT(:x :y)', 4326), :quaternion)"
     q = euler_to_quaternion((*case.pole, case.angle))
 
     v1 = Q.rotate_vectors(q, sph2cart(*case.start_pos))
     v1 = unit_vector(*v1)
     assert N.allclose(cart2sph(v1), case.end_pos)
 
-    coords = rotate_point(case.start_pos, q)
+    coords = rotate_point(case.start_pos, q, func=func)
     assert N.allclose(coords, case.end_pos)
 
 
