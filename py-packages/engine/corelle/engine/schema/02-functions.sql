@@ -28,16 +28,16 @@ AS $$
 DECLARE
   norm double precision;
 BEGIN
-  norm := sqrt(
-    pow(quaternion[1],2) + pow(quaternion[2],2) +
-    pow(quaternion[3],2) + pow(quaternion[4], 2)
-  );
+  -- norm := sqrt(
+  --   pow(quaternion[1],2) + pow(quaternion[2],2) +
+  --   pow(quaternion[3],2) + pow(quaternion[4], 2)
+  -- );
 
   RETURN ARRAY[
-    quaternion[1]/norm,
-    -quaternion[2]/norm,
-    -quaternion[3]/norm,
-    -quaternion[4]/norm
+    quaternion[1],
+    -quaternion[2],
+    -quaternion[3],
+    -quaternion[4]
   ] ;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
