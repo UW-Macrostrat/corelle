@@ -164,21 +164,11 @@ def test_arbitrary_vector_rotations(vector, direction):
     assert N.allclose(vx0, vx1)
 
 
-times = [0, 1, 10, 120, 140, 200]
-
-
-@mark.parametrize("time", times)
-def test_database_against_gplates_web_service(time):
-    req = get_geojson("seton2012-gws-request")
-    res = get_geojson(f"seton2012-gws-response-{time}")
-
-    now = get_coordinates(req)
-    prev = get_coordinates(res)
-    assert len(now) == len(prev)
-
-    for c0, ct in zip(now, prev):
-        model = "Seton2012"
-        plate_id = get_plate_id(c0, model, time)
-        q = get_rotation(model, plate_id, time, safe=False)
+def test_database_against_web_service(gplates_web_service_testcase):
+    case = gplates_web_service_testcase
+    assert len(case.current) == len(case.rotated)
+    for c0, ct in zip(case.current, case.rotated):
+        plate_id = get_plate_id(c0, case.model, case.time)
+        q = get_rotation(case.model, plate_id, case.time, safe=False)
         p1 = rotate_point(c0, q)
         assert N.allclose(p1, ct, atol=0.01)

@@ -1,16 +1,16 @@
 import json
-
+from dataclasses import dataclass
 from macrostrat.utils import relative_path
-
+from pytest import fixture
 
 # Test against gplates web service data
-def fixture(filename):
+def fixture_file(filename):
     fn = relative_path(__file__, "fixtures", filename)
     return open(fn, "r")
 
 
 def get_geojson(key):
-    with fixture(key + ".geojson") as f:
+    with fixture_file(key + ".geojson") as f:
         return json.load(f)
 
 
