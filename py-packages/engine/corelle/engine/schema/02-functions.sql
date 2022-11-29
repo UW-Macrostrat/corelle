@@ -5,6 +5,7 @@ DROP FUNCTION IF EXISTS corelle.build_proj_string(numeric[]);
 DROP FUNCTION IF EXISTS corelle.quaternion_multiply(numeric[], numeric[]);
 DROP FUNCTION IF EXISTS corelle.invert_rotation(numeric[]);
 DROP FUNCTION IF EXISTS corelle.rotate_geometry(geometry, double precision[]);
+DROP FUNCTION IF EXISTS corelle.rotate_geometry(geometry,integer,integer,numeric,boolean);
 
 /*
 Functions to rotate geometries directly in PostGIS. This allows Corelle plate rotations
