@@ -9,7 +9,7 @@ done
 
 corelle init
 
-/run/load-models
-/run/load-features $args
+/code/bin/load-models
+/code/bin/load-features $CORELLE_DB_ARGS
 
 corelle serve

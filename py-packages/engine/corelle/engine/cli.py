@@ -138,7 +138,7 @@ def rotate_all(model, time, verbose=False):
 @option("-p", "--port", type=int, default=5000)
 @option("--debug", is_flag=True, default=False)
 def serve(**kwargs):
-    from corelle.api import app
+    from corelle.server import app
 
     app.run(host="0.0.0.0", **kwargs)
 
@@ -150,6 +150,6 @@ def shell():
 
 @cli.command(name="cache-rotations")
 def build_cache():
-    from .build_cache import build_rotation_caches
+    from .cache import build_rotation_caches
 
     build_rotation_caches()

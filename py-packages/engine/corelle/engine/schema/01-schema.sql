@@ -30,6 +30,15 @@ CREATE TABLE IF NOT EXISTS corelle.plate_polygon (
     ON DELETE CASCADE
 );
 
+CREATE INDEX IF NOT EXISTS
+  corelle_plate_polygon_model_id_idx
+  ON corelle.plate_polygon (plate_id, model_id);
+
+CREATE INDEX
+IF NOT EXISTS corelle_plate_polygon_geometry_idx
+ON corelle.plate_polygon
+USING gist (geometry);
+
 CREATE TABLE IF NOT EXISTS corelle.rotation (
   id serial PRIMARY KEY,
   plate_id integer NOT NULL,
@@ -70,10 +79,8 @@ CREATE TABLE IF NOT EXISTS corelle.feature_cache (
 CREATE TABLE IF NOT EXISTS corelle.rotation_cache (
   model_id integer NOT NULL REFERENCES corelle.model(id),
   plate_id integer NOT NULL,
-  t_step numeric NOT NULL,
+  t_step decimal NOT NULL,
   rotation numeric[],
-  pole geometry(Point, 4326),
-  angle numeric,
   PRIMARY KEY (model_id, plate_id, t_step),
   FOREIGN KEY (plate_id, model_id)
     REFERENCES corelle.plate (id, model_id)

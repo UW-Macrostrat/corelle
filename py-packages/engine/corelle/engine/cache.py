@@ -12,7 +12,9 @@ from corelle.math import quaternion_to_euler
 from .storage import _model, _rotation_cache, conn, model_id
 from .rotate import get_rotation_series
 from .database import db
+from .query import get_sql
 
+update_derived = get_sql("update-cache")
 
 def get_from_cache(cache_args):
     # Get a rotation from the database cache
@@ -64,6 +66,9 @@ def build_rotation_cache(model, time_step=1):
                 if q is not None
             ]
             add_to_cache(rows)
+
+            # Add derived columns
+            #conn.execute(update_derived, model_id=model.id, t_step=time)
             progress.advance(task)
 
 
@@ -76,9 +81,7 @@ def build_cache_row(model_id, plate_id, t_step, q):
         model_id=int(model_id),
         plate_id=int(plate_id),
         t_step=float(t_step),
-        rotation=[q.w, q.x, q.y, q.z],
-        pole=geom,
-        angle=float(N.radians(angle)),
+        rotation=[q.w, q.x, q.y, q.z]
     )
 
 

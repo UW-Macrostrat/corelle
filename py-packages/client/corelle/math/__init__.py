@@ -22,6 +22,8 @@ def cart2sph(unit_vec):
 def euler_to_quaternion(euler_pole):
     lon, lat, angle = [float(i) for i in euler_pole]
     angle = N.radians(angle)
+    # if angle < 0:
+    #    angle += 2 * N.pi
     w = N.cos(angle / 2)
     v = sph2cart(lon, lat) * N.sin(angle / 2)
     return N.quaternion(w, *v)

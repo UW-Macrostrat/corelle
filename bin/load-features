@@ -1,13 +1,13 @@
 #!/bin/sh
 
-if [ $1 == '--redo' ]; then
+if [ $1 = '--redo' ]; then
   shift
   psql "$@" -c "TRUNCATE corelle.feature CASCADE"
 fi
 
 cmd="SELECT count(*) FROM (SELECT DISTINCT dataset_id FROM corelle.feature) AS a"
 n_datasets=$(psql "$@" -t0 -c "$cmd")
-[ $n_datasets -gt 0 ] \
+[ "$n_datasets" -gt 0 ] \
 && echo "Some features are already imported, pass option '--redo' to re-import everything" \
 && exit 0
 
