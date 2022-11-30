@@ -180,18 +180,17 @@ def rotate_postgis_simplified(point, q):
     lon_p = N.arctan2(new_pole.y, new_pole.x)
     lat_p = N.arcsin(new_pole.z)
 
-    orig_pole = N.array([0, 0, 1])
-
-    ra = q.vec
     # Projection of the quaternion vector along direction
-    prod = N.dot(ra, orig_pole)
-    proj = prod * orig_pole
+    proj = N.array([0, 0, q.z])
 
-    twist = Q.from_float_array(N.hstack((q.w, proj)) * N.sign(prod))
-    if twist.norm() == 0:
+    twist = N.hstack((q.w, proj)) * N.sign(q.z)
+    norm = N.linalg.norm(twist)
+
+    if norm == 0:
         twist = identity_quaternion
     else:
-        twist = twist.normalized()
+        twist /= norm
+        twist = Q.from_float_array(twist)
 
     # Step 2: Rotate around the new pole to a final angular position
 
