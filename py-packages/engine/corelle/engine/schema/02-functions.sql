@@ -174,7 +174,6 @@ BEGIN
   lon_p := atan2(new_pole[3], new_pole[2]);
   lat_p := asin(new_pole[4]);
 
-
   norm := sqrt(pow(quaternion[1],2) + pow(quaternion[4], 2));
 
   IF norm = 0 THEN
