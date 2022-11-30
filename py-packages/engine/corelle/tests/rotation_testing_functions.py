@@ -10,6 +10,31 @@ from geoalchemy2.shape import to_shape
 from geoalchemy2.elements import WKBElement
 from corelle.math import sph2cart, cart2sph
 
+identity_quaternion = Q.from_float_array([1, 0, 0, 0])
+
+
+def decompose_quaternion(q, direction):  # pragma: no cover
+    """Decompose a quaternion into a rotation around a given direction.
+    Returns:
+        twist: The rotation around the direction
+        swing: The rotation around the plane perpendicular to the direction
+    """
+    ra = q.vec
+    # Projection of the quaternion vector along direction
+    prod = N.dot(ra, direction)
+    proj = prod * direction
+
+    twist = Q.from_float_array(N.hstack((q.w, proj)) * N.sign(prod))
+    if twist.norm() == 0:
+        return identity_quaternion, q
+    twist = twist.normalized()
+
+    swing = q * twist.conjugate()
+    assert N.allclose(swing.vec.dot(direction), 0)
+    assert N.allclose(unit_vector(*twist.vec), direction)
+
+    return twist, swing
+
 
 def rotate_point(point, quaternion, func="corelle.rotate_geometry"):
     # Rotate a point using the PostGIS function
@@ -47,7 +72,9 @@ def rotate_with_ob_tran(start_pos, lon_p, lat_p, lon_0):
     return list(geom.coords)
 
 
-def swing_twist_decomposition(q):
+def swing_twist_decomposition_old(q):
+    """An old and non-working version of the swing-twist decomposition, which
+    has a lot of description of the overall structure of the algorithm."""
     # Step 1: Take the pole and rotate it along a meridian
     # to a new location (pole is at some point on the equator)
 
@@ -62,12 +89,14 @@ def swing_twist_decomposition(q):
 
     pole_rotation_angle = N.degrees(N.arccos(N.dot(orig_pole, new_pole)))
 
-    print("Pole rotation angle:", pole_rotation_angle)
-    # Sanity check: the angle between the original pole and new pole
-    # should be less than or equal to the overall rotation angle
-    assert (
-        pole_rotation_angle <= N.degrees(N.abs(q.angle())) + 1e-6
-    )  # Allow for floating point error
+    assert N.allclose(N.degrees(swing_q.angle()), pole_rotation_angle)
+
+    # print("Pole rotation angle:", pole_rotation_angle)
+    # # Sanity check: the angle between the original pole and new pole
+    # # should be less than or equal to the overall rotation angle
+    # assert (
+    #     pole_rotation_angle <= N.degrees(N.abs(q.angle())) + 1e-6
+    # )  # Allow for floating point error
 
     # Sanity check 2: pole was rotated along a meridian
     assert N.allclose(90 - new_pole_sph[1], pole_rotation_angle)
@@ -76,15 +105,15 @@ def swing_twist_decomposition(q):
     # 1. Rotation around the geographic pole
     # 2. Rotation to move pole to a new location
 
-    swing_axis = unit_vector(*N.cross(orig_pole, new_pole))
-    swing_angle = N.arccos(N.dot(orig_pole, new_pole))
+    swing_axis = unit_vector(*swing_q.vec)
+    swing_angle = swing_q.angle()
 
     swing_q = Q.from_rotation_vector(swing_angle * swing_axis)
 
     # Check that the rotation axis for the "swing" is indeed on the equator
     assert N.allclose(swing_q.z, 0)
     # Check that the swing angle is correct
-    assert N.allclose(swing_q.angle(), swing_angle)
+    # assert N.allclose(swing_q.angle(), swing_angle)
 
     # Check that the swing angle is equivalent to the latitude (from north) of the new pole
     assert N.allclose(N.degrees(swing_angle), 90 - cart2sph(new_pole)[1])
@@ -98,13 +127,19 @@ def swing_twist_decomposition(q):
     return swing_q, twist_q
 
 
+def swing_twist_decomposition(q):
+    orig_pole = sph2cart(0, 90)
+    return decompose_quaternion(q, orig_pole)
+
+
 def new_pole_location(q):
     orig_pole = sph2cart(0, 90)
     return Q.rotate_vectors(q, orig_pole)
 
 
 def rotate_postgis_ob_tran(point, q):
-    swing_q, twist_q = swing_twist_decomposition(q)
+    orig_pole = sph2cart(0, 90)
+    twist_q, swing_q = decompose_quaternion(q, orig_pole)
 
     new_pole_sph = cart2sph(new_pole_location(q))
     # Step 2: Rotate around the new pole to a final angular position

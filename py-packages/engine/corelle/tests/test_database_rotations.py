@@ -18,6 +18,7 @@ from .rotation_testing_functions import (
     rotation_functions,
     postgis_rotation_functions,
     swing_twist_decomposition,
+    decompose_quaternion,
 )
 
 
@@ -229,32 +230,6 @@ def test_identity_quaternion_norm():
     assert q.norm() == 1
 
 
-identity_quaternion = Q.from_float_array([1, 0, 0, 0])
-
-
-def decompose_quaternion(q, direction):  # pragma: no cover
-    """Decompose a quaternion into a rotation around a given direction.
-    Returns:
-        twist: The rotation around the direction
-        swing: The rotation around the plane perpendicular to the direction
-    """
-    ra = q.vec
-    # Projection of the quaternion vector along direction
-    prod = N.dot(ra, direction)
-    proj = prod * direction
-
-    twist = Q.from_float_array(N.hstack((q.w, proj)) * N.sign(prod))
-    if twist.norm() == 0:
-        return identity_quaternion, q
-    twist = twist.normalized()
-
-    swing = q * twist.conjugate()
-    assert N.allclose(swing.vec.dot(direction), 0)
-    assert N.allclose(unit_vector(*twist.vec), direction)
-
-    return twist, swing
-
-
 def quaternion_decomposition(q):
     x_axis = N.array([1, 0, 0])
     y_axis = N.array([0, 1, 0])
@@ -289,8 +264,8 @@ def test_quaternion_decomposition(q):
 @mark.parametrize("q", quaternions)
 def test_swing_twist_decomposition(q):
     """Test that the quaternion decomposition into 'swing' and 'twist' components is correct."""
-    swing, twist = swing_twist_decomposition(q)
-    assert N.allclose(twist * swing, q)
+    twist, swing = swing_twist_decomposition(q)
+    assert N.allclose(swing * twist, q)
 
 
 @mark.parametrize("q", quaternions)
