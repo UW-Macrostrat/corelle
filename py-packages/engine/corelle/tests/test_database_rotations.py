@@ -402,7 +402,8 @@ def test_postgis_vector_rotation(vector, direction):
 
 @mark.parametrize("vector", vectors)
 @mark.parametrize("direction", directions)
-def test_arbitrary_vector_rotations(vector, direction):
+@mark.parametrize("func", rotation_functions)
+def test_arbitrary_vector_rotations(vector, direction, func):
     a = N.array(vector).astype(N.float64)
     a /= N.linalg.norm(a)
     q = Q.from_float_array(a)
@@ -410,17 +411,18 @@ def test_arbitrary_vector_rotations(vector, direction):
     vx = sph2cart(*direction)
     vx0 = Q.rotate_vectors(q, vx)
 
-    coords = rotate_point(direction, q)
+    coords = rotate_point(direction, q, func=func)
     assert len(coords) == 1
     vx1 = sph2cart(*coords[0])
     assert N.allclose(vx0, vx1)
 
 
-def test_database_against_web_service(gplates_web_service_testcase):
+@mark.parametrize("func", rotation_functions)
+def test_database_against_web_service(gplates_web_service_testcase, func):
     case = gplates_web_service_testcase
     assert len(case.current) == len(case.rotated)
     for c0, ct in zip(case.current, case.rotated):
         plate_id = get_plate_id(c0, case.model, case.time)
         q = get_rotation(case.model, plate_id, case.time, safe=False)
-        p1 = rotate_point(c0, q)
+        p1 = rotate_point(c0, q, func=func)
         assert N.allclose(p1, ct, atol=0.01)
