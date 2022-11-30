@@ -13,7 +13,6 @@ from geoalchemy2.shape import to_shape
 from geoalchemy2.elements import WKBElement
 from corelle.math import euler_to_quaternion, quaternion_to_euler, sph2cart, cart2sph
 from pytest import mark
-from .utils import get_geojson, get_coordinates
 from corelle.engine.rotate import get_plate_id, get_rotation
 
 
@@ -114,7 +113,7 @@ def test_postgis_euler_recovery(case):
         # assert N.allclose(N.degrees([float(i) for i in result]), euler)
 
 
-def _direct_rotation(start_pos, end_pos, lon_p, lat_p, lon_0):
+def rotate_with_ob_tran(start_pos, lon_p, lat_p, lon_0):
     proj_string = f"+proj=ob_tran +o_proj=longlat +o_lon_p={lon_p}r +o_lat_p={lat_p}r +lon_0={lon_0}r"
     sql = "SELECT ST_Transform(ST_GeomFromText('POINT(:x :y)', 4326), :proj_string)"
     # Get the result of the rotation as a WKBElement
@@ -129,7 +128,7 @@ def _direct_rotation(start_pos, end_pos, lon_p, lat_p, lon_0):
         ).scalar()
     # Convert the WKBElement to a Shapely geometry
     geom = to_shape(WKBElement(result))
-    assert N.allclose(list(geom.coords), end_pos)
+    return list(geom.coords)
 
 
 @mark.parametrize("case", cases)
@@ -202,13 +201,13 @@ def test_postgis_direct_rotations(case, inverse):
     print("Twist angle:", twist_angle)
     print("Lon_0:", lon_0)
 
-    _direct_rotation(
+    coords = rotate_with_ob_tran(
         start_pos,
-        end_pos,
         N.radians(new_pole_sph[0]),
         N.radians(new_pole_sph[1]),
         N.radians(lon_0),
     )
+    assert N.allclose(coords, end_pos)
 
 
 @mark.parametrize("case", cases)
@@ -264,7 +263,8 @@ def test_postgis_direct_rotations_simplified_math(case, inverse):
     # by that amount. I think this is a PROJ quirk? So we need to subtract this to rotate everything back into alignment.
     lon_0 = lon_p - twist_angle
 
-    _direct_rotation(start_pos, end_pos, lon_p, lat_p, lon_0)
+    coords = rotate_with_ob_tran(start_pos, lon_p, lat_p, lon_0)
+    assert N.allclose(coords, end_pos)
 
 
 rotation_functions = [

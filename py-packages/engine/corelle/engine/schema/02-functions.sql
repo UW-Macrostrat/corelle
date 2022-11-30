@@ -12,7 +12,11 @@ Functions to rotate geometries directly in PostGIS. This allows Corelle plate ro
 to be applied to any geometry in the database. This requires plate geometries to be pre-cached
 in the database for each time step and plate ID.
 */
-CREATE OR REPLACE FUNCTION corelle.rotate_geometry(geom geometry, quaternion double precision[], wrap_lon numeric DEFAULT 0)
+CREATE OR REPLACE FUNCTION corelle.rotate_geometry(
+  geom geometry,
+  quaternion double precision[],
+  wrap_lon numeric DEFAULT 0
+)
 RETURNS geometry
 AS $$
 DECLARE
