@@ -180,22 +180,19 @@ def rotate_postgis_simplified(point, q):
     lon_p = N.arctan2(new_pole.y, new_pole.x)
     lat_p = N.arcsin(new_pole.z)
 
-    # Projection of the quaternion vector along direction
-    proj = N.array([0, 0, q.z])
+    twist = N.array([q.w, 0, 0, q.z]) * N.sign(q.z)
 
-    twist = N.hstack((q.w, proj)) * N.sign(q.z)
     norm = N.linalg.norm(twist)
 
     if norm == 0:
         twist = identity_quaternion
     else:
         twist /= norm
-        twist = Q.from_float_array(twist)
 
     # Step 2: Rotate around the new pole to a final angular position
 
-    twisted = twist * N.quaternion(0, 1, 0, 0) * twist.inverse()
-    twist_angle = N.arctan2(twisted.y, twisted.x)
+    # Get angle of twist quaternion
+    twist_angle = 2 * N.arccos(twist[0])
 
     # For some reason, changing the longitude of the north pole causes the entire manifold to be shifted
     # by that amount. I think this is a PROJ quirk? So we need to subtract this to rotate everything back into alignment.
