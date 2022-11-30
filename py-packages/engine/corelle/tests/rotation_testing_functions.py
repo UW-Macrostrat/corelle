@@ -47,7 +47,7 @@ def rotate_with_ob_tran(start_pos, lon_p, lat_p, lon_0):
     return list(geom.coords)
 
 
-def rotate_postgis_ob_tran(point, q):
+def swing_twist_decomposition(q):
     # Step 1: Take the pole and rotate it along a meridian
     # to a new location (pole is at some point on the equator)
 
@@ -83,23 +83,36 @@ def rotate_postgis_ob_tran(point, q):
 
     # Check that the rotation axis for the "swing" is indeed on the equator
     assert N.allclose(swing_q.z, 0)
+    # Check that the swing angle is correct
+    assert N.allclose(swing_q.angle(), swing_angle)
+
     # Check that the swing angle is equivalent to the latitude (from north) of the new pole
     assert N.allclose(N.degrees(swing_angle), 90 - cart2sph(new_pole)[1])
 
     # Get rotation component around new pole (the "twist")
     twist_q = q * swing_q.inverse()
 
-    # Check that two rotations can be composed back to the original
-    assert N.allclose(q, swing_q * twist_q)
+    # Check that the swing and twist rotations can be composed back to the original
+    assert N.allclose(q, twist_q * swing_q)
 
+    return swing_q, twist_q
+
+
+def new_pole_location(q):
+    orig_pole = sph2cart(0, 90)
+    return Q.rotate_vectors(q, orig_pole)
+
+
+def rotate_postgis_ob_tran(point, q):
+    swing_q, twist_q = swing_twist_decomposition(q)
+
+    new_pole_sph = cart2sph(new_pole_location(q))
     # Step 2: Rotate around the new pole to a final angular position
-
     # Apply the twist rotation
     twisted = Q.rotate_vectors(twist_q, unit_vector(1, 0, 0))
-    twist_angle = N.degrees(N.arctan2(twisted[1], twisted[0]))
+    twist_angle = N.degrees(twist_q.angle())
 
     print("New pole:", new_pole_sph)
-
     # For some reason, changing the longitude of the north pole causes the entire manifold to be shifted
     # by that amount. I think this is a PROJ quirk? So we need to subtract this to rotate everything back into alignment.
     lon_0 = new_pole_sph[0] - twist_angle

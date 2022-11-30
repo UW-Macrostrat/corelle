@@ -14,7 +14,11 @@ from geoalchemy2.elements import WKBElement
 from corelle.math import euler_to_quaternion, sph2cart, cart2sph
 from pytest import mark
 from corelle.engine.rotate import get_plate_id, get_rotation
-from .rotation_testing_functions import rotation_functions, postgis_rotation_functions
+from .rotation_testing_functions import (
+    rotation_functions,
+    postgis_rotation_functions,
+    swing_twist_decomposition,
+)
 
 
 def test_postgis_noop_rotation():
@@ -101,10 +105,11 @@ def test_postgis_euler_recovery(case):
 @mark.parametrize("inverse", [False, True])
 def test_postgis_rotations(func, case, inverse):
     q = euler_to_quaternion((*case.pole, case.angle))
-    start_pos, end_pos = case.start_pos, case.end_pos
     if inverse:
         start_pos, end_pos = case.end_pos, case.start_pos
         q = q.inverse()
+    else:
+        start_pos, end_pos = case.start_pos, case.end_pos
 
     coords = func(start_pos, q)
     assert N.allclose(coords, end_pos)
@@ -196,23 +201,101 @@ def test_inverse_rotation(geom, func):
         assert g0.almost_equals(geom)
 
 
-vectors = [
-    (1, 4, 0, 0),
-    (1, 1, 0, 1),
-    (1, 4, 1, 0),
-    (4, 0, 1, 1),
+def make_quaternion(*arr):
+    a = N.array(arr).astype(N.float64)
+    a /= N.linalg.norm(a)
+    return Q.from_float_array(a)
+
+
+quaternions = [
+    make_quaternion(*q)
+    for q in [
+        (1, 4, 0, 0),
+        (1, 1, 0, 1),
+        (1, 4, 1, 0),
+        (4, 0, 1, 1),
+    ]
 ]
 
 directions = [(0, 0), (90, 0), (45, 20), (-80, -15), (120, 40)]
 
 
-@mark.parametrize("vector", vectors)
-@mark.parametrize("direction", directions)
-def test_postgis_vector_rotation(vector, direction):
-    a = N.array(vector).astype(N.float64)
-    a /= N.linalg.norm(a)
-    q = Q.from_float_array(a)
+def quaternion_norm(q):
+    return N.sqrt(N.sum(q * q))
 
+
+def test_identity_quaternion_norm():
+    q = make_quaternion(1, 0, 0, 0)
+    assert q.norm() == 1
+
+
+identity_quaternion = Q.from_float_array([1, 0, 0, 0])
+
+
+def decompose_quaternion(q, direction):  # pragma: no cover
+    """Decompose a quaternion into a rotation around a given direction.
+    Returns:
+        twist: The rotation around the direction
+        swing: The rotation around the plane perpendicular to the direction
+    """
+    ra = q.vec
+    # Projection of the quaternion vector along direction
+    prod = N.dot(ra, direction)
+    proj = prod * direction
+
+    twist = Q.from_float_array(N.hstack((q.w, proj)) * N.sign(prod))
+    if twist.norm() == 0:
+        return identity_quaternion, q
+    twist = twist.normalized()
+
+    swing = q * twist.conjugate()
+    assert N.allclose(swing.vec.dot(direction), 0)
+    assert N.allclose(unit_vector(*twist.vec), direction)
+
+    return twist, swing
+
+
+def quaternion_decomposition(q):
+    x_axis = N.array([1, 0, 0])
+    y_axis = N.array([0, 1, 0])
+    z_axis = N.array([0, 0, 1])
+
+    x, rest = decompose_quaternion(q, x_axis)
+    y, rest_1 = decompose_quaternion(rest, y_axis)
+
+    assert rest.vec.dot(x_axis) == 0
+    assert rest_1.vec.dot(y_axis) == 0
+    # assert rest_1.vec.dot(x_axis) == 0
+    # assert rest_1.vec.dot(z_axis) == N.linalg.norm(rest_1.vec)
+    # z, rest = decompose_quaternion(rest, z_axis)
+    return x, y, rest_1
+
+
+@mark.parametrize("q", quaternions)
+def test_quaternion_decomposition(q):
+    """Test that the quaternion decomposition into x, y, and z-axis rotations"""
+
+    assert N.allclose(q.norm(), 1)
+
+    # Decompose the quaternion into x, y, and z-axis rotations
+    x, y, z = quaternion_decomposition(q)
+
+    reconstituted = z * y * x
+
+    # Check that the decomposition is correct
+    assert N.allclose(q, reconstituted)
+
+
+@mark.parametrize("q", quaternions)
+def test_swing_twist_decomposition(q):
+    """Test that the quaternion decomposition into 'swing' and 'twist' components is correct."""
+    swing, twist = swing_twist_decomposition(q)
+    assert N.allclose(twist * swing, q)
+
+
+@mark.parametrize("q", quaternions)
+@mark.parametrize("direction", directions)
+def test_postgis_vector_rotation(q, direction):
     vx = sph2cart(*direction)
     vx0 = Q.rotate_vectors(q, vx)
 
@@ -224,14 +307,10 @@ def test_postgis_vector_rotation(vector, direction):
     assert N.allclose(vx0, coords)
 
 
-@mark.parametrize("vector", vectors)
+@mark.parametrize("q", quaternions)
 @mark.parametrize("direction", directions)
 @mark.parametrize("func", rotation_functions)
-def test_arbitrary_vector_rotations(vector, direction, func):
-    a = N.array(vector).astype(N.float64)
-    a /= N.linalg.norm(a)
-    q = Q.from_float_array(a)
-
+def test_arbitrary_vector_rotations(q, direction, func):
     vx = sph2cart(*direction)
     vx0 = Q.rotate_vectors(q, vx)
 
