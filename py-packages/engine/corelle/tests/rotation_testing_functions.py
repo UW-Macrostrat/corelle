@@ -168,6 +168,7 @@ def rotate_postgis_simplified(point, q):
 
     # Find new pole location
     # new_pole = q * N.quaternion(0, 0, 0, 1) * q.inverse()
+
     q1 = N.quaternion(
         -q.z,
         q.y,
@@ -179,24 +180,22 @@ def rotate_postgis_simplified(point, q):
     lon_p = N.arctan2(new_pole.y, new_pole.x)
     lat_p = N.arcsin(new_pole.z)
 
-    # Pole rotation angle
-    lon_s = lon_p + N.pi / 2
+    orig_pole = N.array([0, 0, 1])
 
-    half_angle = N.arccos(new_pole.z) / 2
+    ra = q.vec
+    # Projection of the quaternion vector along direction
+    prod = N.dot(ra, orig_pole)
+    proj = prod * orig_pole
 
-    swing_q_inv = N.quaternion(
-        -N.cos(half_angle),
-        N.cos(lon_s) * N.sin(half_angle),
-        N.sin(lon_s) * N.sin(half_angle),
-        0,
-    )
-
-    # Get rotation component around new pole (the "twist")
-    twist_q = q * swing_q_inv
+    twist = Q.from_float_array(N.hstack((q.w, proj)) * N.sign(prod))
+    if twist.norm() == 0:
+        twist = identity_quaternion
+    else:
+        twist = twist.normalized()
 
     # Step 2: Rotate around the new pole to a final angular position
 
-    twisted = twist_q * N.quaternion(0, 1, 0, 0) * twist_q.inverse()
+    twisted = twist * N.quaternion(0, 1, 0, 0) * twist.inverse()
     twist_angle = N.arctan2(twisted.y, twisted.x)
 
     # For some reason, changing the longitude of the north pole causes the entire manifold to be shifted
