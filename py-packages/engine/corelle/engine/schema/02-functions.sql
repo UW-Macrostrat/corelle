@@ -161,12 +161,9 @@ DECLARE
   lat_p double precision;
   lon_p double precision;
   lon_0 double precision;
-  pz double precision;
-  half_angle double precision;
-  lon_s double precision;
-  swing_q_inv double precision[];
-  twist_q double precision[];
-  twisted double precision[];
+  norm double precision;
+  twist_q_w double precision;
+  twist_angle double precision;
 BEGIN
 
   new_pole := corelle.quaternion_multiply(
@@ -174,32 +171,23 @@ BEGIN
     corelle.invert_rotation(quaternion)
   );
 
-  -- Make sure our latitude is never out of range
   lon_p := atan2(new_pole[3], new_pole[2]);
   lat_p := asin(new_pole[4]);
 
-  -- Pole rotation angle
-  half_angle := 0.5 * acos(new_pole[4]);
-  lon_s := lon_p + 0.5*pi();
 
-  swing_q_inv := ARRAY[
-    -cos(half_angle),
-    cos(lon_s) * sin(half_angle),
-    sin(lon_s) * sin(half_angle),
-    0
-  ];
+  norm := sqrt(pow(quaternion[1],2) + pow(quaternion[4], 2));
 
-  -- Get rotation component around new pole (the "twist")
-  twist_q := corelle.quaternion_multiply(quaternion, swing_q_inv);
+  IF norm = 0 THEN
+    twist_q_w := 1;
+  ELSIF quaternion[4] < 0 THEN
+    twist_q_w := -quaternion[1] / norm;
+  ELSE
+    twist_q_w := quaternion[1] / norm;
+  END IF;
 
-  -- Step 2: Rotate around the new pole to a final angular position
+  twist_angle := 2 * acos(twist_q_w);
 
-  twisted := corelle.quaternion_multiply(
-    corelle.quaternion_multiply(twist_q, ARRAY[0, 1, 0, 0]),
-    corelle.invert_rotation(twist_q)
-  );
-
-  lon_0 := lon_p - atan2(twisted[3], twisted[2]) + lon_adjustment;
+  lon_0 := lon_p - twist_angle;
 
   RETURN format('+proj=ob_tran +o_lon_p=%sr +o_lat_p=%sr +lon_0=%sr ' || extra_params, 
     lon_p,

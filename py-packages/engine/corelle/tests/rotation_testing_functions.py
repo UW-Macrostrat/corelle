@@ -185,7 +185,7 @@ def rotate_postgis_simplified(point, q):
     norm = N.linalg.norm(twist)
 
     if norm == 0:
-        twist = identity_quaternion
+        twist = N.array([1, 0, 0, 0])
     else:
         twist /= norm
 
