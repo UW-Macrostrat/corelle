@@ -115,7 +115,7 @@ def test_postgis_euler_recovery(case):
 
 def rotate_with_ob_tran(start_pos, lon_p, lat_p, lon_0):
     proj_string = f"+proj=ob_tran +o_proj=longlat +o_lon_p={lon_p}r +o_lat_p={lat_p}r +lon_0={lon_0}r"
-    sql = "SELECT ST_Transform(ST_GeomFromText('POINT(:x :y)', 4326), :proj_string)"
+    sql = "SELECT ST_Transform(ST_SetSRID(ST_MakePoint(:x, :y), 4326), :proj_string)"
     # Get the result of the rotation as a WKBElement
     with db.session_scope() as session:
         result = session.execute(
@@ -131,20 +131,7 @@ def rotate_with_ob_tran(start_pos, lon_p, lat_p, lon_0):
     return list(geom.coords)
 
 
-@mark.parametrize("case", cases)
-@mark.parametrize("inverse", [False, True])
-def test_postgis_direct_rotations(case, inverse):
-    euler = (*case.pole, case.angle)
-
-    q = euler_to_quaternion(euler)
-
-    start_pos, end_pos = case.start_pos, case.end_pos
-    if inverse:
-        start_pos, end_pos = case.end_pos, case.start_pos
-        q = q.inverse()
-    # if case.angle < 0:
-    #     q = euler_to_quaternion((-case.pole[0], -case.pole[1], -case.angle))
-
+def rotate_postgis_ob_tran(point, q):
     # Step 1: Take the pole and rotate it along a meridian
     # to a new location (pole is at some point on the equator)
 
@@ -158,10 +145,12 @@ def test_postgis_direct_rotations(case, inverse):
     new_pole_sph = cart2sph(new_pole)
 
     pole_rotation_angle = N.degrees(N.arccos(N.dot(orig_pole, new_pole)))
+
     print("Pole rotation angle:", pole_rotation_angle)
-    # Sanity check: the angle between the original pole and new pole should be less than or equal to the rotation angle
+    # Sanity check: the angle between the original pole and new pole
+    # should be less than or equal to the overall rotation angle
     assert (
-        pole_rotation_angle <= N.abs(case.angle) + 1e-6
+        pole_rotation_angle <= N.degrees(N.abs(q.angle())) + 1e-6
     )  # Allow for floating point error
 
     # Sanity check 2: pole was rotated along a meridian
@@ -201,28 +190,15 @@ def test_postgis_direct_rotations(case, inverse):
     print("Twist angle:", twist_angle)
     print("Lon_0:", lon_0)
 
-    coords = rotate_with_ob_tran(
-        start_pos,
+    return rotate_with_ob_tran(
+        point,
         N.radians(new_pole_sph[0]),
         N.radians(new_pole_sph[1]),
         N.radians(lon_0),
     )
-    assert N.allclose(coords, end_pos)
 
 
-@mark.parametrize("case", cases)
-@mark.parametrize("inverse", [False, True])
-def test_postgis_direct_rotations_simplified_math(case, inverse):
-    """Same operation as above, but using simplified math constructs that
-    shadow the PostGIS implementation."""
-    euler = (*case.pole, case.angle)
-    q = euler_to_quaternion(euler)
-
-    start_pos, end_pos = case.start_pos, case.end_pos
-    if inverse:
-        start_pos, end_pos = case.end_pos, case.start_pos
-        q = q.inverse()
-
+def rotate_postgis_simplified(point, q):
     # Step 1: Take the pole and rotate it along a meridian
     # to a new location (pole is at some point on the equator)
 
@@ -263,27 +239,49 @@ def test_postgis_direct_rotations_simplified_math(case, inverse):
     # by that amount. I think this is a PROJ quirk? So we need to subtract this to rotate everything back into alignment.
     lon_0 = lon_p - twist_angle
 
-    coords = rotate_with_ob_tran(start_pos, lon_p, lat_p, lon_0)
-    assert N.allclose(coords, end_pos)
+    return rotate_with_ob_tran(point, lon_p, lat_p, lon_0)
 
+
+def rotate_python(point, quaternion):
+    pt = sph2cart(*point)
+    v1 = Q.rotate_vectors(quaternion, pt)
+    return cart2sph(unit_vector(*v1))
+
+
+def corelle_rotate_geometry(point, quaternion):
+    return rotate_point(point, quaternion, func="corelle.rotate_geometry")
+
+
+def corelle_rotate_geometry_pointwise(point, quaternion):
+    return rotate_point(point, quaternion, func="corelle.rotate_geometry_pointwise")
+
+
+postgis_rotation_functions = [
+    "corelle.rotate_geometry",
+    "corelle.rotate_geometry_pointwise",
+]
 
 rotation_functions = [
-    "corelle.rotate_geometry_pointwise",
-    "corelle.rotate_geometry",
+    corelle_rotate_geometry,
+    corelle_rotate_geometry_pointwise,
+    rotate_postgis_ob_tran,
+    rotate_postgis_simplified,
+    rotate_python,
 ]
 
 
 @mark.parametrize("func", rotation_functions)
 @mark.parametrize("case", cases)
-def test_postgis_rotations(func, case):
+@mark.parametrize("inverse", [False, True])
+def test_postgis_rotations(func, case, inverse):
     q = euler_to_quaternion((*case.pole, case.angle))
+    start_pos, end_pos = case.start_pos, case.end_pos
+    if inverse:
+        start_pos, end_pos = case.end_pos, case.start_pos
+        q = q.inverse()
 
-    v1 = Q.rotate_vectors(q, sph2cart(*case.start_pos))
-    v1 = unit_vector(*v1)
-    assert N.allclose(cart2sph(v1), case.end_pos)
-
-    coords = rotate_point(case.start_pos, q, func=func)
-    assert N.allclose(coords, case.end_pos)
+    coords = func(start_pos, q)
+    assert N.allclose(coords, end_pos)
 
 
 geometries = [
@@ -298,7 +296,7 @@ geometries = [
 ]
 
 
-@mark.parametrize("func", rotation_functions)
+@mark.parametrize("func", postgis_rotation_functions)
 @mark.parametrize("geom", geometries)
 def test_postgis_geometry_rotation(func, geom):
     q = euler_to_quaternion((0, 90, 45))
@@ -348,7 +346,7 @@ def compare_rotation_functions(geom):
 
 
 # Right now this doesn't work with the Proj implementation
-@mark.parametrize("func", rotation_functions)
+@mark.parametrize("func", postgis_rotation_functions)
 @mark.parametrize("geom", geometries)
 def test_inverse_rotation(geom, func):
     q = euler_to_quaternion((0, 90, 45))
@@ -411,9 +409,10 @@ def test_arbitrary_vector_rotations(vector, direction, func):
     vx = sph2cart(*direction)
     vx0 = Q.rotate_vectors(q, vx)
 
-    coords = rotate_point(direction, q, func=func)
-    assert len(coords) == 1
-    vx1 = sph2cart(*coords[0])
+    coords = func(direction, q)
+    if len(coords) == 1:
+        coords = coords[0]
+    vx1 = sph2cart(*coords)
     assert N.allclose(vx0, vx1)
 
 
@@ -424,5 +423,5 @@ def test_database_against_web_service(gplates_web_service_testcase, func):
     for c0, ct in zip(case.current, case.rotated):
         plate_id = get_plate_id(c0, case.model, case.time)
         q = get_rotation(case.model, plate_id, case.time, safe=False)
-        p1 = rotate_point(c0, q, func=func)
+        p1 = func(c0, q)
         assert N.allclose(p1, ct, atol=0.01)
