@@ -156,9 +156,28 @@ def rotate_point(point, model, time):
     if plate_id is None:
         return None
     q = get_rotation(model, plate_id, time)
+    if q is None:
+        return None
     v0 = sph2cart(*point)
     v1 = Q.rotate_vectors(q, v0)
     return cart2sph(v1)
+
+
+def rotate_point_for_api(point, model, time):
+    if time == 0:
+        return point
+    sql = get_sql("plate-for-point")
+    plate_id = conn.execute(
+        sql, lon=point[0], lat=point[1], model_name=model, time=time
+    ).scalar()
+    if plate_id is None:
+        return None
+    q = get_rotation(model, plate_id, time)
+    if q is None:
+        return None
+    v0 = sph2cart(*point)
+    v1 = Q.rotate_vectors(q, v0)
+    return dict(coordinates=cart2sph(v1), plate_id=plate_id)
 
 
 __tstep_rotation_pairs = get_sql("rotation-pairs-for-time")

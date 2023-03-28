@@ -13,6 +13,7 @@ from .rotate.engine import (
     get_plate_rotations,
     get_rotation_series,
     rotate_point,
+    rotate_point_for_api,
 )
 
 app = Flask(__name__)
@@ -192,10 +193,11 @@ class Point(ModelResource):
         for p in points:
             [lon, lat] = p.split(",")
             pt = [float(lon), float(lat)]
-            res = rotate_point(pt, args["model"], args["time"])
+            res = rotate_point_for_api(pt, args["model"], args["time"])
             if res is not None:
-                res = dict(type="Feature", geometry=dict(type="Point", coordinates=res))
-                out_points.append(res)
+                out_points.append(dict(type="Feature", 
+                                       geometry=dict(type="Point", coordinates=res['coordinates']),
+                                       properties=dict(plate_id=res['plate_id'])))
             else:
                 if args["include_failures"]:
                     out_points.append(None)
