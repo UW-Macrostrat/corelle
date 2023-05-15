@@ -30,22 +30,18 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 CREATE OR REPLACE FUNCTION corelle.invert_rotation(quaternion double precision[])
 RETURNS double precision[]
 AS $$
-DECLARE
-  norm double precision;
-BEGIN
   -- norm := sqrt(
   --   pow(quaternion[1],2) + pow(quaternion[2],2) +
   --   pow(quaternion[3],2) + pow(quaternion[4], 2)
   -- );
 
-  RETURN ARRAY[
+  SELECT ARRAY[
     quaternion[1],
     -quaternion[2],
     -quaternion[3],
     -quaternion[4]
   ] ;
-END;
-$$ LANGUAGE plpgsql IMMUTABLE STRICT;
+$$ LANGUAGE sql IMMUTABLE STRICT;
 
 CREATE OR REPLACE FUNCTION corelle.rotate_vector(vector numeric[], quaternion numeric[]) RETURNS numeric[] AS $$
 DECLARE
