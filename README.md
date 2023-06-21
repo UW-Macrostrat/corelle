@@ -8,7 +8,7 @@ for the venerable dinnerware owned by everyone's grandma.
 ## Useful links
 
 - [CHANGELOG](CHANGELOG.md)
-- [Demo: pre-split coastline features](https://birdnest.geology.wisc.edu/corelle)
+- [Demo: pre-split coastline features](https://rotate.macrostrat.org)
 - [Demo: externally-provided features](https://davenquinn.com/viz/corelle-demo-pbdb)
 - [Demo: regional rotation model](https://davenquinn.com/viz/corelle-demo-neogene-north-america)
 - [Notebook: basic usage from Python](notebooks/Corelle-Basic-Usage.ipynb)
