@@ -9,3 +9,5 @@ Flask
 Flask-Restful
 simplejson
 fiona
+SQLAlchemy==1.4
+werkzeug==2.0.0
