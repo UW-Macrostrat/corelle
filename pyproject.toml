@@ -2,15 +2,15 @@
 authors = ["Daven Quinn <dev@davenquinn.com>"]
 description = "An API service to support plate rotations on the web"
 name = "corelle"
-version = "2.0.0"
+version = "2.1.0"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
 
 [tool.poetry.dev-dependencies]
-"corelle.client" = {path = "./py-packages/client", develop = true}
-"corelle.engine" = {path = "./py-packages/engine", develop = true}
-"corelle.server" = {path = "./py-packages/server", develop = true}
+"corelle.client" = { path = "./py-packages/client", develop = true }
+"corelle.engine" = { path = "./py-packages/engine", develop = true }
+"corelle.server" = { path = "./py-packages/server", develop = true }
 pytest = "^6.2.3"
 
 [tool.poetry.group.dev.dependencies]
