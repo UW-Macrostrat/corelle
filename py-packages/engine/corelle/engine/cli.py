@@ -14,12 +14,14 @@ warnings.filterwarnings("ignore")
 
 @group()
 def cli():
+    """Register and pre-calculate plate-rotation models"""
     pass
 
 
 @cli.command(name="init")
 @option("--drop", is_flag=True, default=False)
 def init(drop=False):
+    """Create database fixtures"""
     from .database import initialize
 
     initialize(drop=drop)
@@ -138,6 +140,7 @@ def rotate_all(model, time, verbose=False):
 @option("-p", "--port", type=int, default=5000)
 @option("--debug", is_flag=True, default=False)
 def serve(**kwargs):
+    """Run the application server"""
     from corelle.server import app
 
     app.run(host="0.0.0.0", **kwargs)

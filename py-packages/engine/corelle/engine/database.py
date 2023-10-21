@@ -1,7 +1,7 @@
 from os import environ
 from sqlalchemy.exc import ProgrammingError
 from macrostrat.utils import relative_path
-from macrostrat.database import Database
+from macrostrat.database import Database, run_sql
 from pathlib import Path
 
 conn_string = environ.get("CORELLE_DB", "postgresql:///plate-rotations")
@@ -20,4 +20,4 @@ def initialize(drop=False):
     files = sorted(dn.glob("*.sql"))
 
     for file in files:
-        list(db.run_sql(Path(dn) / file))
+        db.run_sql(Path(dn) / file, has_server_binds=False)
