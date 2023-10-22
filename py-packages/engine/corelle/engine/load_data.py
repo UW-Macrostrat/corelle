@@ -5,6 +5,13 @@ from time import perf_counter
 from json import dumps
 import fiona
 from click import echo, style
+import json
+import yaml
+from os.path import splitext
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from macrostrat.utils import working_directory
+from wget import download
 
 from .database import db
 from .query import get_sql
@@ -50,7 +57,6 @@ def insert_plate(**vals):
 
 
 def import_plate(model_id, feature, fields=None):
-
     conn = connect()
 
     def field(field_id):
@@ -220,6 +226,89 @@ def import_model(
         return
 
     model_id = create_model(name, min_age=min_age, max_age=max_age)
-    import_plates(model_id, plates, fields=fields)
+    import_plates(model_id, plates, fields=load_fields(fields))
     import_rotations(model_id, rotations)
     # Right now we don't cache rotations on model import, but we could.
+
+
+def load_fields(fn):
+    if not fn:
+        return None
+    ext = splitext(fn)[1]
+    with open(fn, "r") as f:
+        if ext == ".json":
+            return json.load(f)
+        if ext in [".yaml", ".yml"]:
+            return yaml.load(f, Loader=yaml.SafeLoader)
+    return None
+
+
+corelle_data_dir = Path(__file__).parent.parent.parent.parent.parent / "data"
+
+
+def load_basic_data():
+    """Load basic model and feature datasets"""
+    with working_directory(str(corelle_data_dir)):
+        import_model(
+            "PaleoPlates",
+            "eglington/PlatePolygons2016All.json",
+            "eglington/T_Rot_Model_PalaeoPlates_2019_20190302_experiment.rot",
+            fields="eglington-fields.yaml",
+        )
+
+        import_model(
+            "Seton2012",
+            "seton_2012.geojson",
+            "Seton_etal_ESR2012_2012.1.rot",
+            fields="seton-fields.yaml",
+            min_age=0,
+            max_age=200,
+        )
+
+        import_model(
+            "Wright2013",
+            "wright_plates.geojson",
+            "wright_2013.rot",
+            fields="wright-fields.yaml",
+            min_age=0,
+            max_age=550,
+        )
+
+        import_model(
+            "Scotese",
+            "scotese.geojson",
+            "scotese.rot",
+            fields="scotese-fields.yaml",
+            min_age=0,
+            max_age=550,
+        )
+
+    # Import Natural Earth features
+    # Download natural earth data to temp file
+    prefix = "https://github.com/martynafford/natural-earth-geojson/blob/master/110m/"
+
+    # Create a temp directory
+    with TemporaryDirectory() as tmpdir:
+        tmpdir = Path(tmpdir)
+        tmpdir.chdir()
+
+        for dataset in [
+            prefix + "cultural/ne_110m_populated_places_simple.json",
+            prefix + "physical/ne_110m_land.json",
+        ]:
+            fn = dataset.split("/")[-1]
+            dsn = fn.split(".")[0]
+
+            # Check if this dataset has already been imported
+            q = text(
+                "SELECT count(*) FROM (SELECT DISTINCT dataset_id FROM corelle.feature WHERE dataset_id=:name) "
+            )
+            res = connect().execute(q, name=dsn).scalar()
+            if res == 1:
+                continue
+
+            # Download the dataset
+            download(dataset, out=fn)
+
+            # Import the dataset
+            import_features(dsn, fn, overwrite=True)
