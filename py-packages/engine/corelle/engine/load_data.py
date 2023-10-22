@@ -12,6 +12,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from macrostrat.utils import working_directory
 from wget import download
+from contextlib import contextmanager
 
 from .database import db
 from .query import get_sql
@@ -47,7 +48,7 @@ __plate_polygon = db.reflect_table("plate_polygon", schema="corelle")
 
 
 def pg_geometry(feature):
-    geom = dumps(feature["geometry"])
+    geom = dumps(dict(feature["geometry"]))
     _ = func.ST_GeomFromGeoJSON(geom)
     return func.ST_SetSRID(func.ST_MakeValid(func.ST_Multi(_)), 4326)
 
@@ -121,9 +122,13 @@ def import_plates(model_id, plates, fields={}):
 def import_feature(dataset, feature):
     conn = connect()
 
+    props = feature["properties"]
+    if props is not None:
+        props = dict(props)
+
     vals = dict(
         dataset_id=dataset,
-        properties=(feature["properties"] or None),
+        properties=(props or None),
         geometry=pg_geometry(feature),
     )
 
@@ -218,6 +223,7 @@ def import_rotations(model_id, rotations):
 def import_model(
     name, plates, rotations, fields=None, overwrite=False, min_age=None, max_age=None
 ):
+    print("Importing model", name)
     conn = connect()
     q = text("SELECT count(*) FROM corelle.model WHERE name=:name")
     res = conn.execute(q, name=name).scalar()
@@ -250,7 +256,7 @@ def load_basic_data():
     """Load basic model and feature datasets"""
     with working_directory(str(corelle_data_dir)):
         import_model(
-            "PaleoPlates",
+            "PalaeoPlates",
             "eglington/PlatePolygons2016All.json",
             "eglington/T_Rot_Model_PalaeoPlates_2019_20190302_experiment.rot",
             fields="eglington-fields.yaml",
@@ -285,13 +291,10 @@ def load_basic_data():
 
     # Import Natural Earth features
     # Download natural earth data to temp file
-    prefix = "https://github.com/martynafford/natural-earth-geojson/blob/master/110m/"
+    prefix = "https://raw.githubusercontent.com/martynafford/natural-earth-geojson/master/110m/"
 
     # Create a temp directory
-    with TemporaryDirectory() as tmpdir:
-        tmpdir = Path(tmpdir)
-        tmpdir.chdir()
-
+    with download_context():
         for dataset in [
             prefix + "cultural/ne_110m_populated_places_simple.json",
             prefix + "physical/ne_110m_land.json",
@@ -301,7 +304,7 @@ def load_basic_data():
 
             # Check if this dataset has already been imported
             q = text(
-                "SELECT count(*) FROM (SELECT DISTINCT dataset_id FROM corelle.feature WHERE dataset_id=:name) "
+                "SELECT count(*) FROM (SELECT DISTINCT dataset_id FROM corelle.feature WHERE dataset_id=:name) AS a"
             )
             res = connect().execute(q, name=dsn).scalar()
             if res == 1:
@@ -312,3 +315,10 @@ def load_basic_data():
 
             # Import the dataset
             import_features(dsn, fn, overwrite=True)
+
+
+@contextmanager
+def download_context():
+    with TemporaryDirectory() as tmpdir:
+        with working_directory(tmpdir):
+            yield tmpdir
