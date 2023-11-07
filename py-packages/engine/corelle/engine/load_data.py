@@ -53,7 +53,7 @@ def pg_geometry(feature):
     return func.ST_SetSRID(func.ST_MakeValid(func.ST_Multi(_)), 4326)
 
 
-def insert_plate(**vals):
+def insert_plates(vals):
     connect().execute(insert(__plate).values(vals).on_conflict_do_nothing())
 
 
@@ -84,7 +84,7 @@ def import_plate(model_id, feature, fields=None):
     if young_lim == -999:
         young_lim = None
 
-    poly_vals = dict(
+    plate_polygon = dict(
         plate_id=plate_id,
         model_id=model_id,
         young_lim=young_lim,
@@ -92,31 +92,42 @@ def import_plate(model_id, feature, fields=None):
         geometry=pg_geometry(feature),
     )
 
-    conn.execute(__plate_polygon.insert().values(poly_vals))
+    return plate, plate_polygon
 
 
 def import_plates(model_id, plates, fields={}):
     if fields is None:
         fields = {}
+
+    plates = []
+    plate_polygons = []
     with fiona.open(plates, "r") as src:
         conn = connect()
         trans = conn.begin()
 
         mrf = fields.get("mantle_reference_frame", None)
         if mrf is not None:
-            insert_plate(id=mrf, model_id=model_id, name="Mantle reference frame")
+            plate = dict(id=mrf, model_id=model_id, name="Mantle reference frame")
+            plates.append(plate)
 
         # The spin axis is assumed to have plate ID 0 by default
         spin_axis = fields.get("spin_axis", 0)
-        insert_plate(id=spin_axis, model_id=model_id, name="Spin axis")
+        spin_axis_plate = dict(id=spin_axis, model_id=model_id, name="Spin axis")
+        plates.append(spin_axis_plate)
 
         for feature in src:
-            import_plate(model_id, feature, fields=fields)
+            plate, plate_polygon = import_plate(model_id, feature, fields=fields)
+            plates.append(plate)
+            plate_polygons.append(plate_polygon)
 
-        trans.commit()
+    # Run database transaction
+    insert_plates(plates)
+    conn.execute(__plate_polygon.insert().values(plate_polygons))
 
-        # For faster updates, this materialized view could become an actual table
-        conn.execute("REFRESH MATERIALIZED VIEW corelle.plate_polygon_cache")
+    trans.commit()
+
+    # For faster updates, this materialized view could become an actual table
+    conn.execute("REFRESH MATERIALIZED VIEW corelle.plate_polygon_cache")
 
 
 def import_feature(dataset, feature):
@@ -169,14 +180,14 @@ def import_rotation_row(model_id, line):
     Import a line from a GPlates rotations file
     """
     if line.startswith("*"):
-        return
+        return None, []
 
     conn = connect()
     data, meta = line.strip().split("!", 1)
     row = data.split()
 
     if int(row[0]) == 999:
-        return
+        return None, []
 
     # Insert first plate id
     plate_id = row[0]
@@ -184,10 +195,10 @@ def import_rotation_row(model_id, line):
     # Not sure that every plate_id-ref_plate_id
     # pair is actually unique as would be needed
     # here...
-    insert_plate(id=ref_plate_id, model_id=model_id)
-    insert_plate(id=plate_id, model_id=model_id, parent_id=ref_plate_id)
+    ref_plate = dict(id=ref_plate_id, model_id=model_id)
+    plate = dict(id=plate_id, model_id=model_id, parent_id=ref_plate_id)
 
-    vals = dict(
+    rotation = dict(
         plate_id=plate_id,
         model_id=model_id,
         t_step=row[1],
@@ -198,8 +209,9 @@ def import_rotation_row(model_id, line):
         # Postgres chokes on NULL characters in strings
         metadata=meta.replace("\x00", ""),
     )
-    _ = __rotation.insert().values(vals)
-    conn.execute(_)
+
+    # Return the rotation and the plates that it refers to
+    return rotation, [ref_plate, plate]
 
 
 def import_rotations(model_id, rotations):
@@ -212,12 +224,20 @@ def import_rotations(model_id, rotations):
     well for other `.rot` files in its current
     form.
     """
+    rotations = []
+    plates = []
     with open(rotations, "r") as f:
         start = perf_counter()
         for i, line in enumerate(f):
-            import_rotation_row(model_id, line)
-        elapsed = perf_counter() - start
-        print(f"Imported {i+1} rotations in {elapsed:.2f} seconds")
+            rotation, plates = import_rotation_row(model_id, line)
+            if rotation is not None:
+                rotations.append(rotation)
+            plates += plates
+
+    conn = connect()
+    conn.execute(__rotation.insert().values(rotations))
+    elapsed = perf_counter() - start
+    print(f"Imported {i+1} rotations in {elapsed:.2f} seconds")
 
 
 def import_model(
