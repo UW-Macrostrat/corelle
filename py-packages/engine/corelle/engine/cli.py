@@ -3,9 +3,11 @@ import warnings
 import numpy as N
 from IPython import embed
 from os import environ
-from click import group, argument, option, echo, Path
+import click
+from click import group, argument, option, echo
 from corelle.math import quaternion_to_euler
 from macrostrat.utils import working_directory
+from pathlib import Path
 
 warnings.filterwarnings("ignore")
 
@@ -25,7 +27,7 @@ def init(drop=False):
     initialize(drop=drop)
 
 
-file = Path(exists=True, dir_okay=False)
+file = click.Path(exists=True, dir_okay=False)
 
 
 @cli.command(name="import")
@@ -151,3 +153,23 @@ def build_cache():
     from .cache import build_rotation_caches
 
     build_rotation_caches()
+
+
+def parent_dir(_start: str, name: str) -> Path:
+    start = Path(_start)
+    while start.parent is not None:
+        start = start.parent
+        if start.name == name:
+            return start
+    return None
+
+
+@cli.command(name="test", context_settings=dict(ignore_unknown_options=True))
+def test(*args):
+    """Run tests"""
+    basedir = parent_dir(__file__, "py-packages")
+
+    with working_directory(basedir):
+        from pytest import main
+
+        main(list(args))
