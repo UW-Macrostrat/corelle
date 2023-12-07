@@ -138,6 +138,7 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 DROP FUNCTION IF EXISTS corelle.build_proj_string(double precision[]);
 DROP FUNCTION IF EXISTS corelle.build_proj_string(double precision[], text);
 DROP FUNCTION IF EXISTS corelle.build_proj_string(double precision[], text, text);
+DROP FUNCTION IF EXISTS corelle.build_proj_string(double precision[], text, numeric);
 
 /**
 Builds a projection string from a quaternion. This is the core of Corelle's on-database
@@ -149,7 +150,11 @@ representation to use here.
 CREATE OR REPLACE FUNCTION corelle.build_proj_string(
   quaternion double precision[],
   extra_params text DEFAULT '+o_proj=longlat',
-  lon_adjustment numeric DEFAULT 0
+  /* NOTE: lon_adjustment, in radians, is applied to the pole longitude
+  in order to rotate the projection to solve antimeridian issues. This is
+  a hack, and should be replaced with a better solution, probably involving
+  a fix to PROJ's ob_tran projection (to add handling of the +over parameter). */
+  lon_adjustment double precision DEFAULT 0
 )
 RETURNS text AS $$
 DECLARE
@@ -185,7 +190,7 @@ BEGIN
   lon_0 := lon_p - twist_angle;
 
   RETURN format('+proj=ob_tran +o_lon_p=%sr +o_lat_p=%sr +lon_0=%sr ' || extra_params, 
-    lon_p,
+    lon_p + lon_adjustment,
     lat_p,
     lon_0
   );
