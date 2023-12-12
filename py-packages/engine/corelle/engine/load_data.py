@@ -13,6 +13,9 @@ from tempfile import TemporaryDirectory
 from macrostrat.utils import working_directory
 from wget import download
 from contextlib import contextmanager
+from geoalchemy2 import func as gfunc
+from geoalchemy2.shape import from_shape
+from shapely.geometry import shape, MultiPolygon
 
 from .database import db
 from .query import get_sql
@@ -48,9 +51,10 @@ __plate_polygon = db.reflect_table("plate_polygon", schema="corelle")
 
 
 def pg_geometry(feature):
-    geom = dumps(dict(feature["geometry"]))
-    _ = func.ST_GeomFromGeoJSON(geom)
-    return func.ST_SetSRID(func.ST_MakeValid(func.ST_Multi(_)), 4326)
+    """Convert a GeoJSON feature to a PostGIS geometry"""
+    geom = shape(feature.geometry)
+    # ensure the geometry is a valid multipolygon
+    return gfunc.ST_Multi(gfunc.ST_MakeValid(from_shape(geom, srid=4326)))
 
 
 def import_plate(model_id, feature, fields=None):
@@ -97,9 +101,6 @@ def import_plates(model_id, datafile, fields={}):
     plates = []
     plate_polygons = []
     with fiona.open(datafile, "r") as src:
-        conn = connect()
-        trans = conn.begin()
-
         mrf = fields.get("mantle_reference_frame", None)
         if mrf is not None:
             plate = dict(id=mrf, model_id=model_id, name="Mantle reference frame")
@@ -116,9 +117,11 @@ def import_plates(model_id, datafile, fields={}):
             plate_polygons.append(plate_polygon)
 
     # Run database transaction
-    conn.execute(insert(__plate).values(plates).on_conflict_do_nothing())
-    conn.execute(insert(__plate_polygon).values(plate_polygons))
-
+    conn = connect()
+    trans = conn.begin()
+    conn.execute(insert(__plate).values(plates))
+    for poly in plate_polygons:
+        conn.execute(insert(__plate_polygon).values(poly))
     trans.commit()
 
     # For faster updates, this materialized view could become an actual table
@@ -219,17 +222,24 @@ def import_rotations(model_id, filename):
     """
     rotations = []
     plates = []
+    start = perf_counter()
     with open(filename, "r") as f:
-        start = perf_counter()
         for i, line in enumerate(f):
-            rotation, plates = create_rotation_row(model_id, line)
+            rotation, next_plates = create_rotation_row(model_id, line)
             if rotation is not None:
                 rotations.append(rotation)
-            plates += plates
+            plates.extend(next_plates)
 
     conn = connect()
-    conn.execute(insert(__plate).values(plates).on_conflict_do_nothing())
+    trans = conn.begin()
+    conn.execute(
+        insert(__plate)
+        .values(plates)
+        .on_conflict_do_nothing(index_elements=(__plate.c.id, __plate.c.model_id))
+    )
     conn.execute(insert(__rotation).values(rotations).on_conflict_do_nothing())
+    trans.commit()
+
     elapsed = perf_counter() - start
     print(f"Imported {i+1} rotations in {elapsed:.2f} seconds")
 
