@@ -53,13 +53,7 @@ def pg_geometry(feature):
     return func.ST_SetSRID(func.ST_MakeValid(func.ST_Multi(_)), 4326)
 
 
-def insert_plates(vals):
-    connect().execute(insert(__plate).values(vals).on_conflict_do_nothing())
-
-
 def import_plate(model_id, feature, fields=None):
-    conn = connect()
-
     def field(field_id):
         # If we have provided a mapping of fields for the input
         # geojson file, we should use these fields for
@@ -71,7 +65,7 @@ def import_plate(model_id, feature, fields=None):
     if plate_id is None:
         raise Exception(f"Invalid plate ID: {feature}")
 
-    insert_plate(
+    plate = dict(
         id=plate_id,
         model_id=model_id,
         parent_id=field("parent_id"),
@@ -95,13 +89,14 @@ def import_plate(model_id, feature, fields=None):
     return plate, plate_polygon
 
 
-def import_plates(model_id, plates, fields={}):
+def import_plates(model_id, datafile, fields={}):
+    """Import all plates for a model"""
     if fields is None:
         fields = {}
 
     plates = []
     plate_polygons = []
-    with fiona.open(plates, "r") as src:
+    with fiona.open(datafile, "r") as src:
         conn = connect()
         trans = conn.begin()
 
@@ -121,8 +116,8 @@ def import_plates(model_id, plates, fields={}):
             plate_polygons.append(plate_polygon)
 
     # Run database transaction
-    insert_plates(plates)
-    conn.execute(__plate_polygon.insert().values(plate_polygons))
+    conn.execute(insert(__plate).values(plates).on_conflict_do_nothing())
+    conn.execute(insert(__plate_polygon).values(plate_polygons))
 
     trans.commit()
 
@@ -130,34 +125,33 @@ def import_plates(model_id, plates, fields={}):
     conn.execute("REFRESH MATERIALIZED VIEW corelle.plate_polygon_cache")
 
 
-def import_feature(dataset, feature):
-    conn = connect()
-
+def create_feature(dataset, feature):
     props = feature["properties"]
     if props is not None:
         props = dict(props)
 
-    vals = dict(
+    return dict(
         dataset_id=dataset,
         properties=(props or None),
         geometry=pg_geometry(feature),
     )
-
-    conn.execute(__feature.insert().values(vals))
 
 
 def import_features(name, features, overwrite=False):
     start = perf_counter()
     conn = connect()
     with fiona.open(features, "r") as src:
-        trans = conn.begin()
-
         if overwrite:
             conn.execute(__feature.delete().where(__feature.c.dataset_id == name))
 
+        vals = []
         for i, feature in enumerate(src):
-            import_feature(name, feature)
-        trans.commit()
+            vals.append(create_feature(name, feature))
+
+    trans = conn.begin()
+    conn.execute(insert(__feature).values(vals))
+    trans.commit()
+
     step1 = perf_counter()
     elapsed = step1 - start
     echo(
@@ -175,14 +169,13 @@ def import_features(name, features, overwrite=False):
     echo(f"  cached transformed features in {elapsed:.2f} seconds")
 
 
-def import_rotation_row(model_id, line):
+def create_rotation_row(model_id, line):
     """
     Import a line from a GPlates rotations file
     """
     if line.startswith("*"):
         return None, []
 
-    conn = connect()
     data, meta = line.strip().split("!", 1)
     row = data.split()
 
@@ -214,7 +207,7 @@ def import_rotation_row(model_id, line):
     return rotation, [ref_plate, plate]
 
 
-def import_rotations(model_id, rotations):
+def import_rotations(model_id, filename):
     """
     Import a set of plate rotations defined
     in a GPlates rotation file structure.
@@ -226,16 +219,17 @@ def import_rotations(model_id, rotations):
     """
     rotations = []
     plates = []
-    with open(rotations, "r") as f:
+    with open(filename, "r") as f:
         start = perf_counter()
         for i, line in enumerate(f):
-            rotation, plates = import_rotation_row(model_id, line)
+            rotation, plates = create_rotation_row(model_id, line)
             if rotation is not None:
                 rotations.append(rotation)
             plates += plates
 
     conn = connect()
-    conn.execute(__rotation.insert().values(rotations))
+    conn.execute(insert(__plate).values(plates).on_conflict_do_nothing())
+    conn.execute(insert(__rotation).values(rotations).on_conflict_do_nothing())
     elapsed = perf_counter() - start
     print(f"Imported {i+1} rotations in {elapsed:.2f} seconds")
 
