@@ -1,13 +1,13 @@
 import warnings
 
-import json
-import yaml
 import numpy as N
 from IPython import embed
-
-from click import group, argument, option, echo, Path
+from os import environ
+import click
+from click import group, argument, option, echo
 from corelle.math import quaternion_to_euler
-from os.path import splitext
+from macrostrat.utils import working_directory
+from pathlib import Path
 
 warnings.filterwarnings("ignore")
 
@@ -27,19 +27,7 @@ def init(drop=False):
     initialize(drop=drop)
 
 
-file = Path(exists=True, dir_okay=False)
-
-
-def load_fields(fn):
-    if not fn:
-        return None
-    ext = splitext(fn)[1]
-    with open(fn, "r") as f:
-        if ext == ".json":
-            return json.load(f)
-        if ext in [".yaml", ".yml"]:
-            return yaml.load(f, Loader=yaml.SafeLoader)
-    return None
+file = click.Path(exists=True, dir_okay=False)
 
 
 @cli.command(name="import")
@@ -64,7 +52,6 @@ def _import(
     """
     from .load_data import import_model
 
-    fields = load_fields(fields)
     import_model(
         model_name,
         plates,
@@ -87,6 +74,14 @@ def _import_features(name, file, overwrite=False):
     from .load_data import import_features
 
     import_features(name, file, overwrite=False)
+
+
+@cli.command(name="import-starter-data")
+def import_basic():
+    """Import basic models and data"""
+    from .load_data import load_basic_data
+
+    load_basic_data()
 
 
 @cli.command(name="reset-cache")
@@ -148,11 +143,33 @@ def serve(**kwargs):
 
 @cli.command(name="shell")
 def shell():
+    """Get a shell in the application context"""
     embed()
 
 
 @cli.command(name="cache-rotations")
 def build_cache():
+    """Cache rotations for all models"""
     from .cache import build_rotation_caches
 
     build_rotation_caches()
+
+
+def parent_dir(_start: str, name: str) -> Path:
+    start = Path(_start)
+    while start.parent is not None:
+        start = start.parent
+        if start.name == name:
+            return start
+    return None
+
+
+@cli.command(name="test", context_settings=dict(ignore_unknown_options=True))
+def test(*args):
+    """Run tests"""
+    basedir = parent_dir(__file__, "py-packages")
+
+    with working_directory(basedir):
+        from pytest import main
+
+        main(list(args))
