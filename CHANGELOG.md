@@ -1,6 +1,16 @@
 # Changelog
 
-## [Unreleased]
+## [2.2.0] - 2024-01-04
+
+- Update application for Python 3.11
+- Update dependencies including SQLAlchemy 2
+
+## [2.0.0]
+
+- Switch dependency management to Poetry
+- Break into submodules
+
+## [Unknown]
 
 - New [notebooks](notebooks) showing
   [usage in Python](notebooks/Corelle-Basic-Usage.ipynb) and building towards
