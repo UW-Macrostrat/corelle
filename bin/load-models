@@ -1,4 +1,5 @@
 #!/bin/sh
+# Note (2024-01-04): This script has been superseded by the `corelle import-starter-data` command
 
 if [ "$1" = "--redo" ]; then
   shift
