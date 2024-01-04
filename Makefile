@@ -9,10 +9,16 @@ install:
 	make lock
 	poetry install
 
-init:
-	-createdb plate-rotations
-	poetry run corelle init --drop
-	poetry run bin/load-models
+test-docker:
+	bin/test-docker
+
+test:
+	poetry run bin/run-tests
+
+dev:
+	cd frontend && poetry run npm run dev
+
+# Outdated functions
 
 update_functions:
 	cat py-packages/engine/corelle/engine/schema/*-functions.sql | psql plate-rotations
@@ -22,8 +28,7 @@ baseurl := https://raw.githubusercontent.com/martynafford/natural-earth-geojson/
 features: bin/load-features
 	poetry run bin/load-features --redo plate-rotations
 
-test:
-	poetry run bin/run-tests
-
-dev:
-	cd frontend && poetry run npm run dev
+init:
+	-createdb plate-rotations
+	poetry run corelle init --drop
+	poetry run bin/load-models
