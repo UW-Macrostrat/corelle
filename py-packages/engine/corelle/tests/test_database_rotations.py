@@ -14,6 +14,7 @@ from geoalchemy2.elements import WKBElement
 from corelle.math import euler_to_quaternion, sph2cart, cart2sph
 from pytest import mark
 from corelle.engine.rotate import get_plate_id, get_rotation
+from sqlalchemy import text
 from .rotation_testing_functions import (
     rotation_functions,
     postgis_rotation_functions,
@@ -190,7 +191,7 @@ def test_inverse_rotation(geom, func):
         # Check validity of the input geometry
         g0 = wkt.loads(geom)
         result = session.execute(
-            sql, params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
+            text(sql), params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
         ).scalar()
         assert result is not None
         geom = to_shape(WKBElement(result))
@@ -275,7 +276,7 @@ def test_postgis_vector_rotation(q, direction):
     vx0 = Q.rotate_vectors(q, vx)
 
     result = db.session.execute(
-        "SELECT corelle.rotate_vector(:vector, :quaternion)::float[]",
+        text("SELECT corelle.rotate_vector(:vector, :quaternion)::float[]"),
         params=dict(quaternion=[q.w, q.x, q.y, q.z], vector=list(vx)),
     ).scalar()
     coords = list(result)

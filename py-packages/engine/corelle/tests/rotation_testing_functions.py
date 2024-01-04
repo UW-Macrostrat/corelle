@@ -8,6 +8,7 @@ import quaternion as Q
 from corelle.engine.database import db
 from geoalchemy2.shape import to_shape
 from geoalchemy2.elements import WKBElement
+from sqlalchemy import text
 from corelle.math import sph2cart, cart2sph
 
 identity_quaternion = Q.from_float_array([1, 0, 0, 0])
@@ -41,7 +42,7 @@ def rotate_point(point, quaternion, func="corelle.rotate_geometry"):
     sql = f"SELECT {func}(ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), :quaternion)"
     # Get the result of the rotation as a WKBElement
     result = db.session.execute(
-        sql,
+        text(sql),
         params=dict(
             lon=point[0],
             lat=point[1],
@@ -60,7 +61,7 @@ def rotate_with_ob_tran(start_pos, lon_p, lat_p, lon_0):
     # Get the result of the rotation as a WKBElement
     with db.session_scope() as session:
         result = session.execute(
-            sql,
+            text(sql),
             params=dict(
                 x=start_pos[0],
                 y=start_pos[1],
