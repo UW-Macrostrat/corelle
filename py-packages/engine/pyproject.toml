@@ -9,7 +9,7 @@ packages = [{ include = "corelle" }]
 
 [tool.poetry.dependencies]
 
-Fiona = "^1.8.22"
+Fiona = "^1.9.5"
 IPython = "^8"
 PyYAML = "^6.0"
 "corelle.client" = { path = "../client", develop = true }

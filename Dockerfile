@@ -1,13 +1,13 @@
 # Dockerfile for the corelle API server
-FROM python:3.10
+FROM python:3.11
 
 WORKDIR /code
 
 ENV POETRY_VIRTUALENVS_CREATE=false
 
-RUN apt-get -y update && apt-get -y install postgresql-client
+RUN apt-get -y update && apt-get -y install postgresql-client gdal-bin libgdal-dev
 
-RUN pip install poetry==1.2.2
+RUN pip install poetry==1.7.1
 
 COPY ./poetry.lock ./pyproject.toml /code/
 COPY ./py-packages/client/pyproject.toml /code/py-packages/client/

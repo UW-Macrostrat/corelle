@@ -1,17 +1,28 @@
 #!/usr/bin/env bash
+# This script is meant to be run from the root of the project
 
 set -e
+
+# Load dotenv if it exists
+if [ -f .env ]; then
+  set -o allexport
+  source .env
+  set +o allexport
+fi
+
+POSTGRES_IMAGE=${POSTGRES_IMAGE:-postgis/postgis:14-3.3}
 
 # Remove pre-existing containers if they exist
 docker rm -f corelle-db || true
 
-# Build the image
+# Build the image using buildkit
+export DOCKER_BUILDKIT=1
 docker build -t corelle .
 
 # Spin up the database
 docker run --name corelle-db -d \
   -e POSTGRES_HOST_AUTH_METHOD=trust \
-  -p 54321:5432 postgis/postgis:14-3.3
+  -p 54321:5432 $POSTGRES_IMAGE
 
 # Wait for the database to be ready
 until docker exec corelle-db pg_isready -h localhost -p 5432 -U postgres
