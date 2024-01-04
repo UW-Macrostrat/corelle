@@ -200,7 +200,7 @@ def test_inverse_rotation(geom, func):
         print(g0.wkt, geom.wkt)
 
         # Check that the geometry is the same as the original
-        assert g0.almost_equals(geom)
+        assert g0.equals_exact(geom, tolerance=1e-10)
 
 
 def make_quaternion(*arr):
