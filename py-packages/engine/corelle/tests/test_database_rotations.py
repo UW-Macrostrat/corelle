@@ -238,8 +238,8 @@ def quaternion_decomposition(q):
     x, rest = decompose_quaternion(q, x_axis)
     y, rest_1 = decompose_quaternion(rest, y_axis)
 
-    assert rest.vec.dot(x_axis) == 0
-    assert rest_1.vec.dot(y_axis) == 0
+    assert N.allclose(rest.vec.dot(x_axis), 0, atol=1e-10)
+    assert N.allclose(rest_1.vec.dot(y_axis), 0, atol=1e-10)
     # assert rest_1.vec.dot(x_axis) == 0
     # assert rest_1.vec.dot(z_axis) == N.linalg.norm(rest_1.vec)
     # z, rest = decompose_quaternion(rest, z_axis)
