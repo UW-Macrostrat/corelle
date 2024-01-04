@@ -32,7 +32,7 @@ def get_plate_polygons(model):
     Uncached version of modern plate polygons query
     """
     q = get_sql("modern-plate-polygons")
-    results = conn.execute(q, model_name=model)
+    results = conn.execute(q, dict(model_name=model))
     for row in results:
         props = dict(row)
         geom = loads(props.pop("geometry"))
@@ -43,7 +43,7 @@ def get_plate_polygons(model):
 
 def get_plate_polygons_cached(model):
     q = get_sql("modern-plate-polygons-cached")
-    return conn.execute(q, model_name=model).scalar()
+    return conn.execute(q, dict(model_name=model)).scalar()
 
 
 class ModelResource(Resource):
@@ -63,7 +63,7 @@ class Features(ModelResource):
     def get(self, dataset):
         args = self.parser.parse_args()
         q = get_sql("feature-dataset-cached")
-        return conn.execute(q, model_name=args["model"], dataset=dataset).scalar()
+        return conn.execute(q, dict(model_name=args["model"], dataset=dataset)).scalar()
 
 
 class ModernPlates(ModelResource):
@@ -110,7 +110,7 @@ class Rotation(RotationsResource):
         return list(self.get_all(args))
 
     def get_all(self, args):
-        for (plate_id, q) in get_all_rotations(args["model"], args["time"]):
+        for plate_id, q in get_all_rotations(args["model"], args["time"]):
             yield self.reducer(q, args, plate_id)
 
     def get_single(self, args):

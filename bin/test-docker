@@ -3,6 +3,12 @@
 
 set -e
 
+# Check if we're in a TTY
+TTY_FLAG=""
+if [ -t 1 ]; then
+  TTY_FLAG="-it"
+fi
+
 # Load dotenv if it exists
 if [ -f .env ]; then
   set -o allexport
@@ -44,7 +50,7 @@ docker run --rm \
 EOF
 
 # Run the tests
-docker run -t --rm --link corelle-db:database corelle /code/bin/run-tests $@
+docker run $TTY_FLAG --rm --link corelle-db:database corelle /code/bin/run-tests $@
 
 # Stop the database
 docker stop corelle-db

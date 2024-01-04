@@ -3,18 +3,18 @@ authors = ["Daven Quinn <dev@davenquinn.com>"]
 description = "An API server application for the Corelle plate-rotation system"
 license = "MIT"
 name = "corelle.client"
-version = "2.0.0"
+version = "2.1.0"
 
 packages = [{ include = "corelle" }]
 
 [tool.poetry.dependencies]
 
-geopandas = "^0.12.0"
+geopandas = "^0.14.1"
 numpy = "^1.23.4"
 numpy-quaternion = "^2022.4.2"
 pandas = "^1.5.1||^2.0.0"
-python = "^3.8"
-shapely = "^1.8.5.post1||^2.0.0"
+python = "^3.9"
+shapely = "^2.0.0"
 
 [tool.poetry.dev-dependencies]
 
