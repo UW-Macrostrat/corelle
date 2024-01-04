@@ -170,7 +170,7 @@ __plate_time_ranges = get_sql("plate-time-ranges")
 
 def plates_for_model(model):
     """Returns a list of plate IDs for a given model"""
-    return [k[0] for k in conn.execute(__model_plates_sql, model_name=model)]
+    return [k[0] for k in conn.execute(__model_plates_sql, dict(model_name=model))]
 
 
 def get_all_rotations(
@@ -191,14 +191,14 @@ def get_all_rotations(
     """
     if plates is None:
         if active_only:
-            res = conn.execute(__active_plates_sql, time=time, model_name=model)
+            res = conn.execute(__active_plates_sql, dict(time=time, model_name=model))
             plates = [p[0] for p in res]
         else:
             plates = plates_for_model(model)
 
     if rowset is None:
         _rowset = conn.execute(
-            __tstep_rotation_pairs, time=time, model_name=model
+            __tstep_rotation_pairs, dict(time=time, model_name=model)
         ).fetchall()
     else:
         _rowset = [
@@ -228,14 +228,16 @@ def get_rotation_series(model, *times, **kwargs):
 
     plate_ages = conn.execute(
         __plate_time_ranges,
-        model_name=model,
+        dict(model_name=model),
     ).fetchall()
 
     rowset = conn.execute(
         __model_rotation_pairs,
-        model_name=model,
-        early_age=float(max(times)),
-        late_age=float(min(times)),
+        dict(
+            model_name=model,
+            early_age=float(max(times)),
+            late_age=float(min(times)),
+        ),
     ).fetchall()
     for t in times:
         t = float(t)
