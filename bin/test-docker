@@ -40,7 +40,7 @@ docker run --rm \
   --volume $(pwd)/data:/code/data \
   -i corelle bash <<EOF
   corelle init
-  bin/load-models
+  corelle import-starter-data
 EOF
 
 # Run the tests
