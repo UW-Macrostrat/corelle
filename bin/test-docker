@@ -44,7 +44,7 @@ docker run --rm \
 EOF
 
 # Run the tests
-docker run --rm --link corelle-db:database corelle /code/bin/run-tests
+docker run -t --rm --link corelle-db:database corelle /code/bin/run-tests $@
 
 # Stop the database
 docker stop corelle-db
