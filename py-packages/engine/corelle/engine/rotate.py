@@ -138,14 +138,14 @@ def get_rotation(
 
 def plates_for_model(model):
     sql = get_sql("plates-for-model")
-    for row in conn.execute(sql, model_name=model):
+    for row in conn.execute(sql, dict(model_name=model)):
         yield row[0]
 
 
 def get_plate_id(point, model, time):
     sql = get_sql("plate-for-point")
     return conn.execute(
-        sql, lon=point[0], lat=point[1], model_name=model, time=time
+        sql, dict(lon=point[0], lat=point[1], model_name=model, time=time)
     ).scalar()
 
 

@@ -29,7 +29,7 @@ def test_postgis_noop_rotation():
     sql = "SELECT corelle.rotate_geometry(ST_GeomFromText('POINT(0 0)', 4326), :quaternion)"
     # Get the result of the rotation as a WKBElement
     result = db.session.execute(
-        sql, params=dict(quaternion=list(N.array(identity, dtype=float)))
+        text(sql), params=dict(quaternion=list(N.array(identity, dtype=float)))
     ).scalar()
     # Convert the WKBElement to a Shapely geometry
     geom = to_shape(WKBElement(result))
@@ -92,7 +92,7 @@ def test_postgis_euler_recovery(case):
     euler = (*case.pole, case.angle)
     q = euler_to_quaternion(euler)
     result = db.session.execute(
-        sql, params=dict(quaternion=[q.w, q.x, q.y, q.z])
+        text(sql), params=dict(quaternion=[q.w, q.x, q.y, q.z])
     ).scalar()
     if case.angle == 0:
         assert result is None
@@ -139,7 +139,7 @@ def test_postgis_geometry_rotation(func, geom):
         assert wkt.loads(geom).is_valid
 
         result = session.execute(
-            sql, params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
+            text(sql), params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
         ).scalar()
         geom = to_shape(WKBElement(result))
         print(geom.wkt)
@@ -153,7 +153,7 @@ def test_postgis_geometry_rotation_invalid(geom):
     with db.session_scope() as session:
         g0 = wkt.loads(geom)
         result = session.execute(
-            sql, params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
+            text(sql), params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
         ).scalar()
         assert result is not None
         geom = to_shape(WKBElement(result))
@@ -164,7 +164,7 @@ def _rotate_geom(geom, q, func="corelle.rotate_geometry"):
     sql = f"SELECT {func}(ST_GeomFromText(:geom, 4326), :quaternion)"
     with db.session_scope() as session:
         result = session.execute(
-            sql, params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
+            text(sql), params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
         ).scalar()
         assert result is not None
         return to_shape(WKBElement(result))
