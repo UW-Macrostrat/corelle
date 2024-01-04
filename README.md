@@ -91,9 +91,16 @@ To build (and continuously watch) the frontend, run `make dev`.
 A backend API server will be started and proxied, so you don't have to run
 `corelle serve`.
 
-### Installation with Docker
+### Testing the system
 
-Simply install Docker and run `docker-compose up --build` in the root directory.
+Corelle contains an extensive set of conformance tests to ensure that it has
+GPlates-compatible rotation handling, and to ensure that rotation APIs perform
+correctly and performantly in both Python and PostGIS. To run the test suite,
+run `make test-docker` in the application directory.
+
+### Running the web app with Docker
+
+Install Docker and run `docker-compose up --build` in the root directory.
 This will build the application, install test data, and spin up the development server.
 
 You can run a development version by creating a `.env` file containing
