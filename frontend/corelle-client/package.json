@@ -1,6 +1,6 @@
 {
   "name": "@macrostrat/corelle",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A client library for the Corelle plate-rotation API",
   "scripts": {
     "dev": "rollup -c -w & tsc --emitDeclarationOnly -w",
@@ -36,5 +36,12 @@
   },
   "peerDependencies": {
     "react": "^16.13.1||^17.0.0||^18.0.0"
+  },
+  "exports": {
+    ".": {
+      "typescript": "./src",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    }
   }
 }
