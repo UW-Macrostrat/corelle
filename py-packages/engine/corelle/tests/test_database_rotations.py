@@ -14,6 +14,7 @@ from geoalchemy2.elements import WKBElement
 from corelle.math import euler_to_quaternion, sph2cart, cart2sph
 from pytest import mark
 from corelle.engine.rotate import get_plate_id, get_rotation
+from sqlalchemy import text
 from .rotation_testing_functions import (
     rotation_functions,
     postgis_rotation_functions,
@@ -28,7 +29,7 @@ def test_postgis_noop_rotation():
     sql = "SELECT corelle.rotate_geometry(ST_GeomFromText('POINT(0 0)', 4326), :quaternion)"
     # Get the result of the rotation as a WKBElement
     result = db.session.execute(
-        sql, params=dict(quaternion=list(N.array(identity, dtype=float)))
+        text(sql), params=dict(quaternion=list(N.array(identity, dtype=float)))
     ).scalar()
     # Convert the WKBElement to a Shapely geometry
     geom = to_shape(WKBElement(result))
@@ -91,7 +92,7 @@ def test_postgis_euler_recovery(case):
     euler = (*case.pole, case.angle)
     q = euler_to_quaternion(euler)
     result = db.session.execute(
-        sql, params=dict(quaternion=[q.w, q.x, q.y, q.z])
+        text(sql), params=dict(quaternion=[q.w, q.x, q.y, q.z])
     ).scalar()
     if case.angle == 0:
         assert result is None
@@ -138,7 +139,7 @@ def test_postgis_geometry_rotation(func, geom):
         assert wkt.loads(geom).is_valid
 
         result = session.execute(
-            sql, params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
+            text(sql), params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
         ).scalar()
         geom = to_shape(WKBElement(result))
         print(geom.wkt)
@@ -152,7 +153,7 @@ def test_postgis_geometry_rotation_invalid(geom):
     with db.session_scope() as session:
         g0 = wkt.loads(geom)
         result = session.execute(
-            sql, params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
+            text(sql), params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
         ).scalar()
         assert result is not None
         geom = to_shape(WKBElement(result))
@@ -163,7 +164,7 @@ def _rotate_geom(geom, q, func="corelle.rotate_geometry"):
     sql = f"SELECT {func}(ST_GeomFromText(:geom, 4326), :quaternion)"
     with db.session_scope() as session:
         result = session.execute(
-            sql, params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
+            text(sql), params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
         ).scalar()
         assert result is not None
         return to_shape(WKBElement(result))
@@ -190,7 +191,7 @@ def test_inverse_rotation(geom, func):
         # Check validity of the input geometry
         g0 = wkt.loads(geom)
         result = session.execute(
-            sql, params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
+            text(sql), params=dict(geom=geom, quaternion=[q.w, q.x, q.y, q.z])
         ).scalar()
         assert result is not None
         geom = to_shape(WKBElement(result))
@@ -199,7 +200,7 @@ def test_inverse_rotation(geom, func):
         print(g0.wkt, geom.wkt)
 
         # Check that the geometry is the same as the original
-        assert g0.almost_equals(geom)
+        assert g0.equals_exact(geom, tolerance=1e-10)
 
 
 def make_quaternion(*arr):
@@ -275,7 +276,7 @@ def test_postgis_vector_rotation(q, direction):
     vx0 = Q.rotate_vectors(q, vx)
 
     result = db.session.execute(
-        "SELECT corelle.rotate_vector(:vector, :quaternion)::float[]",
+        text("SELECT corelle.rotate_vector(:vector, :quaternion)::float[]"),
         params=dict(quaternion=[q.w, q.x, q.y, q.z], vector=list(vx)),
     ).scalar()
     coords = list(result)

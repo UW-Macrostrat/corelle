@@ -13,9 +13,10 @@ from tempfile import TemporaryDirectory
 from macrostrat.utils import working_directory
 from wget import download
 from contextlib import contextmanager
-from geoalchemy2 import func as gfunc
+from geoalchemy2 import functions as gfunc
 from geoalchemy2.shape import from_shape
 from shapely.geometry import shape, MultiPolygon
+from macrostrat.database import run_sql
 
 from .database import db
 from .query import get_sql
@@ -118,14 +119,13 @@ def import_plates(model_id, datafile, fields={}):
 
     # Run database transaction
     conn = connect()
-    trans = conn.begin()
     conn.execute(insert(__plate).values(plates))
     for poly in plate_polygons:
         conn.execute(insert(__plate_polygon).values(poly))
-    trans.commit()
+    conn.commit()
 
     # For faster updates, this materialized view could become an actual table
-    conn.execute("REFRESH MATERIALIZED VIEW corelle.plate_polygon_cache")
+    run_sql(conn, "REFRESH MATERIALIZED VIEW corelle.plate_polygon_cache")
 
 
 def create_feature(dataset, feature):
@@ -151,9 +151,8 @@ def import_features(name, features, overwrite=False):
         for i, feature in enumerate(src):
             vals.append(create_feature(name, feature))
 
-    trans = conn.begin()
     conn.execute(insert(__feature).values(vals))
-    trans.commit()
+    conn.commit()
 
     step1 = perf_counter()
     elapsed = step1 - start
@@ -164,9 +163,8 @@ def import_features(name, features, overwrite=False):
     )
 
     sql = get_sql("cache-feature-dataset")
-    trans = conn.begin()
-    conn.execute(sql, dataset_id=name)
-    trans.commit()
+    conn.execute(sql, dict(dataset_id=name))
+    conn.commit()
 
     elapsed = perf_counter() - step1
     echo(f"  cached transformed features in {elapsed:.2f} seconds")
@@ -250,7 +248,7 @@ def import_model(
     print("Importing model", name)
     conn = connect()
     q = text("SELECT count(*) FROM corelle.model WHERE name=:name")
-    res = conn.execute(q, name=name).scalar()
+    res = conn.execute(q, dict(name=name)).scalar()
     if res == 1 and not overwrite:
         print("Model has already been imported.")
         return
@@ -330,7 +328,7 @@ def load_basic_data():
             q = text(
                 "SELECT count(*) FROM (SELECT DISTINCT dataset_id FROM corelle.feature WHERE dataset_id=:name) AS a"
             )
-            res = connect().execute(q, name=dsn).scalar()
+            res = connect().execute(q, dict(name=dsn)).scalar()
             if res == 1:
                 continue
 
