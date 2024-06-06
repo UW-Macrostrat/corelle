@@ -15,7 +15,6 @@ PyYAML = "^6.0"
 "corelle.client" = { path = "../client", develop = true }
 "macrostrat.database" = "^3.0.0"
 "macrostrat.utils" = "^1.0.1"
-numba = "^0.58.1"
 numpy = "^1.26.3"
 numpy-quaternion = "^2022.4.2"
 psycopg2-binary = "^2.9.5"
