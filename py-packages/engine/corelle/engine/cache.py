@@ -2,10 +2,12 @@
 Mapped database models. These would ideally be in the database module, but
 they need to be here to avoid initialization issues.
 """
+
 from sqlalchemy.sql import select
 
 from rich.progress import Progress
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.sql import text
 import numpy as N
 
 from corelle.math import quaternion_to_euler
@@ -47,8 +49,8 @@ def build_rotation_caches():
 def build_rotation_cache(model, time_step=1):
     # Get the time span of the model
 
-    min_age = model["min_age"] or 0
-    max_age = model["max_age"] or 1000
+    min_age = model.min_age or 0
+    max_age = model.max_age or 1000
 
     # Get model steps every 1 Myr
     t_steps = list(range(int(min_age), int(max_age) + 1, time_step))
@@ -56,7 +58,7 @@ def build_rotation_cache(model, time_step=1):
     session = db.session()
 
     session.execute(
-        "DELETE FROM corelle.rotation_cache WHERE model_id = :model_id",
+        text("DELETE FROM corelle.rotation_cache WHERE model_id = :model_id"),
         dict(model_id=model.id),
     )
     session.commit()
