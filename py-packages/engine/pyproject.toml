@@ -3,7 +3,7 @@ authors = ["Daven Quinn <dev@davenquinn.com>"]
 description = "An API server application for the Corelle plate-rotation system"
 license = "MIT"
 name = "corelle.engine"
-version = "2.0.0"
+version = "2.0.1"
 
 packages = [{ include = "corelle" }]
 
@@ -21,9 +21,9 @@ numpy-quaternion = "^2022.4.2"
 psycopg2-binary = "^2.9.5"
 python = "^3.9"
 rich = "^12.6.0||^13.0.0"
-typer = "^0.7.0||^0.8.0||^0.9.0"
+typer = "^0.7.0||^0.8.0||^0.9.0||^0.10.0||^0.11.0||^0.12.0"
 wget = "^3.2"
-geoalchemy2 = "^0.14.0"
+geoalchemy2 = "^0.14.0||^0.15.0"
 
 [tool.poetry.dev-dependencies]
 
