@@ -1,11 +1,9 @@
 import warnings
 
-import numpy as N
 from IPython import embed
 from os import environ
 import click
 from click import group, argument, option, echo
-from corelle.math import quaternion_to_euler
 from macrostrat.utils import working_directory
 from pathlib import Path
 
@@ -104,6 +102,8 @@ def rotate(model, plate, time, verbose=False):
     """
     Rotate a plate to a time
     """
+    import numpy as N
+    from corelle.math import quaternion_to_euler
     from .rotate import get_rotation
 
     q = get_rotation(model, plate, time, verbose=verbose)
@@ -124,6 +124,7 @@ def rotate_all(model, time, verbose=False):
     """
     Rotate all plates in a model to a time
     """
+    import numpy as N
     from .rotate import get_all_rotations
 
     for plate_id, q in get_all_rotations(model, time, verbose=verbose):
