@@ -14,9 +14,9 @@
   "types": "dist/esm/index.d.ts",
   "dependencies": {
     "@macrostrat/hyper": "^3.0.6",
-    "@macrostrat/svg-map-components": "^1.0.1",
+    "@macrostrat/svg-map-components": "^1.0.2",
     "@macrostrat/ui-components": "^4.0.0",
-    "@types/d3-geo": "^1.11.1",
+    "@types/d3-geo": "^3.0",
     "d3-geo": "^3.1.1",
     "quaternion": "^2.0.2",
     "url-join": "^4.0.1"

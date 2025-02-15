@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file. The format
 is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2025-02-14
+
+- Updated packaging to use Parcel
+- Updated dependency versions
+- Switch from outdated `@macrostrat/map-components` to
+  `@macrostrat/svg-map-components`
+- Build within a workspace
+
 ## [2.0.1] - 2024-05-29
 
 Update exports field
