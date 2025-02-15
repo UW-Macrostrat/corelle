@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "yarn workspace @corelle/demo-app run dev",
     "build": "yarn workspaces foreach -A -p run build",
-    "publish": "./publish.sh"
+    "publish": "scripts/publish"
   },
   "author": "Daven Quinn",
   "workspaces": [

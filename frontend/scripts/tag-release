@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+version=$(node -p "require('./package.json').version")
+name=$(node -p "require('./package.json').name")
+
+tag=$name-v$version
+
+git tag -a "$name-v$version" -m "npm package $name version $version"
+if [ $? -eq 0 ]; then
+  echo "Tagged $tag"
+else
+  echo "Tag $tag already exists"
+  exit 0
+fi
