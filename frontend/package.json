@@ -1,5 +1,6 @@
 {
   "description": "A workspace for managing the Corelle project.",
+  "private": true,
   "scripts": {
     "dev": "yarn workspace @corelle/demo-app run dev",
     "build": "yarn workspaces foreach -A -p run build",

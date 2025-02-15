@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "description": "A demo frontend for the Corelle plate-rotation application. Runs at rotate.macrostrat.org",
   "main": "index.html",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite ."

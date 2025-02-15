@@ -1,6 +1,6 @@
 #!/usr/bin/env bash -e
 
-# Ensure work tree is clean
+## Ensure work tree is clean
 if ! git diff --quiet; then
   echo "Working tree is not clean. Please commit all changes before publishing."
   exit 1
@@ -12,9 +12,15 @@ yarn workspaces foreach --no-private -A run build
 
 echo "Listing files to be published:"
 
-yarn workspaces foreach --no-private -A run pack --dry-run
+yarn workspaces foreach --no-private -A pack --dry-run
 
 # Prompt user to confirm publishing
 read -p "Are you sure you want to publish? (y/n) " -n 1 -r
 
 yarn workspaces foreach --no-private -A npm publish --access public
+
+# Tag the release(s)
+yarn workspaces foreach --no-private -A exec -- \
+  node -p 'const pkg = require("./package.json"); pkg.name + "-v" + pkg.version' \
+  | xargs git tag || true
+
