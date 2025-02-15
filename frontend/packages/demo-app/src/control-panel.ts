@@ -7,7 +7,7 @@ import {
   Alignment,
   NumericInput,
 } from "@blueprintjs/core";
-import { RotationsContext } from "@macrostrat/corelle";
+import { RotationsContext } from "@corelle/svg-map-layers";
 import * as styles from "./app.styl";
 import { MapSettingsContext } from "./map-settings";
 

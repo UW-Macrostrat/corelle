@@ -2,7 +2,7 @@ import { useState, useContext, useEffect, useCallback } from "react";
 import { WorldMap } from "./world-map";
 import ControlPanel from "./control-panel";
 import h from "@macrostrat/hyper";
-import { RotationsProvider } from "@macrostrat/corelle";
+import { RotationsProvider } from "@corelle/svg-map-layers";
 import { MapSettingsProvider } from "./map-settings";
 import { Spinner } from "@blueprintjs/core";
 import {
@@ -13,7 +13,7 @@ import {
   getQueryString,
 } from "@macrostrat/ui-components";
 
-import "./app.styl"
+import "./app.styl";
 
 const qs = getQueryString();
 
@@ -31,16 +31,16 @@ function App(props) {
 
   const setTime = useCallback(
     (time) => setState({ ...state, time }),
-    [setState]
+    [setState],
   );
   const setModel = useCallback(
     (model) => setState({ ...state, model }),
-    [setState]
+    [setState],
   );
 
   const { baseURL } = useContext(APIContext);
   const models = useAPIResult<string[]>("/model", null, (data: any) =>
-    data.map((d) => d.name)
+    data.map((d) => d.name),
   );
   const featureDatasets = useAPIResult<string[]>("/feature");
 
