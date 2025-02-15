@@ -3,45 +3,33 @@
   "version": "2.0.1",
   "description": "A client library for the Corelle plate-rotation API",
   "scripts": {
-    "dev": "rollup -c -w & tsc --emitDeclarationOnly -w",
-    "build:types": "(tsc --emitDeclarationOnly 2&> /dev/null) & exit 0",
-    "build": "rollup -c && npm run build:types",
+    "build": "parcel build",
     "prepare": "npm run build"
   },
   "author": "Daven Quinn",
   "license": "MIT",
-  "module": "dist/esm",
-  "main": "dist/cjs",
-  "types": "dist/types",
-  "devDependencies": {
-    "@babel/core": "^7.11.1",
-    "@babel/plugin-proposal-class-properties": "^7.8.3",
-    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.8.3",
-    "@babel/plugin-proposal-optional-chaining": "^7.9.0",
-    "@babel/preset-env": "^7.11.0",
-    "@babel/preset-typescript": "^7.10.4",
-    "@rollup/plugin-babel": "^5.2.0",
-    "@rollup/plugin-node-resolve": "^9.0.0",
-    "rollup": "^2.26.4",
-    "typescript": "^3.9.7"
-  },
+  "module": "dist/esm/index.js",
+  "main": "dist/cjs/index.js",
+  "source": "src/index.ts",
+  "types": "dist/esm/index.d.ts",
   "dependencies": {
-    "@macrostrat/hyper": "^1.0||^2.0",
-    "@macrostrat/map-components": "^0.2.1",
-    "@macrostrat/ui-components": "^0.5.0||^1.0.0||^2.0.0||^3.0.0||^4.0.0",
+    "@macrostrat/hyper": "^3.0.6",
+    "@macrostrat/svg-map-components": "^1.0.1",
+    "@macrostrat/ui-components": "^4.0.0",
     "@types/d3-geo": "^1.11.1",
     "d3-geo": "^1.12.1",
     "quaternion": "^1.1.0",
     "url-join": "^4.0.1"
   },
   "peerDependencies": {
-    "react": "^16.13.1||^17.0.0||^18.0.0"
+    "react": "^16.13.1||^17.0.0||^18.0.0||^19.0.0"
   },
   "exports": {
     ".": {
-      "typescript": "./src",
+      "source": "./src/index.ts",
       "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/esm/index.d.ts"
     }
   }
 }
