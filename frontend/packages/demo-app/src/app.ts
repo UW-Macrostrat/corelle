@@ -13,6 +13,8 @@ import {
   getQueryString,
 } from "@macrostrat/ui-components";
 
+import "./app.styl"
+
 const qs = getQueryString();
 
 const initialState = {
@@ -48,7 +50,7 @@ function App(props) {
 
   const { time, model, features } = state;
 
-  return h("div", [
+  return h("div.corelle-app", [
     h(RotationsProvider, { model, time, endpoint: baseURL, debounce: 1000 }, [
       h(WorldMap, { featureDataset: features }),
       h(ControlPanel, {

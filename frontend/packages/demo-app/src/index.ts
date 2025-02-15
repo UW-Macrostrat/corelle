@@ -8,10 +8,9 @@ import { createRoot } from "react-dom/client";
 import h from "@macrostrat/hyper";
 import App from "./app";
 
-let baseURL = import.meta.env.VITE_CORELLE_API_BASE_URL ?? "https://rotate.macrostrat.org/api";
+let baseURL = import.meta.env.VITE_CORELLE_API_URL ?? "https://rotate.macrostrat.org/api";
 
-const div = document.createElement("div");
-document.body.appendChild(div);
+const div = document.getElementById("root")
 
 const root = createRoot(div);
 
