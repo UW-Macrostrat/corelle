@@ -9,7 +9,6 @@ import {
 import { Globe, MapContext } from "@macrostrat/svg-map-components";
 
 import { MapSettingsContext } from "./map-settings";
-import chroma from "chroma-js";
 
 import "./app.styl";
 import { useElementSize } from "@macrostrat/ui-components";
@@ -17,6 +16,13 @@ import { useElementSize } from "@macrostrat/ui-components";
 function WorldMapInner(props) {
   const { width, height, keepNorthUp, projection, children } = props;
   const { model } = useContext(RotationsContext);
+
+  if (width == null || height == null) return null;
+
+  const minScale = Math.min(width, height) / 2 - 20;
+  const baseScale = Math.max(width, height) / 2 - 20;
+  const maxScale = baseScale * 2;
+
   return h(
     Globe,
     {
@@ -24,7 +30,10 @@ function WorldMapInner(props) {
       projection: projection.func,
       width,
       height,
-      scale: Math.max(width, height) / 2 - 20,
+      margin: 0,
+      scale: baseScale,
+      zoomScaleExtent: [minScale, maxScale],
+      allowZoom: true,
     },
     children,
   );
@@ -45,13 +54,13 @@ function WorldMap({ featureDataset }: { featureDataset: any }) {
   return h(
     "div.world-map",
     { ref },
-    h(WorldMapInner, { width, height, keepNorthUp, projection, margin: 10 }, [
+    h(WorldMapInner, { width, height, keepNorthUp, projection }, [
       h(PlatePolygons),
       h.if(featureDataset != null)(PlateFeatureLayer, {
         name: featureDataset,
         style: {
           fill: "#E9FCEA",
-          stroke: chroma("#E9FCEA").darken(0.3),
+          stroke: "#c9d5c9",
         },
       }),
     ]),

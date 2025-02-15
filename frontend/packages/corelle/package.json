@@ -17,8 +17,8 @@
     "@macrostrat/svg-map-components": "^1.0.1",
     "@macrostrat/ui-components": "^4.0.0",
     "@types/d3-geo": "^1.11.1",
-    "d3-geo": "^1.12.1",
-    "quaternion": "^1.1.0",
+    "d3-geo": "^3.1.1",
+    "quaternion": "^2.0.2",
     "url-join": "^4.0.1"
   },
   "peerDependencies": {
