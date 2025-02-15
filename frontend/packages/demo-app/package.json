@@ -1,7 +1,8 @@
 {
-  "name": "@macrostrat/corelle-workspace",
-  "private": true,
-  "description": "A workspace for managing the Corelle project.",
+  "name": "@macrostrat/corelle-demo-app",
+  "version": "2.0.0",
+  "description": "A demo frontend for the Corelle plate-rotation application. Runs at rotate.macrostrat.org",
+  "main": "index.html",
   "scripts": {
     "preinstall": "npm install -D npm-run-all linklocal && linklocal",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -9,6 +10,12 @@
     "dev": "parcel index.html"
   },
   "author": "Daven Quinn",
+  "alias": {
+    "react": "./node_modules/react",
+    "react-dom": "./node_modules/react-dom",
+    "@macrostrat/map-components": "./node_modules/@macrostrat/map-components"
+  },
+  "license": "ISC",
   "devDependencies": {
     "@babel/core": "^7.5.5",
     "@babel/plugin-transform-typescript": "^7.13.0",
@@ -23,9 +30,7 @@
     "stylus": "^0.54.5",
     "typescript": "^3.9.3"
   },
-  "workspaces": [
-    "packages/*"
-  ],
+  "prettier": {},
   "dependencies": {
     "@blueprintjs/core": "^3.18.0",
     "@macrostrat/corelle": "file:./corelle-client",
