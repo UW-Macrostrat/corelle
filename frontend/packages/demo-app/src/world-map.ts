@@ -1,12 +1,12 @@
 import h from "@macrostrat/hyper";
 import { useContext, useRef } from "react";
+import { Globe, MapContext } from "@macrostrat/svg-map-components";
 import {
   PlateFeatureLayer,
   RotationsContext,
   PlatePolygons,
   PlateFeature,
-} from "@macrostrat/corelle";
-import { Globe, MapContext } from "@macrostrat/svg-map-components";
+} from "@corelle/svg-map-layers";
 
 import { MapSettingsContext } from "./map-settings";
 

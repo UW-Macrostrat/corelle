@@ -324,7 +324,7 @@ __metadata:
   resolution: "@corelle/demo-app@workspace:packages/demo-app"
   dependencies:
     "@blueprintjs/core": "npm:^5"
-    "@macrostrat/corelle": "workspace:^"
+    "@corelle/svg-map-layers": "workspace:^"
     "@macrostrat/hyper": "npm:^3.0.6"
     "@macrostrat/svg-map-components": "npm:^1.0.2"
     "@macrostrat/ui-components": "npm:^4.1.0"
@@ -335,6 +335,36 @@ __metadata:
     sass-embedded: "npm:^1.85.0"
     stylus: "npm:^0.54.5"
     vite: "npm:^6.1.0"
+  languageName: unknown
+  linkType: soft
+
+"@corelle/rotations@workspace:^, @corelle/rotations@workspace:packages/rotations":
+  version: 0.0.0-use.local
+  resolution: "@corelle/rotations@workspace:packages/rotations"
+  dependencies:
+    "@babel/core": "npm:^7.12.0"
+    "@types/d3-geo": "npm:^3.0"
+    d3-geo: "npm:^3.1.1"
+    parcel: "npm:^2.13.3"
+    quaternion: "npm:^2.0.2"
+  peerDependencies:
+    react: ^16.13.1||^17.0.0||^18.0.0||^19.0.0
+  languageName: unknown
+  linkType: soft
+
+"@corelle/svg-map-layers@workspace:^, @corelle/svg-map-layers@workspace:packages/svg-map-layers":
+  version: 0.0.0-use.local
+  resolution: "@corelle/svg-map-layers@workspace:packages/svg-map-layers"
+  dependencies:
+    "@babel/core": "npm:^7.12.0"
+    "@corelle/rotations": "workspace:^"
+    "@macrostrat/hyper": "npm:^3.0.6"
+    "@macrostrat/svg-map-components": "npm:^1.0.2"
+    "@macrostrat/ui-components": "npm:^4.0.0"
+    parcel: "npm:^2.13.3"
+    url-join: "npm:^4.0.1"
+  peerDependencies:
+    react: ^16.13.1||^17.0.0||^18.0.0||^19.0.0
   languageName: unknown
   linkType: soft
 
@@ -651,24 +681,6 @@ __metadata:
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
-
-"@macrostrat/corelle@workspace:^, @macrostrat/corelle@workspace:packages/corelle":
-  version: 0.0.0-use.local
-  resolution: "@macrostrat/corelle@workspace:packages/corelle"
-  dependencies:
-    "@babel/core": "npm:^7.12.0"
-    "@macrostrat/hyper": "npm:^3.0.6"
-    "@macrostrat/svg-map-components": "npm:^1.0.2"
-    "@macrostrat/ui-components": "npm:^4.0.0"
-    "@types/d3-geo": "npm:^3.0"
-    d3-geo: "npm:^3.1.1"
-    parcel: "npm:^2.13.3"
-    quaternion: "npm:^2.0.2"
-    url-join: "npm:^4.0.1"
-  peerDependencies:
-    react: ^16.13.1||^17.0.0||^18.0.0||^19.0.0
-  languageName: unknown
-  linkType: soft
 
 "@macrostrat/hyper@npm:^3.0.6":
   version: 3.0.6

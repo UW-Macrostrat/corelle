@@ -18,7 +18,7 @@
   "prettier": {},
   "dependencies": {
     "@blueprintjs/core": "^5",
-    "@macrostrat/corelle": "workspace:^",
+    "@corelle/svg-map-layers": "workspace:^",
     "@macrostrat/hyper": "^3.0.6",
     "@macrostrat/svg-map-components": "^1.0.2",
     "@macrostrat/ui-components": "^4.1.0",

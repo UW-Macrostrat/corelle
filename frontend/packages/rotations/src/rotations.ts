@@ -1,5 +1,7 @@
 import Quaternion from "quaternion";
 import { sph2cart, cart2sph } from "./math";
+import { GeoProjection } from "d3-geo";
+import { pathGenerator } from "./geometry";
 
 // Drag to rotate globe
 // http://bl.ocks.org/ivyywang/7c94cb5a3accd9913263
@@ -23,6 +25,7 @@ class RotationData {
     this.plateRotation = this.plateRotation.bind(this);
     this.geographyRotator = this.geographyRotator.bind(this);
     this.rotatedProjection = this.rotatedProjection.bind(this);
+    this.pathGenerator = this.pathGenerator.bind(this);
   }
 
   plateRotation(id) {
@@ -57,6 +60,15 @@ class RotationData {
     return function () {
       return projection.apply(this, arguments);
     };
+  }
+
+  pathGenerator(
+    plate_id: number,
+    projection: GeoProjection,
+    context: CanvasRenderingContext2D | null = null,
+  ) {
+    const rotationFunc = this.geographyRotator(plate_id);
+    pathGenerator(projection, rotationFunc, context);
   }
 }
 

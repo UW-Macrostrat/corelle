@@ -2,7 +2,7 @@ import React, { createContext, useContext } from "react";
 import h from "@macrostrat/hyper";
 import { useAPIResult } from "@macrostrat/ui-components";
 import join from "url-join";
-import { RotationData, RotationOptions } from "../rotations";
+import { RotationData, RotationOptions } from "@corelle/rotations";
 
 // Drag to rotate globe
 // http://bl.ocks.org/ivyywang/7c94cb5a3accd9913263
@@ -37,7 +37,7 @@ function RotationsProvider(props: React.PropsWithChildren<P>) {
     useAPIResult(
       join(endpoint, "/rotate"),
       { time: `${time}`, model, quaternion: "true" },
-      { debounce }
+      { debounce },
     ) ?? [];
 
   const value = new RotationData({ rotations, model, time });
@@ -48,7 +48,7 @@ function RotationsProvider(props: React.PropsWithChildren<P>) {
     h(RotationsContext.Provider, {
       value,
       children,
-    })
+    }),
   );
 }
 

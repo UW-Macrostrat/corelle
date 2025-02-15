@@ -1,12 +1,12 @@
 import h from "@macrostrat/hyper";
 import { useContext } from "react";
-import { geoTransform, geoPath } from "d3-geo";
 import { RotationsContext, useRotationsAPI, useRotations } from "./provider";
 import {
   MapContext,
   MapCanvasContext,
   FeatureLayer,
 } from "@macrostrat/svg-map-components";
+import { pathGenerator } from "@corelle/rotations";
 
 function usePathGenerator(plateId, context = null) {
   // Filter out features that are too young
@@ -22,20 +22,7 @@ function usePathGenerator(plateId, context = null) {
   const rotate = geographyRotator(plateId);
   if (rotate == null) return null;
 
-  const trans = geoTransform({
-    point(lon, lat) {
-      const [x, y] = rotate([lon, lat]);
-      return this.stream.point(x, y);
-    },
-  });
-
-  // This ordering makes no sense but whatever
-  const stream = (s) =>
-    // https://stackoverflow.com/questions/27557724/what-is-the-proper-way-to-use-d3s-projection-stream
-    trans.stream(projection.stream(s));
-
-  // Make it work in canvas
-  return geoPath({ stream }, context);
+  return pathGenerator(projection, rotate, context);
 }
 
 function PlateFeature(props) {
@@ -86,7 +73,7 @@ const PlateFeatureLayer = function (props: FeatureDatasetProps) {
         oldLim: old_lim,
         youngLim: young_lim,
       });
-    })
+    }),
   );
 };
 
