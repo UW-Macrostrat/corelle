@@ -347,7 +347,6 @@ __metadata:
     d3-geo: "npm:^3.1.1"
     parcel: "npm:^2.13.3"
     quaternion: "npm:^2.0.2"
-    url-join: "npm:^4.0.1"
   peerDependencies:
     react: ^16.13.1||^17.0.0||^18.0.0||^19.0.0
   languageName: unknown
@@ -362,8 +361,6 @@ __metadata:
     "@macrostrat/hyper": "npm:^3.0.6"
     "@macrostrat/svg-map-components": "npm:^1.0.2"
     "@macrostrat/ui-components": "npm:^4.0.0"
-    "@types/d3-geo": "npm:^3.0"
-    d3-geo: "npm:^3.1.1"
     parcel: "npm:^2.13.3"
     url-join: "npm:^4.0.1"
   peerDependencies:
