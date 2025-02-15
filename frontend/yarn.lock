@@ -338,9 +338,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@corelle/plate-rotations@workspace:^, @corelle/plate-rotations@workspace:packages/plate-rotations":
+"@corelle/rotations@workspace:^, @corelle/rotations@workspace:packages/rotations":
   version: 0.0.0-use.local
-  resolution: "@corelle/plate-rotations@workspace:packages/plate-rotations"
+  resolution: "@corelle/rotations@workspace:packages/rotations"
   dependencies:
     "@babel/core": "npm:^7.12.0"
     "@types/d3-geo": "npm:^3.0"
@@ -358,7 +358,7 @@ __metadata:
   resolution: "@corelle/svg-map-layers@workspace:packages/svg-map-layers"
   dependencies:
     "@babel/core": "npm:^7.12.0"
-    "@corelle/plate-rotations": "workspace:^"
+    "@corelle/rotations": "workspace:^"
     "@macrostrat/hyper": "npm:^3.0.6"
     "@macrostrat/svg-map-components": "npm:^1.0.2"
     "@macrostrat/ui-components": "npm:^4.0.0"

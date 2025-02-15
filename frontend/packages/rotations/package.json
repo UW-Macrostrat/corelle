@@ -1,5 +1,5 @@
 {
-  "name": "@corelle/plate-rotations",
+  "name": "@corelle/rotations",
   "version": "1.0.0",
   "description": "A client library for the Corelle plate-rotation API",
   "scripts": {

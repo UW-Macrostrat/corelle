@@ -1,6 +1,6 @@
 {
   "name": "@corelle/svg-map-layers",
-  "version": "3.0.0",
+  "version": "1.0.0",
   "description": "React map layers for the Corelle plate-rotation service",
   "scripts": {
     "build": "rm -rf dist && parcel build",
@@ -13,7 +13,7 @@
   "source": "src/index.ts",
   "types": "dist/esm/index.d.ts",
   "dependencies": {
-    "@corelle/plate-rotations": "workspace:^",
+    "@corelle/rotations": "workspace:^",
     "@macrostrat/hyper": "^3.0.6",
     "@macrostrat/svg-map-components": "^1.0.2",
     "@macrostrat/ui-components": "^4.0.0",

@@ -2,7 +2,7 @@ import React, { createContext, useContext } from "react";
 import h from "@macrostrat/hyper";
 import { useAPIResult } from "@macrostrat/ui-components";
 import join from "url-join";
-import { RotationData, RotationOptions } from "@corelle/plate-rotations";
+import { RotationData, RotationOptions } from "@corelle/rotations";
 
 // Drag to rotate globe
 // http://bl.ocks.org/ivyywang/7c94cb5a3accd9913263
