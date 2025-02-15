@@ -19,7 +19,7 @@
     "@blueprintjs/core": "^5",
     "@macrostrat/corelle": "workspace:^",
     "@macrostrat/hyper": "^3.0.6",
-    "@macrostrat/svg-map-components": "^1.0.1",
+    "@macrostrat/svg-map-components": "^1.0.2",
     "@macrostrat/ui-components": "^4.1.0",
     "chroma-js": "^2.0.6",
     "core-js": "^3.12.1",
