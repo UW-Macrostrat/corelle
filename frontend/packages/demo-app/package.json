@@ -3,8 +3,9 @@
   "version": "2.0.0",
   "description": "A demo frontend for the Corelle plate-rotation application. Runs at rotate.macrostrat.org",
   "main": "index.html",
+  "type": "module",
   "scripts": {
-    "dev": "parcel index.html"
+    "dev": "vite ."
   },
   "author": "Daven Quinn",
   "license": "ISC",
@@ -41,6 +42,7 @@
     "react-router": "^5.0.1",
     "react-router-dom": "^5.0.1",
     "regenerator-runtime": "^0.13.7",
-    "url-join": "^4.0.1"
+    "url-join": "^4.0.1",
+    "vite": "^6.1.0"
   }
 }

@@ -2,7 +2,7 @@ import { useState, useContext, useEffect, useCallback } from "react";
 import { WorldMap } from "./world-map";
 import ControlPanel from "./control-panel";
 import h from "@macrostrat/hyper";
-import { RotationsProvider } from "../corelle-client/src/components";
+import { RotationsProvider } from "@macrostrat/corelle";
 import { MapSettingsProvider } from "./map-settings";
 import { Spinner } from "@blueprintjs/core";
 import {

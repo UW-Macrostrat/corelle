@@ -1,6 +1,6 @@
 import h from "@macrostrat/hyper";
 import { useContext } from "react";
-import { FeatureLayer } from "@macrostrat/map-components";
+import { FeatureLayer } from "@macrostrat/svg-map-components";
 import { PlateFeature } from "./feature";
 import { RotationsContext, useRotationsAPI } from "./provider";
 

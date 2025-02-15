@@ -1,9 +1,7 @@
 {
-  "name": "@macrostrat/corelle-workspace",
-  "private": true,
   "description": "A workspace for managing the Corelle project.",
   "scripts": {
-    "dev": "yarn workspace @macrostrat/corelle-demo-app run dev"
+    "dev": "yarn workspace @corelle/demo-app run dev"
   },
   "author": "Daven Quinn",
   "workspaces": [
