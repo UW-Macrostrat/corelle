@@ -1,7 +1,9 @@
 {
   "description": "A workspace for managing the Corelle project.",
   "scripts": {
-    "dev": "yarn workspace @corelle/demo-app run dev"
+    "dev": "yarn workspace @corelle/demo-app run dev",
+    "build": "yarn workspaces foreach -A -p run build",
+    "publish": "./publish.sh"
   },
   "author": "Daven Quinn",
   "workspaces": [
