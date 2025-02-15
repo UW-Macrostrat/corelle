@@ -1,60 +1,20 @@
 {
-  "name": "corelle-frontend",
-  "version": "1.0.0",
-  "description": "A frontend for the Corelle plate-rotation application",
-  "main": "index.html",
+  "description": "A workspace for managing the Corelle project.",
+  "private": true,
   "scripts": {
-    "preinstall": "npm install -D npm-run-all linklocal && linklocal",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev:local": "node -r esm dev-server.js",
-    "dev": "parcel index.html"
+    "dev": "yarn workspace @corelle/demo-app run dev",
+    "build": "yarn workspaces foreach -A -p run build",
+    "publish": "scripts/publish"
   },
   "author": "Daven Quinn",
-  "alias": {
-    "react": "./node_modules/react",
-    "react-dom": "./node_modules/react-dom",
-    "@macrostrat/map-components": "./node_modules/@macrostrat/map-components"
-  },
-  "license": "ISC",
+  "workspaces": [
+    "packages/*"
+  ],
+  "packageManager": "yarn@4.6.0",
   "devDependencies": {
-    "@babel/core": "^7.5.5",
-    "@babel/plugin-transform-typescript": "^7.13.0",
-    "@babel/preset-env": "7.13.8",
-    "@babel/preset-react": "^7.0.0",
-    "esm": "^3.2.25",
-    "express": "^4.17.1",
-    "http-proxy-middleware": "^1.0.5",
-    "linklocal": "^2.8.2",
-    "npm-run-all": "^4.1.5",
-    "parcel": "2.0.0-nightly.389",
-    "stylus": "^0.54.5",
-    "typescript": "^3.9.3"
-  },
-  "prettier": {},
-  "dependencies": {
-    "@blueprintjs/core": "^3.18.0",
-    "@macrostrat/corelle": "file:./corelle-client",
-    "@macrostrat/hyper": "^1.2.10",
-    "@macrostrat/map-components": "^0.2.6",
-    "@macrostrat/ui-components": "^0.5.1",
-    "@parcel/babel-plugin-transform-runtime": "^2.0.0-nightly.1823",
-    "@parcel/babel-preset-env": "^2.0.0-alpha.3",
-    "chroma-js": "^2.0.6",
-    "core-js": "^3.12.1",
-    "d3-array": "^2.2.0",
-    "d3-drag": "^1.2.4",
-    "d3-geo": "^1.11.6",
-    "d3-selection": "^1.4.0",
-    "d3-zoom": "^1.8.3",
-    "postcss-modules": "^3.2.0",
-    "prop-types": "^15.7.2",
-    "quaternion": "^1.1.0",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "react-fps-stats": "^0.1.2",
-    "react-router": "^5.0.1",
-    "react-router-dom": "^5.0.1",
-    "regenerator-runtime": "^0.13.7",
-    "url-join": "^4.0.1"
+    "@parcel/packager-ts": "2.13.3",
+    "@parcel/transformer-typescript-types": "2.13.3",
+    "prettier": "^3.5.1",
+    "typescript": "^5.7.3"
   }
 }

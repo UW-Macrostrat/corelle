@@ -1,9 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 import { useContext } from "react";
 import hyper from "@macrostrat/hyper";
 import {
@@ -13,8 +7,8 @@ import {
   Alignment,
   NumericInput,
 } from "@blueprintjs/core";
-import { RotationsContext } from "../corelle-client/src/components";
-import * as styles from "./main.module.styl";
+import { RotationsContext } from "@macrostrat/corelle";
+import * as styles from "./app.styl";
 import { MapSettingsContext } from "./map-settings";
 
 const h = hyper.styled(styles);
@@ -39,9 +33,9 @@ const Select = function (props) {
           {
             value: d,
           },
-          d
-        )
-      )
+          d,
+        ),
+      ),
     ),
   ]);
 };
@@ -110,7 +104,7 @@ const ControlPanel = function (props: ControlPanelProps) {
       h(
         "h1",
         null,
-        h("a", { href: "https://github.com/UW-Macrostrat/Corelle" }, "Corelle")
+        h("a", { href: "https://github.com/UW-Macrostrat/Corelle" }, "Corelle"),
       ),
       h("p", "Simple plate rotations."),
     ]),
@@ -141,7 +135,7 @@ const ControlPanel = function (props: ControlPanelProps) {
             }
           },
         }),
-      ]
+      ],
     ),
     h(MapSettingsPanel),
     //h FPSStats

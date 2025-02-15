@@ -1,0 +1,30 @@
+{
+  "name": "@corelle/demo-app",
+  "version": "2.0.0",
+  "description": "A demo frontend for the Corelle plate-rotation application. Runs at rotate.macrostrat.org",
+  "main": "index.html",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite ."
+  },
+  "author": "Daven Quinn",
+  "license": "ISC",
+  "devDependencies": {
+    "sass-embedded": "^1.85.0",
+    "stylus": "^0.54.5",
+    "vite": "^6.1.0"
+  },
+  "prettier": {},
+  "dependencies": {
+    "@blueprintjs/core": "^5",
+    "@macrostrat/corelle": "workspace:^",
+    "@macrostrat/hyper": "^3.0.6",
+    "@macrostrat/svg-map-components": "^1.0.2",
+    "@macrostrat/ui-components": "^4.1.0",
+    "d3-geo": "^3.1.1",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-fps-stats": "^0.3.1"
+  }
+}

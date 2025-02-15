@@ -2,7 +2,7 @@ import { useState, useContext, useEffect, useCallback } from "react";
 import { WorldMap } from "./world-map";
 import ControlPanel from "./control-panel";
 import h from "@macrostrat/hyper";
-import { RotationsProvider } from "../corelle-client/src/components";
+import { RotationsProvider } from "@macrostrat/corelle";
 import { MapSettingsProvider } from "./map-settings";
 import { Spinner } from "@blueprintjs/core";
 import {
@@ -12,6 +12,8 @@ import {
   setQueryString,
   getQueryString,
 } from "@macrostrat/ui-components";
+
+import "./app.styl"
 
 const qs = getQueryString();
 
@@ -48,7 +50,7 @@ function App(props) {
 
   const { time, model, features } = state;
 
-  return h("div", [
+  return h("div.corelle-app", [
     h(RotationsProvider, { model, time, endpoint: baseURL, debounce: 1000 }, [
       h(WorldMap, { featureDataset: features }),
       h(ControlPanel, {

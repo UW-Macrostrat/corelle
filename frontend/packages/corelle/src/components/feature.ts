@@ -6,7 +6,7 @@ import {
   MapContext,
   MapCanvasContext,
   FeatureLayer,
-} from "@macrostrat/map-components";
+} from "@macrostrat/svg-map-components";
 
 function usePathGenerator(plateId, context = null) {
   // Filter out features that are too young
