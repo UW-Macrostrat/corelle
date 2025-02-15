@@ -1360,6 +1360,43 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@corelle/demo-app@workspace:packages/demo-app":
+  version: 0.0.0-use.local
+  resolution: "@corelle/demo-app@workspace:packages/demo-app"
+  dependencies:
+    "@babel/core": "npm:^7.5.5"
+    "@babel/plugin-transform-typescript": "npm:^7.13.0"
+    "@babel/preset-env": "npm:7.13.8"
+    "@babel/preset-react": "npm:^7.0.0"
+    "@blueprintjs/core": "npm:^3.18.0"
+    "@macrostrat/corelle": "workspace:^"
+    "@macrostrat/hyper": "npm:^3.0.6"
+    "@macrostrat/svg-map-components": "npm:^1.0.1"
+    "@macrostrat/ui-components": "npm:^4.1.0"
+    chroma-js: "npm:^2.0.6"
+    core-js: "npm:^3.12.1"
+    d3-array: "npm:^2.2.0"
+    d3-drag: "npm:^1.2.4"
+    d3-geo: "npm:^1.11.6"
+    d3-selection: "npm:^1.4.0"
+    d3-zoom: "npm:^1.8.3"
+    esm: "npm:^3.2.25"
+    express: "npm:^4.17.1"
+    http-proxy-middleware: "npm:^1.0.5"
+    postcss-modules: "npm:^3.2.0"
+    prop-types: "npm:^15.7.2"
+    quaternion: "npm:^1.1.0"
+    react: "npm:^16.13.1"
+    react-dom: "npm:^16.13.1"
+    react-fps-stats: "npm:^0.1.2"
+    react-router: "npm:^5.0.1"
+    react-router-dom: "npm:^5.0.1"
+    regenerator-runtime: "npm:^0.13.7"
+    stylus: "npm:^0.54.5"
+    url-join: "npm:^4.0.1"
+  languageName: unknown
+  linkType: soft
+
 "@emotion/hash@npm:^0.7.1":
   version: 0.7.4
   resolution: "@emotion/hash@npm:0.7.4"
@@ -1438,46 +1475,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@macrostrat/corelle-demo-app@workspace:packages/corelle-demo-app":
-  version: 0.0.0-use.local
-  resolution: "@macrostrat/corelle-demo-app@workspace:packages/corelle-demo-app"
-  dependencies:
-    "@babel/core": "npm:^7.5.5"
-    "@babel/plugin-transform-typescript": "npm:^7.13.0"
-    "@babel/preset-env": "npm:7.13.8"
-    "@babel/preset-react": "npm:^7.0.0"
-    "@blueprintjs/core": "npm:^3.18.0"
-    "@macrostrat/corelle": "workspace:^"
-    "@macrostrat/hyper": "npm:^3.0.6"
-    "@macrostrat/svg-map-components": "npm:^1.0.1"
-    "@macrostrat/ui-components": "npm:^4.1.0"
-    chroma-js: "npm:^2.0.6"
-    core-js: "npm:^3.12.1"
-    d3-array: "npm:^2.2.0"
-    d3-drag: "npm:^1.2.4"
-    d3-geo: "npm:^1.11.6"
-    d3-selection: "npm:^1.4.0"
-    d3-zoom: "npm:^1.8.3"
-    esm: "npm:^3.2.25"
-    express: "npm:^4.17.1"
-    http-proxy-middleware: "npm:^1.0.5"
-    postcss-modules: "npm:^3.2.0"
-    prop-types: "npm:^15.7.2"
-    quaternion: "npm:^1.1.0"
-    react: "npm:^16.13.1"
-    react-dom: "npm:^16.13.1"
-    react-fps-stats: "npm:^0.1.2"
-    react-router: "npm:^5.0.1"
-    react-router-dom: "npm:^5.0.1"
-    regenerator-runtime: "npm:^0.13.7"
-    stylus: "npm:^0.54.5"
-    url-join: "npm:^4.0.1"
-  languageName: unknown
-  linkType: soft
-
 "@macrostrat/corelle-workspace@workspace:.":
   version: 0.0.0-use.local
   resolution: "@macrostrat/corelle-workspace@workspace:."
+  dependencies:
+    typescript: "npm:^5.7.3"
   languageName: unknown
   linkType: soft
 
@@ -4389,6 +4391,26 @@ __metadata:
   version: 0.0.7
   resolution: "typed-styles@npm:0.0.7"
   checksum: 10c0/ec159f0e538364750cf9b8f19136375df64ad364fda355e6f7a7216ebffc67f18b436722c5c6853c89f70e6507eb69e5061ceb9334fa1f54902c0f6be1b985fe
+  languageName: node
+  linkType: hard
+
+"typescript@npm:^5.7.3":
+  version: 5.7.3
+  resolution: "typescript@npm:5.7.3"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 10c0/b7580d716cf1824736cc6e628ab4cd8b51877408ba2be0869d2866da35ef8366dd6ae9eb9d0851470a39be17cbd61df1126f9e211d8799d764ea7431d5435afa
+  languageName: node
+  linkType: hard
+
+"typescript@patch:typescript@npm%3A^5.7.3#optional!builtin<compat/typescript>":
+  version: 5.7.3
+  resolution: "typescript@patch:typescript@npm%3A5.7.3#optional!builtin<compat/typescript>::version=5.7.3&hash=5786d5"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 10c0/6fd7e0ed3bf23a81246878c613423730c40e8bdbfec4c6e4d7bf1b847cbb39076e56ad5f50aa9d7ebd89877999abaee216002d3f2818885e41c907caaa192cc4
   languageName: node
   linkType: hard
 
