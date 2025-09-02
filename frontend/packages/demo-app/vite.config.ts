@@ -1,4 +1,4 @@
-import {defineConfig} from "vite";
+import { defineConfig } from "vite";
 // import * as path from "node:path";
 // import * as fs from "node:fs";
 //
@@ -17,6 +17,7 @@ import {defineConfig} from "vite";
 export default defineConfig({
   resolve: {
     conditions: ["source"],
+    dedupe: ["react", "react-dom", "@macrostrat/svg-map-components"],
   },
   //envDir,
 });
