@@ -6,7 +6,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite ."
+    "dev": "vite .",
+    "build": "vite build"
   },
   "author": "Daven Quinn",
   "license": "ISC",

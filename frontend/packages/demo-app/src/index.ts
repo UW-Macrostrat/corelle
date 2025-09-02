@@ -1,5 +1,6 @@
 //import "core-js/stable";
 //import "regenerator-runtime/runtime";
+
 import { FocusStyleManager } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 
@@ -10,6 +11,11 @@ import App from "./app";
 
 let baseURL =
   import.meta.env.VITE_CORELLE_API_URL ?? "https://rotate.macrostrat.org/api";
+// @ts-ignore
+if (typeof window !== "undefined" && window.corelleAPIBaseURL != null) {
+  // @ts-ignore
+  baseURL = window.corelleAPIBaseURL;
+}
 
 const div = document.getElementById("root");
 

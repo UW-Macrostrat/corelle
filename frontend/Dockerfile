@@ -1,10 +1,51 @@
-FROM node:12
+FROM node:20 AS builder
 
-WORKDIR /app/
-COPY package.json /app/
+# The following build sequence is adapted from the Macrostrat web repository
+# Install rsync
+RUN apt-get update && apt-get install -y rsync
 
-RUN npm install -g parcel-bundler && npm install
+ENV NODE_ENV=production
 
-COPY ./ /app/
+WORKDIR /usr/src/app
+COPY .yarn/releases .yarn/releases
+COPY .yarnrc.yml yarn.lock package.json ./
 
-CMD parcel build -d /app/dist --public-url './' index.html
+# Copy only the elements needed for a Yarn install to take advantage of
+# Docker's layer caching
+# This is complex because we are working with multiple workspaces.
+
+# Copy package JSON files with wildcards
+# This scoops up all package.json files in the directory and subdirectories
+# to deal with Yarn workspaces. However it requires BUILDKIT to be enabled,
+# which is done by setting DOCKER_BUILDKIT=1 in the environment
+RUN --mount=type=bind,target=/docker-context \
+    cd /docker-context/; \
+    find . -name "package.json" -mindepth 0 -maxdepth 5 -exec cp --parents "{}" /usr/src/app/ \;
+
+RUN yarn install --immutable
+
+# Load the cache from the previous build
+RUN --mount=type=cache,target=/yarn-cache \
+     rsync -a /yarn-cache/ .yarn/cache/ \
+  && yarn install --immutable \
+  && rsync -a .yarn/cache/ /yarn-cache
+
+# # Remove rsync
+RUN apt-get remove -y rsync
+
+COPY . ./
+
+ENV NODE_ENV=production
+
+RUN yarn run build:demo-app
+
+FROM caddy:2.10-alpine AS production
+
+COPY --from=builder /usr/src/app/packages/demo-app/dist /usr/share/caddy
+
+WORKDIR /usr/share/caddy
+
+# If CORELLE_API_URL is set in the environment, substitute it in...
+
+EXPOSE 80
+
