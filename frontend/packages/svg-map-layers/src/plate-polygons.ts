@@ -44,7 +44,7 @@ function PlatePolygons(props: { style: any }) {
       className: "plates",
       style,
     },
-    data.map((feature, i) => h(PlatePolygon, { key: i, feature }))
+    data.map((feature, i) => h(PlatePolygon, { key: i, feature })),
   );
 }
 

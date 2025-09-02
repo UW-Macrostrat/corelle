@@ -18,6 +18,8 @@ function WorldMapInner(props) {
 
   if (width == null || height == null) return null;
 
+  if (width == 0 || height == 0) return null;
+
   const minScale = Math.min(width, height) / 2 - 20;
   const baseScale = Math.max(width, height) / 2 - 20;
   const maxScale = baseScale * 2;
