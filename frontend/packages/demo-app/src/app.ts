@@ -29,11 +29,11 @@ function App(props) {
 
   const setTime = useCallback(
     (time) => setState({ ...state, time }),
-    [setState],
+    [setState, state],
   );
   const setModel = useCallback(
     (model) => setState({ ...state, model }),
-    [setState],
+    [setState, state],
   );
 
   const { baseURL } = useContext(APIContext);

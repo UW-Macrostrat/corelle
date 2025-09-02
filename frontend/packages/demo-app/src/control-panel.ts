@@ -101,7 +101,7 @@ const ControlPanel = function (props: ControlPanelProps) {
       h(
         "h1",
         null,
-        h("a", { href: "https://github.com/UW-Macrostrat/Corelle" }, "Corelle"),
+        h("a", { href: "https://github.com/UW-Macrostrat/corelle" }, "Corelle"),
       ),
       h("p", "Simple plate rotations."),
     ]),

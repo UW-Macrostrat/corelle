@@ -15,6 +15,7 @@ function PlatePolygon(props) {
   const { feature, ...rest } = props;
   const { id, properties } = feature;
   const { old_lim, young_lim, plate_id } = properties;
+
   return h(PlateFeature, {
     feature,
     oldLim: old_lim,

@@ -1195,15 +1195,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@parcel/packager-ts@npm:2.13.3":
-  version: 2.13.3
-  resolution: "@parcel/packager-ts@npm:2.13.3"
-  dependencies:
-    "@parcel/plugin": "npm:2.13.3"
-  checksum: 10c0/96d8d6c05d5d89e18b6f26b9f479f824c8c165a1582cc5a6ce8532233ca20960946b7825e34e46b51df40963fefd6314bc40409f6187b4469aa23e44d7d06ac1
-  languageName: node
-  linkType: hard
-
 "@parcel/packager-wasm@npm:2.13.3":
   version: 2.13.3
   resolution: "@parcel/packager-wasm@npm:2.13.3"
@@ -1497,33 +1488,6 @@ __metadata:
     posthtml-render: "npm:^3.0.0"
     semver: "npm:^7.5.2"
   checksum: 10c0/ad54b84f00613b70452ef3f01f2c21702255c802fa6b7cf7bf5cbfd11288ad2add512a2c38cdbad322bbf379728aa3f8ce8e3f3b159fbf9dd4298e4c590c69a1
-  languageName: node
-  linkType: hard
-
-"@parcel/transformer-typescript-types@npm:2.13.3":
-  version: 2.13.3
-  resolution: "@parcel/transformer-typescript-types@npm:2.13.3"
-  dependencies:
-    "@parcel/diagnostic": "npm:2.13.3"
-    "@parcel/plugin": "npm:2.13.3"
-    "@parcel/source-map": "npm:^2.1.1"
-    "@parcel/ts-utils": "npm:2.13.3"
-    "@parcel/utils": "npm:2.13.3"
-    nullthrows: "npm:^1.1.1"
-  peerDependencies:
-    typescript: ">=3.0.0"
-  checksum: 10c0/dee381572ba3b70339ba3252d7fb2cd9da672f24f5ee0d21d0c002064877cd90260dee59a524c40e61f0942941ee14188943474c72a8b1e3a5c3ff9aa3ab1e48
-  languageName: node
-  linkType: hard
-
-"@parcel/ts-utils@npm:2.13.3":
-  version: 2.13.3
-  resolution: "@parcel/ts-utils@npm:2.13.3"
-  dependencies:
-    nullthrows: "npm:^1.1.1"
-  peerDependencies:
-    typescript: ">=3.0.0"
-  checksum: 10c0/770935e24218d32ed5c9d5685d4e9a79fddf22e7480e0c9c7e5163d8ff70d2e8622bc9ff53ea1f965aa574d301044b9fbe2cd56729171817615233e33e2c5c71
   languageName: node
   linkType: hard
 
@@ -4654,8 +4618,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
-    "@parcel/packager-ts": "npm:2.13.3"
-    "@parcel/transformer-typescript-types": "npm:2.13.3"
     prettier: "npm:^3.5.1"
     typescript: "npm:^5.7.3"
   languageName: unknown

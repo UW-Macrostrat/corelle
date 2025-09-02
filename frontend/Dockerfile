@@ -43,7 +43,9 @@ COPY --from=builder /usr/src/app/packages/demo-app/dist /usr/share/caddy
 
 WORKDIR /usr/share/caddy
 
-# If CORELLE_API_URL is set in the environment, substitute it in...
+COPY docker-command.sh /run/docker-command.sh
 
 EXPOSE 80
+
+CMD ["/run/docker-command.sh"]
 

@@ -20,6 +20,7 @@ function usePathGenerator(plateId, context = null) {
   if (projection == null || geographyRotator == null) return null;
 
   const rotate = geographyRotator(plateId);
+
   if (rotate == null) return null;
 
   return pathGenerator(projection, rotate, context);
