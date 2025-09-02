@@ -23,4 +23,5 @@ jobs:
     secrets: inherit
     with:
       context: ./frontend
-      image: "hub.opensciencegrid.org/macrostrat/corelle-demo-app"
+      file: ./frontend/Dockerfile
+      image: "hub.opensciencegrid.org/macrostrat/corelle-frontend"
