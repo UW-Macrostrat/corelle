@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import hyper from "@macrostrat/hyper";
+import h from "@macrostrat/hyper";
 import {
   HTMLSelect,
   FormGroup,
@@ -8,10 +8,7 @@ import {
   NumericInput,
 } from "@blueprintjs/core";
 import { RotationsContext } from "@corelle/svg-map-layers";
-import * as styles from "./app.styl";
 import { MapSettingsContext } from "./map-settings";
-
-const h = hyper.styled(styles);
 
 const Select = function (props) {
   let { label, value, options, onChange } = props;

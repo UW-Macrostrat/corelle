@@ -13,8 +13,6 @@ import {
   getQueryString,
 } from "@macrostrat/ui-components";
 
-import "./app.styl";
-
 const qs = getQueryString();
 
 const initialState = {

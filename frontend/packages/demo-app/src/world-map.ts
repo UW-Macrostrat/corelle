@@ -10,7 +10,6 @@ import {
 
 import { MapSettingsContext } from "./map-settings";
 
-import "./app.styl";
 import { useElementSize } from "@macrostrat/ui-components";
 
 function WorldMapInner(props) {
