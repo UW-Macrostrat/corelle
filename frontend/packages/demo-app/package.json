@@ -6,13 +6,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite ."
+    "dev": "vite .",
+    "build": "vite build"
   },
   "author": "Daven Quinn",
   "license": "ISC",
   "devDependencies": {
     "sass-embedded": "^1.85.0",
-    "stylus": "^0.54.5",
     "vite": "^6.1.0"
   },
   "prettier": {},
@@ -20,9 +20,8 @@
     "@blueprintjs/core": "^5",
     "@corelle/svg-map-layers": "workspace:^",
     "@macrostrat/hyper": "^3.0.6",
-    "@macrostrat/svg-map-components": "^1.0.2",
-    "@macrostrat/ui-components": "^4.1.0",
-    "d3-geo": "^3.1.1",
+    "@macrostrat/svg-map-components": "^1.0.5",
+    "@macrostrat/ui-components": "^4.4.6",
     "react": "^18",
     "react-dom": "^18",
     "react-fps-stats": "^0.3.1"

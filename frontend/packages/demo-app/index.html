@@ -1,9 +1,15 @@
+<!DOCTYPE html>
 <html>
   <head>
     <meta charset="UTF-8">
     <title>Corelle plate rotations service</title>
+    <link rel="stylesheet" href="./src/app.sass">
   </head>
   <body>
+    <script type="text/javascript">
+      // Script to inject environment variables at runtime
+      window.corelleAPIBaseURL = null;
+    </script>
     <div id="root"></div>
     <script type="module" src="./src/index.ts"></script>
   </body>

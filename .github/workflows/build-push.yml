@@ -1,0 +1,27 @@
+name: Build Corelle API image
+
+permissions: read-all
+
+on:
+  push:
+    branches: ["main"]
+    tags:
+      - "v*.*.*" # glob for semver tags (including prereleases)
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-api-image:
+    uses: UW-Macrostrat/build-push/.github/workflows/build-push.yaml@main
+    secrets: inherit
+    with:
+      context: .
+      image: "hub.opensciencegrid.org/macrostrat/corelle-api"
+
+  build-frontend-image:
+    uses: UW-Macrostrat/build-push/.github/workflows/build-push.yaml@main
+    secrets: inherit
+    with:
+      context: ./frontend
+      file: ./frontend/Dockerfile
+      image: "hub.opensciencegrid.org/macrostrat/corelle-frontend"
