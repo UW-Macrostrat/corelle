@@ -1,3 +1,12 @@
 .cache
-dist
-node_modules
+.yarn/cache
+.yarn/unplugged
+.yarn/install-state.gz
+.pnp.cjs
+.pnp.loader.mjs
+.env
+.env.local
+packages/demo-app/dist
+packages/demo-app/node_modules
+Dockerfile
+scripts

@@ -10,7 +10,6 @@ import {
 
 import { MapSettingsContext } from "./map-settings";
 
-import "./app.styl";
 import { useElementSize } from "@macrostrat/ui-components";
 
 function WorldMapInner(props) {
@@ -18,6 +17,8 @@ function WorldMapInner(props) {
   const { model } = useContext(RotationsContext);
 
   if (width == null || height == null) return null;
+
+  if (width == 0 || height == 0) return null;
 
   const minScale = Math.min(width, height) / 2 - 20;
   const baseScale = Math.max(width, height) / 2 - 20;

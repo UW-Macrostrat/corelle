@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import hyper from "@macrostrat/hyper";
+import h from "@macrostrat/hyper";
 import {
   HTMLSelect,
   FormGroup,
@@ -8,10 +8,7 @@ import {
   NumericInput,
 } from "@blueprintjs/core";
 import { RotationsContext } from "@corelle/svg-map-layers";
-import * as styles from "./app.styl";
 import { MapSettingsContext } from "./map-settings";
-
-const h = hyper.styled(styles);
 
 const Select = function (props) {
   let { label, value, options, onChange } = props;
@@ -104,7 +101,7 @@ const ControlPanel = function (props: ControlPanelProps) {
       h(
         "h1",
         null,
-        h("a", { href: "https://github.com/UW-Macrostrat/Corelle" }, "Corelle"),
+        h("a", { href: "https://github.com/UW-Macrostrat/corelle" }, "Corelle"),
       ),
       h("p", "Simple plate rotations."),
     ]),

@@ -13,8 +13,6 @@ import {
   getQueryString,
 } from "@macrostrat/ui-components";
 
-import "./app.styl";
-
 const qs = getQueryString();
 
 const initialState = {
@@ -31,11 +29,11 @@ function App(props) {
 
   const setTime = useCallback(
     (time) => setState({ ...state, time }),
-    [setState],
+    [setState, state],
   );
   const setModel = useCallback(
     (model) => setState({ ...state, model }),
-    [setState],
+    [setState, state],
   );
 
   const { baseURL } = useContext(APIContext);
