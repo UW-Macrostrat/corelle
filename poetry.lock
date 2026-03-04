@@ -251,7 +251,7 @@ numpy-quaternion = "^2022.4.2"
 psycopg2-binary = "^2.9.5"
 PyYAML = "^6.0"
 rich = ">12.6.0,<15.0.0"
-typer = ">0.7.0,<0.24.0"
+typer = ">0.7.0,<0.25"
 wget = "^3.2"
 
 [package.source]
