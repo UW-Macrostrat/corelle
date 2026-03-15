@@ -1,32 +1,33 @@
 # Dockerfile for the corelle API server
 FROM python:3.11
+COPY --from=ghcr.io/astral-sh/uv:0.9.21 /uv /uvx /bin/
+# https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
 
-WORKDIR /code
+WORKDIR /services/main
 
-ENV POETRY_VIRTUALENVS_CREATE=false
+ENV UV_COMPILE_BYTECODE=1
 
 RUN apt-get -y update && apt-get -y install postgresql-client gdal-bin libgdal-dev
 
-RUN pip install poetry==1.7.1
+# NEED TO specify another build context for the py-modules directory
+COPY ./py-packages /services/main/py-packages
+COPY pyproject.toml uv.lock /services/main/
 
-COPY ./poetry.lock ./pyproject.toml /code/
-COPY ./py-packages/client/pyproject.toml /code/py-packages/client/
-COPY ./py-packages/server/pyproject.toml /code/py-packages/server/
-COPY ./py-packages/engine/pyproject.toml /code/py-packages/engine/
+# Install dependencies
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-install-project
 
-# We need to add shims for local development dependencies for poetry not to complain
-COPY ./py-packages/client/corelle/client/__init__.py /code/py-packages/client/corelle/client/__init__.py
-COPY ./py-packages/server/corelle/server/__init__.py /code/py-packages/server/corelle/server/__init__.py
-COPY ./py-packages/engine/corelle/engine/__init__.py /code/py-packages/engine/corelle/engine/__init__.py
 
-RUN poetry install --no-root
+COPY ./bin/* /services/main/bin/
 
-COPY ./py-packages /code/py-packages
 
-RUN poetry install
+# Sync the project
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked
 
+# Needed for testing
 ENV CORELLE_DB=postgresql://postgres@database:5432/corelle
 
-COPY ./bin/* /code/bin/
+EXPOSE 80
 
-CMD poetry run /code/bin/run-docker
+CMD ["uv", "run", "bin/run-docker"]
