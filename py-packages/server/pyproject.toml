@@ -1,28 +1,42 @@
-[tool.poetry]
-authors = ["Daven Quinn <dev@davenquinn.com>"]
-description = "An API server application for the Corelle plate-rotation system"
-license = "MIT"
+[project]
 name = "corelle.server"
 version = "1.1.0-dev1"
-
-packages = [
-  {include = "corelle"},
+description = "An API server application for the Corelle plate-rotation system"
+authors = [{ name = "Daven Quinn", email = "dev@davenquinn.com" }]
+requires-python = ">=3.10,<=3.12"
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "Flask>=1,<2",
+    "Flask-RESTful>=0.3.9,<0.4",
+    "MarkupSafe==2.0.1",
+    "corelle.client",
+    "corelle.engine",
+    "itsdangerous<2.1.0",
+    "jinja2<3.1.0",
+    "numpy>=1.26.3,<2",
+    "simplejson>=3.17.6,<4",
+    "werkzeug==2.0.3",
 ]
 
-[tool.poetry.dependencies]
+[tool.uv]
 
-Flask = "^1"
-Flask-RESTful = "^0.3.9"
-MarkupSafe = "2.0.1"
-"corelle.client" = {path = "../client", develop = true}
-"corelle.engine" = {path = "../engine", develop = true}
-itsdangerous = "<2.1.0"
-jinja2 = "<3.1.0"
-numpy = "^1.26.3"
-python = "^3.10"
-simplejson = "^3.17.6"
-"werkzeug" = "2.0.3"
+[tool.uv.sources]
+"corelle.client" = { path = "../client", editable = true }
+"corelle.engine" = { path = "../engine", editable = true }
+
+[tool.uv.build-backend]
+module-name = ["corelle"]
+module-root = ""
+namespace = true
 
 [build-system]
-build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core>=1.0.0"]
+requires = ["uv_build>=0.9.21,<0.10.0"]
+build-backend = "uv_build"

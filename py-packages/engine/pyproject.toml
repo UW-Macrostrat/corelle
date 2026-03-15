@@ -1,35 +1,50 @@
-[tool.poetry]
-authors = ["Daven Quinn <dev@davenquinn.com>"]
-description = "An API server application for the Corelle plate-rotation system"
-license = "MIT"
+[project]
 name = "corelle.engine"
 version = "2.1.0-dev1"
+description = "An API server application for the Corelle plate-rotation system"
+authors = [{ name = "Daven Quinn", email = "dev@davenquinn.com" }]
+requires-python = ">=3.10,<4"
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "Fiona>=1.9.5,<2",
+    "IPython>=8.0,<9",
+    "PyYAML>=6.0,<7",
+    "corelle.client",
+    "macrostrat.database>=3.0.0,<4",
+    "macrostrat.utils>=1.0.1,<2",
+    "numba>=0.63.1,<0.64",
+    "numpy>=1.26.3,<2",
+    "numpy-quaternion>=2022.4.2,<2023",
+    "rich>12.6.0,<15.0.0",
+    "typer>0.7.0,<0.25",
+    "wget>=3.2,<4",
+    "geoalchemy2>0.14.0,<0.19.0",
+]
 
-packages = [{ include = "corelle" }]
+[project.scripts]
+corelle = "corelle.engine:cli"
 
-[tool.poetry.dependencies]
+[dependency-groups]
+dev = []
 
-Fiona = "^1.9.5"
-IPython = "^8.0"
-PyYAML = "^6.0"
-"corelle.client" = { path = "../client", develop = true }
-"macrostrat.database" = "^3.0.0"
-"macrostrat.utils" = "^1.0.1"
-numba = "^0.63.1"
-numpy = "^1.26.3"
-numpy-quaternion = "^2022.4.2"
-psycopg2-binary = "^2.9.5"
-python = "^3.10"
-rich = ">12.6.0,<15.0.0"
-typer = ">0.7.0,<0.25"
-wget = "^3.2"
-geoalchemy2 = "^0.14.0||^0.15.0"
+[tool.uv]
 
-[tool.poetry.dev-dependencies]
+[tool.uv.sources]
+"corelle.client" = { path = "../client", editable = true }
 
-[tool.poetry.scripts]
-corelle = 'corelle.engine:cli'
+[tool.uv.build-backend]
+module-name = ["corelle"]
+module-root = ""
+namespace = true
 
 [build-system]
-build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core>=1.0.0"]
+requires = ["uv_build>=0.9.21,<0.10.0"]
+build-backend = "uv_build"

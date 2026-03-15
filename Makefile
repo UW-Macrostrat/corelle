@@ -2,7 +2,7 @@ all: install
 
 .PHONY: install init update_functions test dev features publish
 
-DOCKER_IMAGE_VERSION := 1.0.0
+DOCKER_IMAGE_VERSION := 1.0.1
 
 # We centrally manage the version of Docker images for simplicity at this point
 # We should get a better CI architecture eventually, or move the actual API

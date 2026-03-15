@@ -1,20 +1,36 @@
-[tool.poetry]
-authors = ["Daven Quinn <dev@davenquinn.com>"]
+[project]
+name = ""
+version = "1.0.0"
 description = "An API service to support plate rotations on the web"
-package-mode = false
+authors = [{ name = "Daven Quinn", email = "dev@davenquinn.com" }]
+requires-python = ">=3.10,<=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<4.0"
+[dependency-groups]
+dev = [
+    "corelle.client",
+    "corelle.engine",
+    "corelle.server",
+    "pytest>=7.4.4,<8",
+    "black>=23.12.1,<24",
+]
 
-[tool.poetry.dev-dependencies]
-"corelle.client" = { path = "./py-packages/client", develop = true }
-"corelle.engine" = { path = "./py-packages/engine", develop = true }
-"corelle.server" = { path = "./py-packages/server", develop = true }
-pytest = "^7.4.4"
+[tool.uv]
+package = false
+default-groups = "all"
 
-[tool.poetry.group.dev.dependencies]
-black = "^23.12.1"
+[tool.uv.sources]
+"corelle.client" = { path = "./py-packages/client", editable = true }
+"corelle.engine" = { path = "./py-packages/engine", editable = true }
+"corelle.server" = { path = "./py-packages/server", editable = true }
 
 [build-system]
-build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core>=1.0.0"]
+requires = ["uv_build>=0.9.21,<0.10.0"]
+build-backend = "uv_build"

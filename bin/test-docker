@@ -43,14 +43,14 @@ docker exec corelle-db createdb -U postgres corelle
 # Initialize the database and load features
 docker run --rm \
   --link corelle-db:database \
-  --volume $(pwd)/data:/code/data \
+  --volume $(pwd)/data:/services/main/data \
   -i corelle bash <<EOF
-  corelle init
-  corelle import-starter-data
+  uv run corelle init
+  uv run corelle import-starter-data
 EOF
 
 # Run the tests
-docker run $TTY_FLAG --rm --link corelle-db:database corelle /code/bin/run-tests $@
+docker run $TTY_FLAG --rm --link corelle-db:database corelle /services/main/bin/run-tests $@
 
 # Stop the database
 docker stop corelle-db

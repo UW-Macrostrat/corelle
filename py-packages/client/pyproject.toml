@@ -1,23 +1,37 @@
-[tool.poetry]
-authors = ["Daven Quinn <dev@davenquinn.com>"]
-description = "An API server application for the Corelle plate-rotation system"
-license = "MIT"
+[project]
 name = "corelle.client"
 version = "2.1.0"
+description = "An API server application for the Corelle plate-rotation system"
+authors = [{ name = "Daven Quinn", email = "dev@davenquinn.com" }]
+requires-python = ">=3.9,<4"
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "geopandas>=0.14.1,<0.15",
+    "numpy>=1.23.4,<2",
+    "numpy-quaternion>=2022.4.2,<2023",
+    "pandas>=2.0.0,<3",
+    "shapely>=2.0.0,<3",
+]
 
-packages = [{ include = "corelle" }]
+[dependency-groups]
+dev = []
 
-[tool.poetry.dependencies]
+[tool.uv]
 
-geopandas = "^0.14.1"
-numpy = "^1.23.4"
-numpy-quaternion = "^2022.4.2"
-pandas = "^1.5.1||^2.0.0"
-python = "^3.9"
-shapely = "^2.0.0"
-
-[tool.poetry.dev-dependencies]
+[tool.uv.build-backend]
+module-name = ["corelle"]
+module-root = ""
+namespace = true
 
 [build-system]
-build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core>=1.0.0"]
+requires = ["uv_build>=0.9.21,<0.10.0"]
+build-backend = "uv_build"
