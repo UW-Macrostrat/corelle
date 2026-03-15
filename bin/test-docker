@@ -50,7 +50,7 @@ docker run --rm \
 EOF
 
 # Run the tests
-docker run $TTY_FLAG --rm --link corelle-db:database corelle /code/bin/run-tests $@
+docker run $TTY_FLAG --rm --link corelle-db:database corelle /services/main/bin/run-tests $@
 
 # Stop the database
 docker stop corelle-db
