@@ -1,6 +1,6 @@
 [project]
 name = ""
-version = "1.0.0"
+version = "1.0.2"
 description = "An API service to support plate rotations on the web"
 authors = [{ name = "Daven Quinn", email = "dev@davenquinn.com" }]
 requires-python = ">=3.10,<=3.12"
