@@ -9,6 +9,7 @@ DOCKER_IMAGE_VERSION := $(shell uv version --short)
 # definition to the Macrostrat repository.
 publish:
 	# Ensure we have an empty index
+	uv lock
 	git diff-index --quiet HEAD --
 	git tag -a v$(DOCKER_IMAGE_VERSION) -m "Version $(DOCKER_IMAGE_VERSION)"
 	git push origin tag v$(DOCKER_IMAGE_VERSION)
