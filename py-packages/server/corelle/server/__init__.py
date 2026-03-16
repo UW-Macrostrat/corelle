@@ -174,7 +174,7 @@ class Pole(ModelResource):
 
 class Model(Resource):
     def get(self):
-        results = conn.execute("SELECT id, name, min_age, max_age FROM corelle.model")
+        results = conn.execute(text("SELECT id, name, min_age, max_age FROM corelle.model")).mappings()
         return [dict(r) for r in results]
 
 

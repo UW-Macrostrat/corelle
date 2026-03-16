@@ -25,7 +25,7 @@ test-docker:
 	bin/test-docker
 
 test:
-	poetry run bin/run-tests
+	uv run bin/run-tests
 
 dev:
 	cd frontend && poetry run npm run dev

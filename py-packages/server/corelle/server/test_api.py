@@ -35,3 +35,12 @@ def test_reconstruct_api(client):
     assert len(res["features"]) == 1
     coords = res["features"][0]["geometry"]["coordinates"]
     assert allclose(coords, [-84.17949814030625, -21.341188167880905])
+
+
+def test_model_route(client):
+    res = client.get("/api/model").json
+    assert len(res) > 1
+    assert all("id" in m for m in res)
+    assert all("name" in m for m in res)
+    assert all("min_age" in m for m in res)
+    assert all("max_age" in m for m in res)

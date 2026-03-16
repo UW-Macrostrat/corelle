@@ -13,7 +13,7 @@ def initialize(drop=False):
     dn = Path(relative_path(__file__, "schema"))
     if drop:
         try:
-            db.engine.execute("DROP SCHEMA corelle CASCADE")
+            db.run_sql("DROP SCHEMA corelle CASCADE")
         except ProgrammingError:
             pass
 

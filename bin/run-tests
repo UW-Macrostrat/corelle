@@ -1,5 +1,18 @@
 #!/bin/bash
 
-uv run python -m pytest \
+# Load .env file if it exists
+if [ -f .env ]; then
+  set -a
+  source .env
+  set +a
+fi
+
+# Check if CORELLE_DB is set
+if [ -z "$CORELLE_DB" ]; then
+  echo "Error: CORELLE_DB environment variable is not set"
+  exit 1
+fi
+
+python -m pytest \
   --pdbcls=IPython.terminal.debugger:Pdb \
   --durations=10 py-packages "$@"
