@@ -1,6 +1,6 @@
 [project]
 name = "corelle.client"
-version = "2.1.0"
+version = "2.2.0"
 description = "An API server application for the Corelle plate-rotation system"
 authors = [{ name = "Daven Quinn", email = "dev@davenquinn.com" }]
 requires-python = ">=3.9,<4"
