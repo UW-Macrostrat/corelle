@@ -1,6 +1,6 @@
 [project]
 name = "corelle.engine"
-version = "2.1.0-dev1"
+version = "2.1.0-dev2"
 description = "An API server application for the Corelle plate-rotation system"
 authors = [{ name = "Daven Quinn", email = "dev@davenquinn.com" }]
 requires-python = ">=3.10,<4"
@@ -18,15 +18,16 @@ dependencies = [
     "IPython>=8.0,<9",
     "PyYAML>=6.0,<7",
     "corelle.client",
-    "macrostrat.database>=3.0.0,<4",
+    "macrostrat.database>=4.0.0,<5",
     "macrostrat.utils>=1.0.1,<2",
-    "numba>=0.63.1,<0.64",
+    "numba>=0.63.1,<0.66",
     "numpy>=1.26.3,<2",
     "numpy-quaternion>=2022.4.2,<2023",
     "rich>12.6.0,<15.0.0",
-    "typer>0.7.0,<0.25",
+    "typer>0.12.0,<0.26",
     "wget>=3.2,<4",
-    "geoalchemy2>0.14.0,<0.19.0",
+    "geoalchemy2>0.14.0,<0.20.0",
+    "python-dotenv>=1.2.2",
 ]
 
 [project.scripts]

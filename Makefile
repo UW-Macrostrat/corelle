@@ -25,7 +25,7 @@ test-docker:
 	bin/test-docker
 
 test:
-	uv run bin/run-tests
+	bin/run-tests
 
 dev:
 	cd frontend && poetry run npm run dev
@@ -42,5 +42,5 @@ features: bin/load-features
 
 init:
 	-createdb plate-rotations
-	poetry run corelle init --drop
-	poetry run bin/load-models
+	uv run corelle init --drop
+	uv run bin/load-models

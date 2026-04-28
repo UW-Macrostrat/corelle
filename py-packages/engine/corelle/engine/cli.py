@@ -1,11 +1,14 @@
 import warnings
 
 from IPython import embed
-from os import environ
 import click
 from click import group, argument, option, echo
 from macrostrat.utils import working_directory
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 warnings.filterwarnings("ignore")
 

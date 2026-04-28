@@ -13,6 +13,6 @@ if [ -z "$CORELLE_DB" ]; then
   exit 1
 fi
 
-python -m pytest \
+uv run python -m pytest \
   --pdbcls=IPython.terminal.debugger:Pdb \
   --durations=10 py-packages "$@"
