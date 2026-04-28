@@ -15,11 +15,11 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-    "geopandas>=0.14.1,<0.15",
-    "numpy>=1.23.4,<2",
-    "numpy-quaternion>=2022.4.2,<2023",
-    "pandas>=2.0.0,<3",
-    "shapely>=2.0.0,<3",
+    "geopandas>=1.1.0,<2",
+    "numpy>=2.0.0,<3",
+    "numpy-quaternion>=2024.0.13,<2025.0.0",
+    "pandas>=2.0.0,<4",
+    "shapely>=2.1.2,<3",
 ]
 
 [dependency-groups]
