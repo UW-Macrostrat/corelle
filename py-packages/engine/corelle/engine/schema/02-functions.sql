@@ -6,6 +6,7 @@ DROP FUNCTION IF EXISTS corelle.quaternion_multiply(numeric[], numeric[]);
 DROP FUNCTION IF EXISTS corelle.invert_rotation(numeric[]);
 DROP FUNCTION IF EXISTS corelle.rotate_geometry(geometry, double precision[]);
 DROP FUNCTION IF EXISTS corelle.rotate_geometry(geometry,integer,integer,numeric,boolean);
+DROP FUNCTION IF EXISTS corelle.rotate_vector(numeric[], numeric[]);
 
 /*
 Functions to rotate geometries directly in PostGIS. This allows Corelle plate rotations
@@ -43,29 +44,46 @@ AS $$
   ] ;
 $$ LANGUAGE sql IMMUTABLE STRICT;
 
-CREATE OR REPLACE FUNCTION corelle.rotate_vector(vector numeric[], quaternion numeric[]) RETURNS numeric[] AS $$
-DECLARE
-  q_conj numeric[];
-  q_res numeric[];
-  r numeric[];
-BEGIN
-  q_conj := ARRAY[
-    quaternion[1],
-    -quaternion[2],
-    -quaternion[3],
-    -quaternion[4]
-  ];
 
-  r := ARRAY[0, vector[1], vector[2], vector[3]];
+CREATE OR REPLACE FUNCTION corelle.rotate_vector(vector double precision[], quaternion double precision[]) RETURNS double precision[] AS $$
+  DECLARE
+    q_conj double precision[];
+    q_res double precision[];
+    r double precision[];
+  BEGIN
+    q_conj := ARRAY[
+      quaternion[1],
+      -quaternion[2],
+      -quaternion[3],
+      -quaternion[4]
+    ];
 
-  q_res := corelle.quaternion_multiply(
-    corelle.quaternion_multiply(quaternion, r),
-    q_conj
-  );
+    r := ARRAY[0, vector[1], vector[2], vector[3]];
 
-  RETURN ARRAY[q_res[2], q_res[3], q_res[4]];
-END;
+    q_res := corelle.quaternion_multiply(
+      corelle.quaternion_multiply(quaternion, r),
+      q_conj
+    );
+
+    RETURN ARRAY[q_res[2], q_res[3], q_res[4]];
+  END;
 $$ LANGUAGE plpgsql IMMUTABLE STRICT;
+
+CREATE OR REPLACE FUNCTION corelle.rotate_vector(vector numeric[], quaternion numeric[]) RETURNS numeric[] AS $$
+  SELECT corelle.rotate_vector(
+    ARRAY[
+      vector[1]::double precision,
+      vector[2]::double precision,
+      vector[3]::double precision
+    ],
+    ARRAY[
+      quaternion[1]::double precision,
+      quaternion[2]::double precision,
+      quaternion[3]::double precision,
+      quaternion[4]::double precision
+    ]
+  )::numeric[];
+$$ LANGUAGE sql IMMUTABLE STRICT;
 
 
 /* Rotate a geometry and clip to a bounding plate polygon */
@@ -189,7 +207,7 @@ BEGIN
 
   lon_0 := lon_p - twist_angle;
 
-  RETURN format('+proj=ob_tran +o_lon_p=%sr +o_lat_p=%sr +lon_0=%sr ' || extra_params, 
+  RETURN format('+proj=ob_tran +o_lon_p=%sr +o_lat_p=%sr +lon_0=%sr ' || extra_params,
     lon_p + lon_adjustment,
     lat_p,
     lon_0
@@ -204,7 +222,7 @@ Hamilton product of two quaternions.
 CREATE OR REPLACE FUNCTION corelle.quaternion_multiply(q double precision[], r double precision[])
 RETURNS double precision[]
 AS $$
-BEGIN 
+BEGIN
   RETURN ARRAY[
     r[1]*q[1]-r[2]*q[2]-r[3]*q[3]-r[4]*q[4],
     r[1]*q[2]+r[2]*q[1]-r[3]*q[4]+r[4]*q[3],
