@@ -29,7 +29,6 @@ dependencies = [
     "geoalchemy2>0.14.0,<0.22",
     # sqlalchemy-utils 0.42 (via macrostrat.database) breaks on SQLAlchemy 2.1.
     "sqlalchemy>=2.0.25,<2.1",
-    "python-dotenv>=1.2.2",
 ]
 
 [project.scripts]

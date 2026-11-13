@@ -1,3 +1,12 @@
+import warnings
+
+from dotenv import load_dotenv
+
+# Before importing the engine, which reads CORELLE_DB on import. The library
+# itself takes configuration only from the environment.
+load_dotenv()
+warnings.filterwarnings("ignore")
+
 from flask import Flask
 from flask_restful import Resource, Api
 from flask_restful.reqparse import Argument, RequestParser

@@ -8,6 +8,11 @@
 - Flask 3 and Werkzeug 3; query arguments are read from the URL only
 - Allow Python 3.13 and 3.14; upgrade dependencies; cap SQLAlchemy below 2.1
 - Repair `uv.lock`, which was written for an unnamed root package
+- `import-features --overwrite` replaces the dataset instead of appending to it
+- Importing `corelle.engine` no longer reads a `.env` or silences warnings; the server
+  does both
+- `import-starter-data` works on a fresh database: one plate row per plate ID, and bulk
+  inserts in chunks under psycopg's parameter limit
 
 ## [2.2.0] - 2024-01-04
 

@@ -19,6 +19,7 @@ dependencies = [
     "corelle.client",
     "corelle.engine",
     "numpy>=2.0.0,<3",
+    "python-dotenv>=1.2.2,<2",
     "simplejson>=3.17.6,<5",
 ]
 

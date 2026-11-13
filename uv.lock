@@ -257,7 +257,6 @@ dependencies = [
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
     { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "numpy-quaternion" },
-    { name = "python-dotenv" },
     { name = "pyyaml" },
     { name = "rich" },
     { name = "sqlalchemy" },
@@ -276,7 +275,6 @@ requires-dist = [
     { name = "numba", specifier = ">=0.63.1,<0.69" },
     { name = "numpy", specifier = ">=2.0.0,<3" },
     { name = "numpy-quaternion", specifier = ">=2024.0.13,<2025.0.0" },
-    { name = "python-dotenv", specifier = ">=1.2.2" },
     { name = "pyyaml", specifier = ">=6.0,<7" },
     { name = "rich", specifier = ">12.6.0,<16" },
     { name = "sqlalchemy", specifier = ">=2.0.25,<2.1" },
@@ -299,6 +297,7 @@ dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
     { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "python-dotenv" },
     { name = "simplejson" },
 ]
 
@@ -309,6 +308,7 @@ requires-dist = [
     { name = "flask", specifier = ">=3.1,<4" },
     { name = "flask-restful", specifier = ">=0.3.10,<0.4" },
     { name = "numpy", specifier = ">=2.0.0,<3" },
+    { name = "python-dotenv", specifier = ">=1.2.2,<2" },
     { name = "simplejson", specifier = ">=3.17.6,<5" },
 ]
 

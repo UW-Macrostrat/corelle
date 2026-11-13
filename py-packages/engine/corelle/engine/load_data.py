@@ -58,6 +58,18 @@ def pg_geometry(feature):
     return gfunc.ST_Multi(gfunc.ST_MakeValid(from_shape(geom, srid=4326)))
 
 
+def insert_rows(conn, statement, rows, chunk_size=1000):
+    """Insert in chunks: one VALUES list overflows psycopg's 65,535 parameters.
+
+    Not executemany, since geometries are SQL expressions rather than parameters.
+    """
+    rows = list(rows)
+    keys = set().union(*rows) if rows else set()
+    rows = [{k: row.get(k) for k in keys} for row in rows]
+    for i in range(0, len(rows), chunk_size):
+        conn.execute(statement.values(rows[i : i + chunk_size]))
+
+
 def import_plate(model_id, feature, fields=None):
     def field(field_id):
         # If we have provided a mapping of fields for the input
@@ -99,29 +111,30 @@ def import_plates(model_id, datafile, fields={}):
     if fields is None:
         fields = {}
 
-    plates = []
+    # A plate can have several polygons (PalaeoPlates has 390 such plates); keep
+    # one row per plate ID, the first seen.
+    plates = {}
     plate_polygons = []
     with fiona.open(datafile, "r") as src:
         mrf = fields.get("mantle_reference_frame", None)
         if mrf is not None:
             plate = dict(id=mrf, model_id=model_id, name="Mantle reference frame")
-            plates.append(plate)
+            plates.setdefault(mrf, plate)
 
         # The spin axis is assumed to have plate ID 0 by default
         spin_axis = fields.get("spin_axis", 0)
         spin_axis_plate = dict(id=spin_axis, model_id=model_id, name="Spin axis")
-        plates.append(spin_axis_plate)
+        plates.setdefault(spin_axis, spin_axis_plate)
 
         for feature in src:
             plate, plate_polygon = import_plate(model_id, feature, fields=fields)
-            plates.append(plate)
+            plates.setdefault(plate["id"], plate)
             plate_polygons.append(plate_polygon)
 
     # Run database transaction
     conn = connect()
-    conn.execute(insert(__plate).values(plates))
-    for poly in plate_polygons:
-        conn.execute(insert(__plate_polygon).values(poly))
+    insert_rows(conn, insert(__plate), plates.values())
+    insert_rows(conn, insert(__plate_polygon), plate_polygons)
     conn.commit()
 
     # For faster updates, this materialized view could become an actual table
@@ -151,7 +164,7 @@ def import_features(name, features, overwrite=False):
         for i, feature in enumerate(src):
             vals.append(create_feature(name, feature))
 
-    conn.execute(insert(__feature).values(vals))
+    insert_rows(conn, insert(__feature), vals)
     conn.commit()
 
     step1 = perf_counter()
@@ -230,12 +243,14 @@ def import_rotations(model_id, filename):
 
     conn = connect()
     trans = conn.begin()
-    conn.execute(
-        insert(__plate)
-        .values(plates)
-        .on_conflict_do_nothing(index_elements=(__plate.c.id, __plate.c.model_id))
+    insert_rows(
+        conn,
+        insert(__plate).on_conflict_do_nothing(
+            index_elements=(__plate.c.id, __plate.c.model_id)
+        ),
+        plates,
     )
-    conn.execute(insert(__rotation).values(rotations).on_conflict_do_nothing())
+    insert_rows(conn, insert(__rotation).on_conflict_do_nothing(), rotations)
     trans.commit()
 
     elapsed = perf_counter() - start
