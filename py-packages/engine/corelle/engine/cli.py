@@ -1,13 +1,7 @@
-import warnings
-
-from IPython import embed
-from os import environ
 import click
 from click import group, argument, option, echo
 from macrostrat.utils import working_directory
 from pathlib import Path
-
-warnings.filterwarnings("ignore")
 
 
 @group()
@@ -71,7 +65,7 @@ def _import_features(name, file, overwrite=False):
     """
     from .load_data import import_features
 
-    import_features(name, file, overwrite=False)
+    import_features(name, file, overwrite=overwrite)
 
 
 @cli.command(name="import-starter-data")
@@ -145,6 +139,8 @@ def serve(**kwargs):
 @cli.command(name="shell")
 def shell():
     """Get a shell in the application context"""
+    from IPython import embed
+
     embed()
 
 

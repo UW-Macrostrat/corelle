@@ -1,7 +1,10 @@
-from pytest import fixture
+from pytest import fixture, raises
 from numpy import allclose
+from sqlalchemy import text
+from sqlalchemy.exc import DBAPIError
 
 from corelle.client import rotate_features
+from corelle.engine.storage import conn
 from . import app
 
 
@@ -44,3 +47,21 @@ def test_model_route(client):
     assert all("name" in m for m in res)
     assert all("min_age" in m for m in res)
     assert all("max_age" in m for m in res)
+
+
+def test_failed_statement_does_not_poison_later_requests(client):
+    """A shared connection left in a failed transaction once broke every route."""
+    with raises(DBAPIError):
+        conn.execute(text("SELECT 1/0"))
+    assert client.get("/api/model").status_code == 200
+    res = client.get("/api/point?model=Scotese&time=100&data=-89.4,43.07")
+    assert res.status_code == 200
+
+
+def test_point_route_includes_plate_id(client):
+    """PBDB's paleocoordinate updater stores the plate ID from this route."""
+    res = client.get(
+        "/api/point?model=Scotese&time=100&include_failures=1&data=-89.4,43.07+0,-89"
+    ).json
+    assert [f["properties"]["plate_id"] for f in res] == [101, 802]
+    assert allclose(res[0]["geometry"]["coordinates"], [-50.277, 38.316], atol=0.01)
