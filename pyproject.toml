@@ -1,9 +1,9 @@
 [project]
-name = ""
+name = "corelle"
 version = "1.0.3"
 description = "An API service to support plate rotations on the web"
 authors = [{ name = "Daven Quinn", email = "dev@davenquinn.com" }]
-requires-python = ">=3.10,<=3.12"
+requires-python = ">=3.10,<3.15"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
@@ -18,8 +18,8 @@ dev = [
     "corelle.client",
     "corelle.engine",
     "corelle.server",
-    "pytest>=7.4.4,<8",
-    "black>=23.12.1,<24",
+    "pytest>=8.3,<10",
+    "black>=26,<27",
 ]
 
 [tool.uv]

@@ -161,6 +161,16 @@ def rotate_point(point, model, time):
     return cart2sph(v1)
 
 
+def rotate_point_with_plate(point, model, time):
+    """The rotated point and its plate ID, or None for a point on no plate."""
+    plate_id = get_plate_id(point, model, time)
+    if plate_id is None:
+        return None
+    q = get_rotation(model, plate_id, time)
+    v1 = Q.rotate_vectors(q, sph2cart(*point))
+    return cart2sph(v1), plate_id
+
+
 __tstep_rotation_pairs = get_sql("rotation-pairs-for-time")
 __model_rotation_pairs = get_sql("rotation-pairs-for-model")
 __active_plates_sql = get_sql("active-plates-at-time")

@@ -5,7 +5,8 @@ from macrostrat.database import Database, run_sql
 from pathlib import Path
 
 conn_string = environ.get("CORELLE_DB", "postgresql:///plate-rotations")
-db = Database(conn_string)
+# Pre-ping replaces pooled connections the server has dropped.
+db = Database(conn_string, pool_pre_ping=True)
 
 
 def initialize(drop=False):

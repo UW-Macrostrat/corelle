@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+- Run each query on a pooled connection with pre-ping, so a dropped connection no
+  longer breaks every later request
+- `/api/point` returns `properties.plate_id` again, as the `production` branch did
+- Flask 3 and Werkzeug 3; query arguments are read from the URL only
+- Allow Python 3.13 and 3.14; upgrade dependencies; cap SQLAlchemy below 2.1
+- Repair `uv.lock`, which was written for an unnamed root package
+
 ## [2.2.0] - 2024-01-04
 
 - Update application for Python 3.11

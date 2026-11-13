@@ -1,25 +1,35 @@
 from flask import Flask
 from flask_restful import Resource, Api
-from flask_restful.reqparse import RequestParser
+from flask_restful.reqparse import Argument, RequestParser
 from sqlalchemy import text
 from simplejson import loads, JSONEncoder
 import numpy as N
 
-from corelle.engine.database import db
 from corelle.engine.query import get_sql
+from corelle.engine.storage import conn
 from corelle.engine.rotate import (
     get_rotation,
     get_all_rotations,
     get_plate_rotations,
     get_rotation_series,
     rotate_point,
+    rotate_point_with_plate,
 )
 
 app = Flask(__name__)
 app.config["RESTFUL_JSON"] = dict(cls=JSONEncoder)
 api = Api(app)
 
-conn = db.engine.connect()
+
+class QueryArgument(Argument):
+    """Read query values only; Werkzeug 2.1+ rejects reading a non-JSON body with 415."""
+
+    def __init__(self, *args, location="values", **kwargs):
+        super().__init__(*args, location=location, **kwargs)
+
+
+def query_parser():
+    return RequestParser(argument_class=QueryArgument)
 
 
 class Help(Resource):
@@ -49,7 +59,7 @@ def get_plate_polygons_cached(model):
 class ModelResource(Resource):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.parser = RequestParser()
+        self.parser = query_parser()
         self.parser.add_argument("model", type=str, required=True)
 
 
@@ -73,7 +83,7 @@ class ModernPlates(ModelResource):
 
 
 def base_parser():
-    r = RequestParser()
+    r = query_parser()
     r.add_argument("plate_id", type=int)
     r.add_argument("model", type=str, required=True)
     r.add_argument("quaternion", type=bool, default=False)
@@ -192,10 +202,17 @@ class Point(ModelResource):
         for p in points:
             [lon, lat] = p.split(",")
             pt = [float(lon), float(lat)]
-            res = rotate_point(pt, args["model"], args["time"])
+            res = rotate_point_with_plate(pt, args["model"], args["time"])
             if res is not None:
-                res = dict(type="Feature", geometry=dict(type="Point", coordinates=res))
-                out_points.append(res)
+                coords, plate_id = res
+                # PBDB stores `plate_id` from this response.
+                out_points.append(
+                    dict(
+                        type="Feature",
+                        geometry=dict(type="Point", coordinates=coords),
+                        properties=dict(plate_id=plate_id),
+                    )
+                )
             else:
                 if args["include_failures"]:
                     out_points.append(None)

@@ -18,15 +18,17 @@ dependencies = [
     "IPython>=8.0,<10",
     "PyYAML>=6.0,<7",
     "corelle.client",
-    "macrostrat.database>=4.0.0,<5",
+    "macrostrat.database>=4.7,<5",
     "macrostrat.utils>=1.0.1,<2",
-    "numba>=0.63.1,<0.66",
+    "numba>=0.63.1,<0.69",
     "numpy>=2.0.0,<3",
     "numpy-quaternion>=2024.0.13,<2025.0.0",
-    "rich>12.6.0,<15.0.0",
-    "typer>0.12.0,<0.26",
+    "rich>12.6.0,<16",
+    "typer>0.12.0,<0.30",
     "wget>=3.2,<4",
-    "geoalchemy2>0.14.0,<0.20.0",
+    "geoalchemy2>0.14.0,<0.22",
+    # sqlalchemy-utils 0.42 (via macrostrat.database) breaks on SQLAlchemy 2.1.
+    "sqlalchemy>=2.0.25,<2.1",
     "python-dotenv>=1.2.2",
 ]
 
