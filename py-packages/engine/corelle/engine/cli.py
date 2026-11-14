@@ -1,7 +1,16 @@
 import click
 from click import group, argument, option, echo
 from macrostrat.utils import working_directory
+from contextlib import contextmanager
 from pathlib import Path
+
+
+@contextmanager
+def transaction():
+    from .database import get_database
+
+    with get_database().engine.begin() as conn:
+        yield conn
 
 
 @group()
@@ -44,15 +53,17 @@ def _import(
     """
     from .load_data import import_model
 
-    import_model(
-        model_name,
-        plates,
-        rotations,
-        fields=fields,
-        overwrite=overwrite,
-        min_age=min_age,
-        max_age=max_age,
-    )
+    with transaction() as conn:
+        import_model(
+            conn,
+            model_name,
+            plates,
+            rotations,
+            fields=fields,
+            overwrite=overwrite,
+            min_age=min_age,
+            max_age=max_age,
+        )
 
 
 @cli.command(name="import-features")
@@ -65,7 +76,8 @@ def _import_features(name, file, overwrite=False):
     """
     from .load_data import import_features
 
-    import_features(name, file, overwrite=overwrite)
+    with transaction() as conn:
+        import_features(conn, name, file, overwrite=overwrite)
 
 
 @cli.command(name="import-starter-data")
@@ -73,7 +85,8 @@ def import_basic():
     """Import basic models and data"""
     from .load_data import load_basic_data
 
-    load_basic_data()
+    with transaction() as conn:
+        load_basic_data(conn)
 
 
 @cli.command(name="reset-cache")
@@ -100,7 +113,8 @@ def rotate(model, plate, time, verbose=False):
     from corelle.math import quaternion_to_euler
     from .rotate import get_rotation
 
-    q = get_rotation(model, plate, time, verbose=verbose)
+    with transaction() as conn:
+        q = get_rotation(conn, model, plate, time, verbose=verbose)
     if q is None:
         echo(f"No rotation for plate {plate} at {time} Ma.")
         return
@@ -121,9 +135,10 @@ def rotate_all(model, time, verbose=False):
     import numpy as N
     from .rotate import get_all_rotations
 
-    for plate_id, q in get_all_rotations(model, time, verbose=verbose):
-        angle = N.degrees(q.angle())
-        echo(f"{plate_id}: rotate {angle:.2f}° around {q.vec}")
+    with transaction() as conn:
+        for plate_id, q in get_all_rotations(conn, model, time, verbose=verbose):
+            angle = N.degrees(q.angle())
+            echo(f"{plate_id}: rotate {angle:.2f}° around {q.vec}")
 
 
 @cli.command(name="serve")
@@ -149,7 +164,8 @@ def build_cache():
     """Cache rotations for all models"""
     from .cache import build_rotation_caches
 
-    build_rotation_caches()
+    with transaction() as conn:
+        build_rotation_caches(conn)
 
 
 def parent_dir(_start: str, name: str) -> Path:

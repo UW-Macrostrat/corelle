@@ -1,6 +1,13 @@
 from dataclasses import dataclass
 from pytest import fixture
+from corelle.engine.database import get_database
 from .utils import get_coordinates, get_geojson
+
+
+@fixture(scope="session")
+def conn():
+    with get_database().engine.connect() as conn:
+        yield conn
 
 
 @dataclass

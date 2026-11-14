@@ -5,11 +5,13 @@ Tests of rotations using PostGIS functions (to support on-database transformatio
 from corelle.math.util import unit_vector
 import numpy as N
 import quaternion as Q
-from corelle.engine.database import db
+from corelle.engine.database import get_database
 from geoalchemy2.shape import to_shape
 from geoalchemy2.elements import WKBElement
 from sqlalchemy import text
 from corelle.math import sph2cart, cart2sph
+
+db = get_database()
 
 identity_quaternion = Q.from_float_array([1, 0, 0, 0])
 

@@ -1,6 +1,6 @@
 [project]
 name = "corelle.server"
-version = "1.1.0"
+version = "1.2.0"
 description = "An API server application for the Corelle plate-rotation system"
 authors = [{ name = "Daven Quinn", email = "dev@davenquinn.com" }]
 requires-python = ">=3.10,<3.15"
@@ -16,8 +16,9 @@ classifiers = [
 dependencies = [
     "Flask>=3.1,<4",
     "Flask-RESTful>=0.3.10,<0.4",
-    "corelle.client",
-    "corelle.engine",
+    "corelle.client>=2.2,<3",
+    # A standalone install also loads models and features.
+    "corelle.engine[import]>=3,<4",
     "numpy>=2.0.0,<3",
     "python-dotenv>=1.2.2,<2",
     "simplejson>=3.17.6,<5",
@@ -33,6 +34,7 @@ dependencies = [
 module-name = ["corelle"]
 module-root = ""
 namespace = true
+wheel-exclude = ["corelle/server/test_api.py"]
 
 [build-system]
 requires = ["uv_build>=0.9.21,<0.10.0"]

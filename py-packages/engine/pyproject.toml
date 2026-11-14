@@ -1,7 +1,7 @@
 [project]
 name = "corelle.engine"
-version = "2.2.0"
-description = "An API server application for the Corelle plate-rotation system"
+version = "3.0.0"
+description = "Plate-rotation models and rotation engine for the Corelle system"
 authors = [{ name = "Daven Quinn", email = "dev@davenquinn.com" }]
 requires-python = ">=3.10,<4"
 license = "MIT"
@@ -14,10 +14,8 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-    "Fiona>=1.10.1,<2",
-    "IPython>=8.0,<10",
-    "PyYAML>=6.0,<7",
-    "corelle.client",
+    "click>=8.1,<9",
+    "corelle.client>=2.2,<3",
     "macrostrat.database>=4.7,<5",
     "macrostrat.utils>=1.0.1,<2",
     "numba>=0.63.1,<0.69",
@@ -25,11 +23,15 @@ dependencies = [
     "numpy-quaternion>=2024.0.13,<2025.0.0",
     "rich>12.6.0,<16",
     "typer>0.12.0,<0.30",
-    "wget>=3.2,<4",
     "geoalchemy2>0.14.0,<0.22",
     # sqlalchemy-utils 0.42 (via macrostrat.database) breaks on SQLAlchemy 2.1.
     "sqlalchemy>=2.0.25,<2.1",
 ]
+
+[project.optional-dependencies]
+# Model and feature imports; servers that only rotate don't need them.
+import = ["Fiona>=1.10.1,<2", "PyYAML>=6.0,<7", "wget>=3.2,<4"]
+shell = ["IPython>=8.0,<10"]
 
 [project.scripts]
 corelle = "corelle.engine:cli"
@@ -46,6 +48,7 @@ dev = []
 module-name = ["corelle"]
 module-root = ""
 namespace = true
+wheel-exclude = ["corelle/tests"]
 
 [build-system]
 requires = ["uv_build>=0.9.21,<0.10.0"]

@@ -16,7 +16,7 @@ classifiers = [
 [dependency-groups]
 dev = [
     "corelle.client",
-    "corelle.engine",
+    "corelle.engine[import,shell]",
     "corelle.server",
     "pytest>=8.3,<10",
     "black>=26,<27",

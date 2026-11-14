@@ -4,8 +4,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 
 from corelle.client import rotate_features
-from corelle.engine.storage import conn
-from . import app
+from . import app, connection
 
 
 @fixture
@@ -51,8 +50,9 @@ def test_model_route(client):
 
 def test_failed_statement_does_not_poison_later_requests(client):
     """A shared connection left in a failed transaction once broke every route."""
-    with raises(DBAPIError):
-        conn.execute(text("SELECT 1/0"))
+    with app.app_context():
+        with raises(DBAPIError):
+            connection().execute(text("SELECT 1/0"))
     assert client.get("/api/model").status_code == 200
     res = client.get("/api/point?model=Scotese&time=100&data=-89.4,43.07")
     assert res.status_code == 200

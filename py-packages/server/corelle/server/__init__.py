@@ -2,20 +2,19 @@ import warnings
 
 from dotenv import load_dotenv
 
-# Before importing the engine, which reads CORELLE_DB on import. The library
-# itself takes configuration only from the environment.
+# The engine reads CORELLE_DB from the environment; a `.env` is a server convenience.
 load_dotenv()
 warnings.filterwarnings("ignore")
 
-from flask import Flask
+from flask import Flask, g
 from flask_restful import Resource, Api
 from flask_restful.reqparse import Argument, RequestParser
 from sqlalchemy import text
 from simplejson import loads, JSONEncoder
 import numpy as N
 
+from corelle.engine.database import get_database
 from corelle.engine.query import get_sql
-from corelle.engine.storage import conn
 from corelle.engine.rotate import (
     get_rotation,
     get_all_rotations,
@@ -28,6 +27,20 @@ from corelle.engine.rotate import (
 app = Flask(__name__)
 app.config["RESTFUL_JSON"] = dict(cls=JSONEncoder)
 api = Api(app)
+
+
+def connection():
+    """One pooled connection per request; teardown closes it, discarding a failed one."""
+    if "conn" not in g:
+        g.conn = get_database().engine.connect()
+    return g.conn
+
+
+@app.teardown_appcontext
+def close_connection(exc):
+    conn = g.pop("conn", None)
+    if conn is not None:
+        conn.close()
 
 
 class QueryArgument(Argument):
@@ -51,7 +64,7 @@ def get_plate_polygons(model):
     Uncached version of modern plate polygons query
     """
     q = get_sql("modern-plate-polygons")
-    results = conn.execute(q, dict(model_name=model))
+    results = connection().execute(q, dict(model_name=model))
     for row in results:
         props = dict(row)
         geom = loads(props.pop("geometry"))
@@ -62,7 +75,7 @@ def get_plate_polygons(model):
 
 def get_plate_polygons_cached(model):
     q = get_sql("modern-plate-polygons-cached")
-    return conn.execute(q, dict(model_name=model)).scalar()
+    return connection().execute(q, dict(model_name=model)).scalar()
 
 
 class ModelResource(Resource):
@@ -75,14 +88,14 @@ class ModelResource(Resource):
 class AllFeatures(Resource):
     def get(self):
         q = text("SELECT DISTINCT dataset_id FROM corelle.feature_cache")
-        return [r[0] for r in conn.execute(q)]
+        return [r[0] for r in connection().execute(q)]
 
 
 class Features(ModelResource):
     def get(self, dataset):
         args = self.parser.parse_args()
         q = get_sql("feature-dataset-cached")
-        return conn.execute(q, dict(model_name=args["model"], dataset=dataset)).scalar()
+        return connection().execute(q, dict(model_name=args["model"], dataset=dataset)).scalar()
 
 
 class ModernPlates(ModelResource):
@@ -129,12 +142,12 @@ class Rotation(RotationsResource):
         return list(self.get_all(args))
 
     def get_all(self, args):
-        for plate_id, q in get_all_rotations(args["model"], args["time"]):
+        for plate_id, q in get_all_rotations(connection(), args["model"], args["time"]):
             yield self.reducer(q, args, plate_id)
 
     def get_single(self, args):
         plate_id = args["plate_id"]
-        q = get_rotation(args["model"], plate_id, args["time"])
+        q = get_rotation(connection(), args["model"], plate_id, args["time"])
         return self.reducer(q, args, plate_id)
 
 
@@ -160,7 +173,7 @@ class RotationSeries(RotationsResource):
         ages = N.arange(
             float(args["time_start"]), float(args["time_end"]), -float(args["interval"])
         )
-        for vals in get_rotation_series(args["model"], *ages):
+        for vals in get_rotation_series(connection(), args["model"], *ages):
             vals["rotations"] = [
                 self.reducer(q, args, plate_id) for plate_id, q in vals["rotations"]
             ]
@@ -182,7 +195,7 @@ class Pole(ModelResource):
         return list(self.get_single(id, args))
 
     def get_single(self, id, args):
-        for q, t_step in get_plate_rotations(args["model"], id):
+        for q, t_step in get_plate_rotations(connection(), args["model"], id):
             yield self.reducer(q, args, t_step)
 
     def reducer(self, q, args, t_step):
@@ -193,7 +206,7 @@ class Pole(ModelResource):
 
 class Model(Resource):
     def get(self):
-        results = conn.execute(text("SELECT id, name, min_age, max_age FROM corelle.model")).mappings()
+        results = connection().execute(text("SELECT id, name, min_age, max_age FROM corelle.model")).mappings()
         return [dict(r) for r in results]
 
 
@@ -211,7 +224,7 @@ class Point(ModelResource):
         for p in points:
             [lon, lat] = p.split(",")
             pt = [float(lon), float(lat)]
-            res = rotate_point_with_plate(pt, args["model"], args["time"])
+            res = rotate_point_with_plate(connection(), pt, args["model"], args["time"])
             if res is not None:
                 coords, plate_id = res
                 # PBDB stores `plate_id` from this response.
@@ -245,7 +258,7 @@ class Reconstruct(ModelResource):
     def get(self):
         args = self.parser.parse_args()
         pt = [args["lng"], args["lat"]]
-        out = rotate_point(pt, args["model"], args["age"])
+        out = rotate_point(connection(), pt, args["model"], args["age"])
         if out is None:
             return None
         return dict(
