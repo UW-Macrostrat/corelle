@@ -7,7 +7,7 @@ from corelle.math.util import unit_vector
 import numpy as N
 import quaternion as Q
 from shapely import wkt
-from corelle.engine.database import db
+from corelle.engine.database import get_database
 from geoalchemy2 import Geometry
 from geoalchemy2.shape import to_shape
 from geoalchemy2.elements import WKBElement
@@ -21,6 +21,8 @@ from .rotation_testing_functions import (
     swing_twist_decomposition,
     decompose_quaternion,
 )
+
+db = get_database()
 
 
 def test_postgis_noop_rotation():
@@ -298,11 +300,11 @@ def test_arbitrary_vector_rotations(q, direction, func):
 
 
 @mark.parametrize("func", rotation_functions)
-def test_database_against_web_service(gplates_web_service_testcase, func):
+def test_database_against_web_service(conn, gplates_web_service_testcase, func):
     case = gplates_web_service_testcase
     assert len(case.current) == len(case.rotated)
     for c0, ct in zip(case.current, case.rotated):
-        plate_id = get_plate_id(c0, case.model, case.time)
-        q = get_rotation(case.model, plate_id, case.time, safe=False)
+        plate_id = get_plate_id(conn, c0, case.model, case.time)
+        q = get_rotation(conn, case.model, plate_id, case.time, safe=False)
         p1 = func(c0, q)
         assert N.allclose(p1, ct, atol=0.01)

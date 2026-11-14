@@ -6,8 +6,7 @@ from decimal import Decimal
 from corelle.math import cart2sph, sph2cart, euler_to_quaternion, quaternion_to_euler
 
 from .query import get_sql
-from .database import db
-from .storage import conn, model_id
+from .storage import model_id
 
 
 class RotationError(Exception):
@@ -41,15 +40,16 @@ def build_cache(q, cache_args):
 __sql = get_sql("rotation-pairs")
 
 
-def check_model_id(model_name):
+def check_model_id(conn, model_name):
     # Make sure our model id actually exists
-    id = model_id(model_name)
+    id = model_id(conn, model_name)
     if id is None:
         raise RotationError("Unknown model id")
 
 
 # Cache this expensive, recursive function.
 def get_rotation(
+    conn,
     model_name,
     plate_id,
     time,
@@ -65,7 +65,7 @@ def get_rotation(
         return cache[cache_args]
 
     if safe:
-        check_model_id(model_name)
+        check_model_id(conn, model_name)
 
     __cache = lambda q: build_cache(q, cache_args)
 
@@ -103,6 +103,7 @@ def get_rotation(
 
     if not row.interpolated:
         base = get_rotation(
+            conn,
             model_name,
             row.ref_plate_id,
             row.r1_step,
@@ -119,6 +120,7 @@ def get_rotation(
 
     # Interpolated rotations
     base = get_rotation(
+        conn,
         model_name,
         row.ref_plate_id,
         time,
@@ -136,37 +138,31 @@ def get_rotation(
     return __cache(base * res)
 
 
-def plates_for_model(model):
-    sql = get_sql("plates-for-model")
-    for row in conn.execute(sql, dict(model_name=model)):
-        yield row[0]
-
-
-def get_plate_id(point, model, time):
+def get_plate_id(conn, point, model, time):
     sql = get_sql("plate-for-point")
     return conn.execute(
         sql, dict(lon=point[0], lat=point[1], model_name=model, time=time)
     ).scalar()
 
 
-def rotate_point(point, model, time):
+def rotate_point(conn, point, model, time):
     if time == 0:
         return point
-    plate_id = get_plate_id(point, model, time)
+    plate_id = get_plate_id(conn, point, model, time)
     if plate_id is None:
         return None
-    q = get_rotation(model, plate_id, time)
+    q = get_rotation(conn, model, plate_id, time)
     v0 = sph2cart(*point)
     v1 = Q.rotate_vectors(q, v0)
     return cart2sph(v1)
 
 
-def rotate_point_with_plate(point, model, time):
+def rotate_point_with_plate(conn, point, model, time):
     """The rotated point and its plate ID, or None for a point on no plate."""
-    plate_id = get_plate_id(point, model, time)
+    plate_id = get_plate_id(conn, point, model, time)
     if plate_id is None:
         return None
-    q = get_rotation(model, plate_id, time)
+    q = get_rotation(conn, model, plate_id, time)
     v1 = Q.rotate_vectors(q, sph2cart(*point))
     return cart2sph(v1), plate_id
 
@@ -178,13 +174,20 @@ __model_plates_sql = get_sql("plates-for-model")
 __plate_time_ranges = get_sql("plate-time-ranges")
 
 
-def plates_for_model(model):
+def plates_for_model(conn, model):
     """Returns a list of plate IDs for a given model"""
     return [k[0] for k in conn.execute(__model_plates_sql, dict(model_name=model))]
 
 
 def get_all_rotations(
-    model, time, verbose=False, active_only=True, plates=None, safe=True, rowset=None
+    conn,
+    model,
+    time,
+    verbose=False,
+    active_only=True,
+    plates=None,
+    safe=True,
+    rowset=None,
 ):
     """Get all rotations for a model and a timestep
 
@@ -204,7 +207,7 @@ def get_all_rotations(
             res = conn.execute(__active_plates_sql, dict(time=time, model_name=model))
             plates = [p[0] for p in res]
         else:
-            plates = plates_for_model(model)
+            plates = plates_for_model(conn, model)
 
     if rowset is None:
         _rowset = conn.execute(
@@ -219,10 +222,10 @@ def get_all_rotations(
         ]
 
     if safe:
-        check_model_id(model)
+        check_model_id(conn, model)
     for plate_id in plates:
         q = get_rotation(
-            model, plate_id, time, verbose=verbose, rowset=_rowset, safe=False
+            conn, model, plate_id, time, verbose=verbose, rowset=_rowset, safe=False
         )
         if q is None:
             continue
@@ -231,10 +234,10 @@ def get_all_rotations(
         yield plate_id, q
 
 
-def get_rotation_series(model, *times, **kwargs):
+def get_rotation_series(conn, model, *times, **kwargs):
     # Pre-compute plates for speed...
     # LOL this actually makes things slower
-    check_model_id(model)
+    check_model_id(conn, model)
 
     plate_ages = conn.execute(
         __plate_time_ranges,
@@ -253,12 +256,10 @@ def get_rotation_series(model, *times, **kwargs):
         t = float(t)
         plates = [p.id for p in plate_ages if p.old_lim > t and p.young_lim < t]
         kwargs["plates"] = plates
-        r = get_all_rotations(model, t, safe=False, rowset=rowset, **kwargs)
+        r = get_all_rotations(conn, model, t, safe=False, rowset=rowset, **kwargs)
         yield dict(rotations=list(r), time=t)
 
 
-def get_plate_rotations(model, plate_id, verbose=False):
-    time_step = 1
-    time_range = (0, 500)
+def get_plate_rotations(conn, model, plate_id, verbose=False):
     time_steps = range(0, 500, 1)
-    return ((get_rotation(model, plate_id, t), t) for t in time_steps)
+    return ((get_rotation(conn, model, plate_id, t), t) for t in time_steps)

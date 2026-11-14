@@ -16,39 +16,24 @@ from contextlib import contextmanager
 from geoalchemy2 import functions as gfunc
 from geoalchemy2.shape import from_shape
 from shapely.geometry import shape, MultiPolygon
-from macrostrat.database import run_sql
 
-from .database import db
 from .query import get_sql
-
-__conn = None
-
-
-def connect():
-    global __conn
-    if __conn is None:
-        __conn = db.engine.connect()
-    return __conn
+from .storage import reflect_table
 
 
-def create_model(name, **kwargs):
-    model = db.reflect_table("model", schema="corelle")
-    conn = connect()
+def create_model(conn, name, **kwargs):
+    model = reflect_table(conn, "model")
     try:
-        conn.execute(
-            insert(model)
-            .values(name=name, **kwargs)
-            .on_conflict_do_update(index_elements=(model.c.id,), set_=kwargs)
-        )
+        # A savepoint, so a conflict doesn't abort the caller's transaction.
+        with conn.begin_nested():
+            conn.execute(
+                insert(model)
+                .values(name=name, **kwargs)
+                .on_conflict_do_update(index_elements=(model.c.id,), set_=kwargs)
+            )
     except IntegrityError:
         pass
     return conn.execute(model.select().where(model.c.name == name)).first()[0]
-
-
-__plate = db.reflect_table("plate", schema="corelle")
-__feature = db.reflect_table("feature", schema="corelle")
-__rotation = db.reflect_table("rotation", schema="corelle")
-__plate_polygon = db.reflect_table("plate_polygon", schema="corelle")
 
 
 def pg_geometry(feature):
@@ -106,7 +91,7 @@ def import_plate(model_id, feature, fields=None):
     return plate, plate_polygon
 
 
-def import_plates(model_id, datafile, fields={}):
+def import_plates(conn, model_id, datafile, fields={}):
     """Import all plates for a model"""
     if fields is None:
         fields = {}
@@ -131,14 +116,11 @@ def import_plates(model_id, datafile, fields={}):
             plates.setdefault(plate["id"], plate)
             plate_polygons.append(plate_polygon)
 
-    # Run database transaction
-    conn = connect()
-    insert_rows(conn, insert(__plate), plates.values())
-    insert_rows(conn, insert(__plate_polygon), plate_polygons)
-    conn.commit()
+    insert_rows(conn, insert(reflect_table(conn, "plate")), plates.values())
+    insert_rows(conn, insert(reflect_table(conn, "plate_polygon")), plate_polygons)
 
     # For faster updates, this materialized view could become an actual table
-    run_sql(conn, "REFRESH MATERIALIZED VIEW corelle.plate_polygon_cache")
+    conn.execute(text("REFRESH MATERIALIZED VIEW corelle.plate_polygon_cache"))
 
 
 def create_feature(dataset, feature):
@@ -153,19 +135,18 @@ def create_feature(dataset, feature):
     )
 
 
-def import_features(name, features, overwrite=False):
+def import_features(conn, name, features, overwrite=False):
     start = perf_counter()
-    conn = connect()
+    table = reflect_table(conn, "feature")
     with fiona.open(features, "r") as src:
         if overwrite:
-            conn.execute(__feature.delete().where(__feature.c.dataset_id == name))
+            conn.execute(table.delete().where(table.c.dataset_id == name))
 
         vals = []
         for i, feature in enumerate(src):
             vals.append(create_feature(name, feature))
 
-    insert_rows(conn, insert(__feature), vals)
-    conn.commit()
+    insert_rows(conn, insert(table), vals)
 
     step1 = perf_counter()
     elapsed = step1 - start
@@ -177,7 +158,6 @@ def import_features(name, features, overwrite=False):
 
     sql = get_sql("cache-feature-dataset")
     conn.execute(sql, dict(dataset_id=name))
-    conn.commit()
 
     elapsed = perf_counter() - step1
     echo(f"  cached transformed features in {elapsed:.2f} seconds")
@@ -221,7 +201,7 @@ def create_rotation_row(model_id, line):
     return rotation, [ref_plate, plate]
 
 
-def import_rotations(model_id, filename):
+def import_rotations(conn, model_id, filename):
     """
     Import a set of plate rotations defined
     in a GPlates rotation file structure.
@@ -241,36 +221,41 @@ def import_rotations(model_id, filename):
                 rotations.append(rotation)
             plates.extend(next_plates)
 
-    conn = connect()
-    trans = conn.begin()
+    plate = reflect_table(conn, "plate")
     insert_rows(
         conn,
-        insert(__plate).on_conflict_do_nothing(
-            index_elements=(__plate.c.id, __plate.c.model_id)
+        insert(plate).on_conflict_do_nothing(
+            index_elements=(plate.c.id, plate.c.model_id)
         ),
         plates,
     )
-    insert_rows(conn, insert(__rotation).on_conflict_do_nothing(), rotations)
-    trans.commit()
+    rotation = reflect_table(conn, "rotation")
+    insert_rows(conn, insert(rotation).on_conflict_do_nothing(), rotations)
 
     elapsed = perf_counter() - start
     print(f"Imported {i+1} rotations in {elapsed:.2f} seconds")
 
 
 def import_model(
-    name, plates, rotations, fields=None, overwrite=False, min_age=None, max_age=None
+    conn,
+    name,
+    plates,
+    rotations,
+    fields=None,
+    overwrite=False,
+    min_age=None,
+    max_age=None,
 ):
     print("Importing model", name)
-    conn = connect()
     q = text("SELECT count(*) FROM corelle.model WHERE name=:name")
     res = conn.execute(q, dict(name=name)).scalar()
     if res == 1 and not overwrite:
         print("Model has already been imported.")
         return
 
-    model_id = create_model(name, min_age=min_age, max_age=max_age)
-    import_plates(model_id, plates, fields=load_fields(fields))
-    import_rotations(model_id, rotations)
+    model_id = create_model(conn, name, min_age=min_age, max_age=max_age)
+    import_plates(conn, model_id, plates, fields=load_fields(fields))
+    import_rotations(conn, model_id, rotations)
     # Right now we don't cache rotations on model import, but we could.
 
 
@@ -289,10 +274,11 @@ def load_fields(fn):
 corelle_data_dir = Path(__file__).parent.parent.parent.parent.parent / "data"
 
 
-def load_basic_data():
+def load_basic_data(conn):
     """Load basic model and feature datasets"""
     with working_directory(str(corelle_data_dir)):
         import_model(
+            conn,
             "PalaeoPlates",
             "eglington/PlatePolygons2016All.json",
             "eglington/T_Rot_Model_PalaeoPlates_2019_20190302_experiment.rot",
@@ -300,6 +286,7 @@ def load_basic_data():
         )
 
         import_model(
+            conn,
             "Seton2012",
             "seton_2012.geojson",
             "Seton_etal_ESR2012_2012.1.rot",
@@ -309,6 +296,7 @@ def load_basic_data():
         )
 
         import_model(
+            conn,
             "Wright2013",
             "wright_plates.geojson",
             "wright_2013.rot",
@@ -318,6 +306,7 @@ def load_basic_data():
         )
 
         import_model(
+            conn,
             "Scotese",
             "scotese.geojson",
             "scotese.rot",
@@ -343,7 +332,7 @@ def load_basic_data():
             q = text(
                 "SELECT count(*) FROM (SELECT DISTINCT dataset_id FROM corelle.feature WHERE dataset_id=:name) AS a"
             )
-            res = connect().execute(q, dict(name=dsn)).scalar()
+            res = conn.execute(q, dict(name=dsn)).scalar()
             if res == 1:
                 continue
 
@@ -351,7 +340,7 @@ def load_basic_data():
             download(dataset, out=fn)
 
             # Import the dataset
-            import_features(dsn, fn, overwrite=True)
+            import_features(conn, dsn, fn, overwrite=True)
 
 
 @contextmanager

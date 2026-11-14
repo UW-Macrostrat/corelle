@@ -195,7 +195,7 @@ default-groups = "all"
 dev = [
     { name = "black" },
     { name = "corelle-client" },
-    { name = "corelle-engine" },
+    { name = "corelle-engine", extra = ["import", "shell"] },
     { name = "corelle-server" },
     { name = "pytest" },
 ]
@@ -206,7 +206,7 @@ dev = [
 dev = [
     { name = "black", specifier = ">=26,<27" },
     { name = "corelle-client", editable = "py-packages/client" },
-    { name = "corelle-engine", editable = "py-packages/engine" },
+    { name = "corelle-engine", extras = ["import", "shell"], editable = "py-packages/engine" },
     { name = "corelle-server", editable = "py-packages/server" },
     { name = "pytest", specifier = ">=8.3,<10" },
 ]
@@ -242,14 +242,12 @@ dev = []
 
 [[package]]
 name = "corelle-engine"
-version = "2.2.0"
+version = "3.0.0"
 source = { editable = "py-packages/engine" }
 dependencies = [
+    { name = "click" },
     { name = "corelle-client" },
-    { name = "fiona" },
     { name = "geoalchemy2" },
-    { name = "ipython", version = "8.39.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "ipython", version = "9.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "macrostrat-database" },
     { name = "macrostrat-utils" },
     { name = "numba" },
@@ -257,41 +255,52 @@ dependencies = [
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
     { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "numpy-quaternion" },
-    { name = "pyyaml" },
     { name = "rich" },
     { name = "sqlalchemy" },
     { name = "typer" },
+]
+
+[package.optional-dependencies]
+import = [
+    { name = "fiona" },
+    { name = "pyyaml" },
     { name = "wget" },
+]
+shell = [
+    { name = "ipython", version = "8.39.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "ipython", version = "9.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "click", specifier = ">=8.1,<9" },
     { name = "corelle-client", editable = "py-packages/client" },
-    { name = "fiona", specifier = ">=1.10.1,<2" },
+    { name = "fiona", marker = "extra == 'import'", specifier = ">=1.10.1,<2" },
     { name = "geoalchemy2", specifier = ">0.14.0,<0.22" },
-    { name = "ipython", specifier = ">=8.0,<10" },
+    { name = "ipython", marker = "extra == 'shell'", specifier = ">=8.0,<10" },
     { name = "macrostrat-database", specifier = ">=4.7,<5" },
     { name = "macrostrat-utils", specifier = ">=1.0.1,<2" },
     { name = "numba", specifier = ">=0.63.1,<0.69" },
     { name = "numpy", specifier = ">=2.0.0,<3" },
     { name = "numpy-quaternion", specifier = ">=2024.0.13,<2025.0.0" },
-    { name = "pyyaml", specifier = ">=6.0,<7" },
+    { name = "pyyaml", marker = "extra == 'import'", specifier = ">=6.0,<7" },
     { name = "rich", specifier = ">12.6.0,<16" },
     { name = "sqlalchemy", specifier = ">=2.0.25,<2.1" },
     { name = "typer", specifier = ">0.12.0,<0.30" },
-    { name = "wget", specifier = ">=3.2,<4" },
+    { name = "wget", marker = "extra == 'import'", specifier = ">=3.2,<4" },
 ]
+provides-extras = ["import", "shell"]
 
 [package.metadata.requires-dev]
 dev = []
 
 [[package]]
 name = "corelle-server"
-version = "1.1.0"
+version = "1.2.0"
 source = { editable = "py-packages/server" }
 dependencies = [
     { name = "corelle-client" },
-    { name = "corelle-engine" },
+    { name = "corelle-engine", extra = ["import"] },
     { name = "flask" },
     { name = "flask-restful" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -304,7 +313,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "corelle-client", editable = "py-packages/client" },
-    { name = "corelle-engine", editable = "py-packages/engine" },
+    { name = "corelle-engine", extras = ["import"], editable = "py-packages/engine" },
     { name = "flask", specifier = ">=3.1,<4" },
     { name = "flask-restful", specifier = ">=0.3.10,<0.4" },
     { name = "numpy", specifier = ">=2.0.0,<3" },

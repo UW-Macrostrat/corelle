@@ -10,23 +10,23 @@ from corelle.engine.rotate import (
 )
 
 
-def test_seton_recursion():
+def test_seton_recursion(conn):
     """
     There is a self-referential loop in the Seton2012 plate model
     that we need to make sure our code can handle without infinite
     recursion (which affected our first, naive implementation).
     """
-    q = get_rotation("Seton2012", 502, 130)
+    q = get_rotation(conn, "Seton2012", 502, 130)
     assert q is not None
 
 
-def test_wright_recursion():
+def test_wright_recursion(conn):
     """
     There is a self-referential loop in the Wright2013 plate model
     that we need to make sure our code can handle without infinite
     recursion (which affected our first, naive implementation).
     """
-    q = get_rotation("Wright2013", 601, 160)
+    q = get_rotation(conn, "Wright2013", 601, 160)
     assert q is not None
 
 
@@ -34,8 +34,8 @@ times = [0, 2, 4, 10, 30, 60, 120, 130, 240, 480, 550, 620]
 
 
 @pytest.mark.parametrize("time", times)
-def test_seton_rotations(time):
-    for (plate_id, q) in get_all_rotations("Seton2012", time):
+def test_seton_rotations(conn, time):
+    for (plate_id, q) in get_all_rotations(conn, "Seton2012", time):
         if plate_id == 225:
             print(quaternion_to_euler(q))
         assert q is not None
@@ -43,15 +43,15 @@ def test_seton_rotations(time):
 
 # In the Seton, 2012 plate model, the parts of the South American plate
 # should remain together until at least the Cretaceous
-def test_south_america_cretaceous():
+def test_south_america_cretaceous(conn):
     parts = [201, 202, 291, 280]
-    rotations = [get_rotation("Seton2012", r, 67) for r in parts]
+    rotations = [get_rotation(conn, "Seton2012", r, 67) for r in parts]
     for r in rotations[1:]:
         assert N.allclose(r, rotations[0])
 
 
-def test_south_america_jurassic():
-    rotate = lambda x: get_rotation("Seton2012", x, 152)
+def test_south_america_jurassic(conn):
+    rotate = lambda x: get_rotation(conn, "Seton2012", x, 152)
     assert not N.allclose(rotate(291), rotate(201))
     assert N.allclose(rotate(291), rotate(280))
 
@@ -60,14 +60,14 @@ times = [2, 5, 9.8, 10]
 
 
 @pytest.mark.parametrize("time", times)
-def test_plate_disappearance(time):
+def test_plate_disappearance(conn, time):
     """
     Plates should not have a valid rotation after their `old_lim`...
     Amendment: actually this is perfectly fine, because different plate polygons
     can appear and disappear at different times. What plates shouldn't have are
     defined rotations outside the time range for which rotations are explicitly defined.
     """
-    rotations = get_all_rotations("Seton2012", time, active_only=False)
+    rotations = get_all_rotations(conn, "Seton2012", time, active_only=False)
     plate_ids = [p for p, q in rotations]
     if time <= 9.8:
         assert 922 in plate_ids
@@ -76,79 +76,79 @@ def test_plate_disappearance(time):
 
 
 # Test identity
-def test_identity():
+def test_identity(conn):
     time = 10
     plate_id = 1
-    q = get_rotation("Seton2012", plate_id, 10)
+    q = get_rotation(conn, "Seton2012", plate_id, 10)
     q1 = N.quaternion(1, 0, 0, 0)
     assert N.allclose(q, q1)
 
 
 # Make sure simple rotation is right
-def test_simple_rotation():
+def test_simple_rotation(conn):
     time = 10
     plate_id = 701
     euler = (-87.86, 46.19, -1.92)
-    q = get_rotation("Seton2012", plate_id, time)
+    q = get_rotation(conn, "Seton2012", plate_id, time)
     q1 = euler_to_quaternion(euler)
     euler1 = quaternion_to_euler(q)
     assert euler_equal(euler, euler1)
     assert N.allclose(q, q1)
 
-    q2 = get_rotation("Seton2012", 702, 10)
+    q2 = get_rotation(conn, "Seton2012", 702, 10)
     assert N.allclose(q1, q2)
 
 
-def test_undefined_model():
+def test_undefined_model(conn):
     """
     Make sure there is an error when we specify a bad model.
     """
     did_throw = False
     try:
-        r = get_rotation("Adsdfs", 10, 10)
+        r = get_rotation(conn, "Adsdfs", 10, 10)
     except RotationError as err:
         did_throw = True
     assert did_throw
 
 
-def test_mongol_okhotsk():
+def test_mongol_okhotsk(conn):
     """
     The Mongol-Okhotsk basin in Seton2012 should not show up prior to 320 Ma
     (its earliest defined rotation time step)
     Amendment: it also should not show up prior to ~200 Ma when the last rotation
     for plate 701 in its reconstruction tree is defined.
     """
-    q = get_rotation("Seton2012", 417, 200)
+    q = get_rotation(conn, "Seton2012", 417, 200)
     assert q is not None
 
-    q = get_rotation("Seton2012", 417, 318)
+    q = get_rotation(conn, "Seton2012", 417, 318)
     assert q is None
 
-    q = get_rotation("Seton2012", 417, 322)
+    q = get_rotation(conn, "Seton2012", 417, 322)
     assert q is None
 
 
-def test_rotation_series():
+def test_rotation_series(conn):
     """Getting a series of rotation vectors should be as simple as possible"""
     times = N.arange(350, 340, -1)
-    res = list(get_rotation_series("Seton2012", *times, verbose=True))
+    res = list(get_rotation_series(conn, "Seton2012", *times, verbose=True))
     for time, rot in zip(times, res):
         assert rot["time"] == time
         assert len(rot["rotations"]) == len(
-            list(get_all_rotations("Seton2012", float(time)))
+            list(get_all_rotations(conn, "Seton2012", float(time)))
         )
 
 
-def test_rotation_series_2():
+def test_rotation_series_2(conn):
     """Getting a series of rotation vectors should not take millenia"""
     times = N.arange(350, 340, -0.1)
-    res = list(get_rotation_series("Seton2012", *times))
+    res = list(get_rotation_series(conn, "Seton2012", *times))
     assert res[0]["time"] == 350
 
 
 # @pytest.mark.skip(reason="It's super slow!")
-def test_rotation_series_speed():
+def test_rotation_series_speed(conn):
     """Getting a series of rotation vectors should not take millenia"""
     times = N.arange(350, 0, -1)
-    res = list(get_rotation_series("Seton2012", *times))
+    res = list(get_rotation_series(conn, "Seton2012", *times))
     assert res[0]["time"] == 350

@@ -1,0 +1,48 @@
+name: Publish Python packages
+
+# Publishes each package whose version is not yet on PyPI.
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "py-packages/client/pyproject.toml"
+      - "py-packages/engine/pyproject.toml"
+      - "py-packages/server/pyproject.toml"
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    # PyPI trusted publishing is configured against this environment.
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Build packages
+        run: |
+          for pkg in client engine server; do
+            uv build --out-dir dist "py-packages/$pkg"
+          done
+
+      - name: Publish versions not yet on PyPI
+        # Each package separately, so one without a publisher doesn't block the rest.
+        run: |
+          status=0
+          for pkg in client engine server; do
+            uv publish --trusted-publishing always \
+              --check-url https://pypi.org/simple/ dist/corelle_${pkg}-* || status=1
+          done
+          exit $status

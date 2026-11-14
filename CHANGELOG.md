@@ -13,6 +13,16 @@
   does both
 - `import-starter-data` works on a fresh database: one plate row per plate ID, and bulk
   inserts in chunks under psycopg's parameter limit
+- **Breaking (`corelle.engine`):** rotation, cache and import functions take a SQLAlchemy
+  connection as their first argument, so other applications can call them on their own
+  database
+- Importing `corelle.engine` no longer needs a database: tables are not reflected at
+  import, and `CORELLE_DB` is read on first use via `get_database()`
+- The server opens one pooled connection per request and closes it at teardown; each CLI
+  command runs in one transaction
+- Fiona, PyYAML and wget move to the `import` extra, and IPython to `shell`
+- `corelle.client` 2.2.0, `corelle.engine` 3.0.0 and `corelle.server` 1.2.0 are
+  published to PyPI when their versions change on `main`; wheels no longer ship tests
 
 ## [2.2.0] - 2024-01-04
 

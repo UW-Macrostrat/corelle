@@ -85,7 +85,7 @@ def test_quaternion_equivalence(angles):
     assert equal(N.abs(angle), N.abs(angles[-1]), atol=0.001)
 
 
-def test_rotate_now():
+def test_rotate_now(conn):
     point = [90, -50]
-    new_point = rotate_point(point, "Seton2012", 0)
+    new_point = rotate_point(conn, point, "Seton2012", 0)
     assert N.allclose(point, new_point)
